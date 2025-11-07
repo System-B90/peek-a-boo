@@ -1,0 +1,69 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - when: never
+
+stages:
+  - lint
+  - build
+  - compose
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DNS_CACHE: ""
+  DOCKER_RUN_OPTIONS: --privileged
+
+image:
+  name: 8200artifactory.dother.mil/docker-images/docker:dind-28.1.1
+
+services:
+  - name: 8200artifactory.dother.mil/docker-images/docker:dind-28.1.1
+    alias: docker
+
+before_script:
+  - git config --global http.sslVerify false
+  - export NODE_TLS_REJECT_UNAUTHORIZED=0
+  - docker info
+
+lint-js:
+  stage: lint
+  script:
+    - npm config set strict-ssl false
+    - npm i
+    - chmod -R +x ./.next/* || true
+    - chmod -R +x ./node_modules/.bin/*
+    - npm run lint
+  tags:
+    - npm
+
+build-js:
+  stage: build
+  script:
+    - chmod -R +x ./.next/* || true
+    - chmod -R +x ./node_modules/.bin/*
+    - npm run build
+  tags:
+    - npm
+  needs:
+    - lint-js
+
+compose-all:
+  stage: compose
+  script:
+    - ls
+    - cp ./sources.list /etc/apt/sources.list || true
+    - apt update -y || true
+    - apt install docker docker-compose -y || true
+    - docker-compose version
+    # - unset DOCKER_HOST
+    - docker-compose build
+    - docker push peekaboo/peekaboo_nextjs
+    - docker push peekaboo/peekaboo_websock
+  tags:
+    - shell
+    - docker-compose
+  needs:
+    - lint-js

@@ -1,0 +1,52 @@
+services:
+  nextjs:
+    image: peekaboo/peekaboo_nextjs
+    container_name: peekaboo_nextjs
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./.env:/app/.env:ro
+    expose:
+      - "3000"
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: peekaboo_nginx
+    restart: always
+    ports:
+      - "443:443"
+      - "80:80"
+    depends_on:
+      - nextjs
+      - websock
+    volumes:
+      - ./utils/certs:/etc/nginx/certs:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - backend
+      - frontend
+
+  websock:
+    image: peekaboo/peekaboo_websock
+    container_name: peekaboo_websock
+    build:
+      context: ./websock/
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./websocket_token_source.txt:/app/websocket_token_source.txt:ro
+      - ./.env:/app/.env:ro
+    ports:
+      - "60800"
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge

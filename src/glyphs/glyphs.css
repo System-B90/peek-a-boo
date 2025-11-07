@@ -1,0 +1,23 @@
+.svg-glyph {
+    width: 100%;
+    height: 100%;
+    display: inline-block;
+    transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+:not([aria-disabled=true]):not([data-static])>.svg-glyph {
+    cursor: pointer;
+}
+
+.svg-glyph svg {
+    box-sizing: border-box;
+    pointer-events: bounding-box;
+}
+
+:not([aria-disabled=true]):not([data-static])>.svg-glyph:hover {
+    transform: scale(1.1);
+}
+
+[aria-disabled=true]>.svg-glyph {
+    opacity: 0.35;
+}

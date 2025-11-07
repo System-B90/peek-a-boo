@@ -25,7 +25,7 @@ services:
       - websock
     volumes:
       - ./utils/certs:/etc/nginx/certs:ro
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./scripts/configs/nginx.conf:/etc/nginx/nginx.conf:ro
     networks:
       - backend
       - frontend

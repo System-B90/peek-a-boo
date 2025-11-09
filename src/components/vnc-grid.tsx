@@ -3,23 +3,27 @@
 import { Dispatch, SetStateAction, useCallback } from "react";
 import VncCard from "./vnc-card";
 
-export interface Props {
-    activeUsers: Set<number>;
-    setActiveStudents: Dispatch<SetStateAction<Set<number>>>;
+export interface Props
+{
+    activeUsers: Set<string>;
+    setActiveStudents: Dispatch<SetStateAction<Set<string>>>;
 }
 
 export default function VncGrid({ activeUsers, setActiveStudents }
     : Props
-) {
-    const onClose = useCallback((number: number) => {
-        setActiveStudents(new Set([...activeUsers].filter((s) => s !== number)));
-    }, [setActiveStudents, activeUsers]);
+)
+{
+    const onClose = useCallback((username: string) =>
+    {
+        setActiveStudents(new Set([ ...activeUsers ].filter((s) => s !== username)));
+    }, [ setActiveStudents, activeUsers ]);
 
-    const vncCards = [...activeUsers].map((n) => (
-        <VncCard key={`vnc-card-${n}`} studentNumber={n} onClose={onClose} />
+    const vncCards = [ ...activeUsers ].map((username) => (
+        <VncCard key={ `vnc-card-${username}` } studentUsername={ username } onClose={ onClose } />
     ));
 
-    if (vncCards.length === 0) {
+    if (vncCards.length === 0)
+    {
         return (
             <div className="flex-5 h-screen">
                 <div className="flex flex-col space-y-5 flex-wrap justify-center items-center h-screen">
@@ -34,7 +38,7 @@ export default function VncGrid({ activeUsers, setActiveStudents }
 
     return (
         <div className="flex-5 overflow-y-scroll h-screen">
-            <div className="flex flex-row flex-wrap justify-center ">{vncCards}</div>
+            <div className="flex flex-row flex-wrap justify-center ">{ vncCards }</div>
         </div>
     );
 }

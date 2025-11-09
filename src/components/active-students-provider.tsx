@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
+import
+{
     createContext,
     Dispatch,
     SetStateAction,
@@ -13,8 +14,8 @@ import {
 
 export type ActiveStudentsContext = {
     default: boolean;
-    activeStudents: Set<number>;
-    setActiveStudents: Dispatch<SetStateAction<Set<number>>>;
+    activeStudents: Set<string>;
+    setActiveStudents: Dispatch<SetStateAction<Set<string>>>;
 };
 
 const KnownTagsContextProvider = createContext<ActiveStudentsContext>({
@@ -27,22 +28,25 @@ export const ActiveStudentsProvider = ({
     children,
 }: {
     children: React.ReactNode;
-}) => {
+}) =>
+{
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    const [activeStudents, setActiveStudents] = useState<Set<number>>(new Set());
+    const [ activeStudents, setActiveStudents ] = useState<Set<string>>(new Set());
 
-    const createQueryString = useCallback((name: string, value: string) => {
+    const createQueryString = useCallback((name: string, value: string) =>
+    {
         const params = new URLSearchParams(searchParams.toString());
         params.set(name, value);
         return params.toString();
-    }, [searchParams]);
+    }, [ searchParams ]);
 
-    const setActiveUsersWrapper: Dispatch<SetStateAction<Set<number>>> = useCallback((newValue) => {
+    const setActiveUsersWrapper: Dispatch<SetStateAction<Set<string>>> = useCallback((newValue) =>
+    {
         const resolvedValue = new Set(
             typeof newValue === "function"
-                ? (newValue as (prev: Set<number>) => Set<number>)(activeStudents)
+                ? (newValue as (prev: Set<string>) => Set<string>)(activeStudents)
                 : newValue);
 
         setActiveStudents(resolvedValue);
@@ -51,37 +55,41 @@ export const ActiveStudentsProvider = ({
             "?" +
             createQueryString(
                 "actives",
-                [...resolvedValue].map((n) => n.toString()).join("\0")
+                [ ...resolvedValue ].map((n) => n.toString()).join(",")
             )
         );
-    }, [router, createQueryString, pathname, setActiveStudents, activeStudents]);
+    }, [ router, createQueryString, pathname, setActiveStudents, activeStudents ]);
 
-    const getActivesByUrl = useCallback(() => {
+    const getActivesByUrl = useCallback(() =>
+    {
         return new Set(searchParams.get("actives")
-            ? [...(searchParams.get("actives")?.split("\0").map(Number) ?? [])]
+            ? [ ...(searchParams.get("actives")?.split(",").map(String) ?? []) ]
             : []);
-    }, [searchParams]);
+    }, [ searchParams ]);
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         setActiveStudents(getActivesByUrl());
-    }, [setActiveStudents, getActivesByUrl]);
+    }, [ setActiveStudents, getActivesByUrl ]);
 
     return (
         <KnownTagsContextProvider.Provider
-            value={{
+            value={ {
                 default: false,
                 activeStudents,
                 setActiveStudents: setActiveUsersWrapper,
-            }}
+            } }
         >
-            {children}
+            { children }
         </KnownTagsContextProvider.Provider>
     );
 };
 
-export function useActiveStudents() {
+export function useActiveStudents()
+{
     const context = useContext(KnownTagsContextProvider);
-    if (context.default) {
+    if (context.default)
+    {
         throw Error(
             "useActiveStudents must be used inside ActiveStudentsProvider!"
         );

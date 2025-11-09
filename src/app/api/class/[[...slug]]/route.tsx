@@ -7,16 +7,19 @@ import { getHiveClasses } from "@/server-api/hive";
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ slug: Array<string> }> },
-) {
-    try {
+    { params }: { params: Promise<{ slug?: Array<string>; }>; },
+)
+{
+    try
+    {
         const { slug } = await params;
         await assertUserLoggedIn();
 
         if (slug) { throw new ClientApiError('Not implemented!'); }
 
         return ApiSuccess(await getHiveClasses());
-    } catch (e: unknown) {
+    } catch (e: unknown)
+    {
         return catchHandler(request, e);
     }
 }

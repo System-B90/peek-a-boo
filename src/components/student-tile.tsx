@@ -4,8 +4,9 @@ import Image from "next/image";
 import { useCallback } from "react";
 import { ApolloLogo, HermonLogo, MivtzarLogo } from "./course-logos";
 
-interface Props extends StudentTileInfo {
-    onClick: (number: number) => void;
+interface Props extends StudentTileInfo
+{
+    onClick: (username: string) => void;
     isInSearch: boolean;
 }
 
@@ -14,11 +15,13 @@ export default function StudentTile({
     isActive,
     onClick,
     isInSearch,
-}: Props) {
+}: Props)
+{
 
-    const clickCallback = useCallback(() => {
-        onClick(student.studentNumber);
-    }, [student.studentNumber, onClick]);
+    const clickCallback = useCallback(() =>
+    {
+        onClick(student.studentUsername);
+    }, [ student.studentNumber, onClick ]);
 
     const programLogo = (
         (student.programName === 'Apollo') ? ApolloLogo
@@ -28,38 +31,38 @@ export default function StudentTile({
 
     return (
         <div
-            className={`h-[70px] flex-grow flex bg-[#bb86fc] rounded-2xl overflow-hidden relative cursor-pointer ${isInSearch ? "opacity-100" : "opacity-50"
-                }`}
+            className={ `h-[70px] flex-grow flex bg-[#bb86fc] rounded-2xl overflow-hidden relative cursor-pointer ${isInSearch ? "opacity-100" : "opacity-50"
+                }` }
             dir="rtl"
-            onClick={clickCallback}
+            onClick={ clickCallback }
         >
             <div className="bg-[#121212] aspect-[5/7] rounded-l-full flex justify-center items-center font-bold text-xl">
-                <span className="ml-4"><Typography fontWeight={600} fontSize={'1.5rem'}>{student.studentNumber}</Typography></span>
+                <span className="ml-4"><Typography fontWeight={ 600 } fontSize={ '1.5rem' }>{ student.studentNumber }</Typography></span>
             </div>
             <div className="flex flex-col bg-[#bb86fc] flex-grow text-black p-2">
                 <div className="font-bold">
-                    <Typography fontWeight={600}>
-                        {student.studentFirstName} {student.studentLastName}
+                    <Typography fontWeight={ 600 }>
+                        { student.studentFirstName } { student.studentLastName }
                     </Typography>
                 </div>
                 <div dir="rtl" className="flex flex-row items-center">
-                    <Typography fontSize={'0.9rem'}>
-                        {student.currentExerciseName}
+                    <Typography fontSize={ '0.9rem' }>
+                        { student.currentExerciseName }
                     </Typography>
-                    <Box sx={{ width: '0.2rem' }} />
-                    {programLogo({ 'className': 'w-6 h-6' })}
+                    <Box sx={ { width: '0.2rem' } } />
+                    { programLogo({ 'className': 'w-6 h-6' }) }
                 </div>
             </div>
             <Image
                 className="rounded-l-2xl h-[70px] aspect-sqare"
-                src={`/api/image/${student.studentNumber}`}
-                width={70}
-                height={70}
+                src={ `/api/image/${student.studentNumber}` }
+                width={ 70 }
+                height={ 70 }
                 alt=""
             />
             <div
-                className={`rounded-full bg-[#1afb1a] aspect-square w-[20px] absolute -left-[5px] -top-[5px] transition-all duration-200 ${isActive ? "opacity-100" : "opacity-0"
-                    }`}
+                className={ `rounded-full bg-[#1afb1a] aspect-square w-[20px] absolute -left-[5px] -top-[5px] transition-all duration-200 ${isActive ? "opacity-100" : "opacity-0"
+                    }` }
             ></div>
         </div>
     );

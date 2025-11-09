@@ -1,5 +1,5 @@
 export async function getHiveApiToken() {
-    const request = await fetch(`https://${process.env.HIVE_URI}/api/core/token/`, {
+    const request = await fetch(`https://${process.env.HIVE_HOSTNAME}/api/core/token/`, {
         method: 'POST',
         body: JSON.stringify({
             'username': process.env.HIVE_API_USERNAME ?? 'api',
@@ -18,7 +18,7 @@ export async function getHiveApiToken() {
 
 export async function performHiveApiRequest(endpoint: string) {
     const tokens = await getHiveApiToken();
-    const request = await fetch(`https://${process.env.HIVE_URI}${endpoint}/`, {
+    const request = await fetch(`https://${process.env.HIVE_HOSTNAME}${endpoint}/`, {
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${tokens['access']}`

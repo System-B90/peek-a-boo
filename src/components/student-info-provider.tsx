@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { studentUsernameBuilder } from "@/shared-api/common";
 import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
 import { useAllStudentInfo } from "@/components/all-student-info-provider";
 import { useAuth } from "./auth-provider";
@@ -25,7 +24,7 @@ export type StudentInfo = {
     programName: string;
     hiveId: number;
     hostname: string;
-}
+};
 export type StudentInfoContext = {
     default: boolean;
     mentorName: string;
@@ -56,37 +55,37 @@ const StudentInfoContextProvider = createContext<StudentInfoContext>({
 
 export const StudentInfoProvider = ({
     children,
-    studentNumber,
-}: { children: React.ReactNode; studentNumber: number; }) => {
+    studentUsername,
+}: { children: React.ReactNode; studentUsername: string; }) =>
+{
     const { clientEnvConfig } = useAuth();
     const { getStudentInfo } = useAllStudentInfo();
 
-    const [studentUsername, setStudentUsername] = useState<string>('');
-    const [studentName, setStudentName] = useState<string>('');
-    const [studentFirstName, setStudentFirstName] = useState<string>('');
-    const [studentLastName, setStudentLastName] = useState<string>('');
-    const [studentStatus, setStudentStatus] = useState<string>('');
-    const [currentExerciseName, setCurrentExerciseName] = useState<string>('');
-    const [currentExerciseUrl, setCurrentExerciseUrl] = useState<string>('');
-    const [checkersBrief, setCheckersBrief] = useState<string>('');
-    const [mentorFirstName, setMentorFirstName] = useState<string>('');
-    const [mentorLastName, setMentorLastName] = useState<string>('');
-    const [mentorName, setMentorName] = useState<string>('');
-    const [mentorUsername, setMentorUsername] = useState<string>('');
-    const [programName, setProgramName] = useState<string>('');
-    const [hostname, setHostname] = useState<string>('');
-    const [hiveId, setHiveId] = useState<number>(0);
-    const [currentExerciseId, setCurrentExerciseId] = useState<number>(0);
-    const [currentExerciseParentModuleId, setCurrentExerciseParentModuleId] = useState<number>(0);
-    const [currentExerciseParentModuleParentSubjectId, setCurrentExerciseParentModuleParentSubjectId] = useState<number>(0);
+    const [ studentName, setStudentName ] = useState<string>('');
+    const [ studentFirstName, setStudentFirstName ] = useState<string>('');
+    const [ studentLastName, setStudentLastName ] = useState<string>('');
+    const [ studentStatus, setStudentStatus ] = useState<string>('');
+    const [ currentExerciseName, setCurrentExerciseName ] = useState<string>('');
+    const [ currentExerciseUrl, setCurrentExerciseUrl ] = useState<string>('');
+    const [ checkersBrief, setCheckersBrief ] = useState<string>('');
+    const [ mentorFirstName, setMentorFirstName ] = useState<string>('');
+    const [ mentorLastName, setMentorLastName ] = useState<string>('');
+    const [ mentorName, setMentorName ] = useState<string>('');
+    const [ mentorUsername, setMentorUsername ] = useState<string>('');
+    const [ programName, setProgramName ] = useState<string>('');
+    const [ hostname, setHostname ] = useState<string>('');
+    const [ hiveId, setHiveId ] = useState<number>(0);
+    const [ studentNumber, setStudentNumber ] = useState<number>(0);
 
-    useEffect(() => {
-        setStudentUsername(studentUsernameBuilder(clientEnvConfig, studentNumber));
-    }, [clientEnvConfig, studentNumber, setStudentUsername]);
+    const [ currentExerciseId, setCurrentExerciseId ] = useState<number>(0);
+    const [ currentExerciseParentModuleId, setCurrentExerciseParentModuleId ] = useState<number>(0);
+    const [ currentExerciseParentModuleParentSubjectId, setCurrentExerciseParentModuleParentSubjectId ] = useState<number>(0);
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         if (!studentUsername) { return; }
-        getStudentInfo(studentUsername).then((data) => {
+        getStudentInfo(studentUsername).then((data) =>
+        {
             if (!data) { return; }
             console.log(data);
             setStudentFirstName(data.studentFirstName);
@@ -96,7 +95,7 @@ export const StudentInfoProvider = ({
             setCurrentExerciseId(data.currentExerciseId);
             setCurrentExerciseParentModuleId(data.currentExerciseParentModuleId);
             setCurrentExerciseParentModuleParentSubjectId(data.currentExerciseParentModuleParentSubjectId);
-            setCurrentExerciseUrl(`https://${clientEnvConfig.HIVE_URI}/course/${data.currentExerciseParentModuleParentSubjectId}/${data.currentExerciseParentModuleId}/${data.currentExerciseId}#${data.hiveId}`);
+            setCurrentExerciseUrl(`https://${clientEnvConfig.HIVE_HOSTNAME}/course/${data.currentExerciseParentModuleParentSubjectId}/${data.currentExerciseParentModuleId}/${data.currentExerciseId}#${data.hiveId}`);
             setCheckersBrief(data.checkersBrief);
             setMentorName(`${data.mentorFirstName} ${data.mentorLastName}`);
             setMentorUsername(data.mentorUsername);
@@ -105,19 +104,22 @@ export const StudentInfoProvider = ({
             setProgramName(data.programName);
             setHiveId(data.hiveId);
             setHostname(data.hostname);
+            setStudentNumber(data.studentNumber);
 
-        }).catch((error) => {
+        }).catch((error) =>
+        {
             enqueueApiErrorSnackbar('Failed to fetch student info', error);
         }
         );
-    }, [studentUsername, clientEnvConfig, getStudentInfo, setStudentFirstName, setHostname, setCurrentExerciseId, setStudentLastName, setCurrentExerciseParentModuleId, setCurrentExerciseParentModuleParentSubjectId, setStudentStatus, setCurrentExerciseName, setCurrentExerciseUrl, setCheckersBrief, setMentorUsername, setHiveId,]);
+    }, [ studentUsername, clientEnvConfig, getStudentInfo, setStudentFirstName, setHostname, setCurrentExerciseId, setStudentLastName, setCurrentExerciseParentModuleId, setCurrentExerciseParentModuleParentSubjectId, setStudentStatus, setCurrentExerciseName, setCurrentExerciseUrl, setCheckersBrief, setMentorUsername, setHiveId, ]);
 
-    useEffect(() => {
-        setStudentName(`${studentFirstName} ${studentLastName}`)
-    }, [studentFirstName, studentLastName, setStudentName]);
+    useEffect(() =>
+    {
+        setStudentName(`${studentFirstName} ${studentLastName}`);
+    }, [ studentFirstName, studentLastName, setStudentName ]);
 
     return (
-        <StudentInfoContextProvider.Provider value={{
+        <StudentInfoContextProvider.Provider value={ {
             default: false,
             studentNumber,
             studentUsername,
@@ -138,15 +140,17 @@ export const StudentInfoProvider = ({
             programName,
             hiveId,
             hostname,
-        }} >
-            {children}
+        } } >
+            { children }
         </StudentInfoContextProvider.Provider>
     );
 };
 
-export function useStudentInfo() {
+export function useStudentInfo()
+{
     const context = useContext(StudentInfoContextProvider);
-    if (context.default) {
+    if (context.default)
+    {
         throw Error('useStudentInfo must be used inside StudentInfoProvider!');
     }
     return context;

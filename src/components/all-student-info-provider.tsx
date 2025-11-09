@@ -1,6 +1,7 @@
 "use client";
 
-import {
+import
+{
     createContext,
     useCallback,
     useContext,
@@ -25,7 +26,8 @@ export type AllStudentInfoContext = {
 const AllStudentInfoContextProvider = createContext<AllStudentInfoContext>({
     default: true,
     /* eslint-disable @typescript-eslint/no-unused-vars */
-    getStudentInfo: async (_username: string) => {
+    getStudentInfo: async (_username: string) =>
+    {
         return {
             studentNumber: 0,
             studentUsername: "",
@@ -50,7 +52,8 @@ const AllStudentInfoContextProvider = createContext<AllStudentInfoContext>({
         };
     },
     studentInfo: {},
-    getStudentInfoByHiveId: () => {
+    getStudentInfoByHiveId: () =>
+    {
         return {
             studentNumber: 0,
             studentUsername: "",
@@ -81,84 +84,93 @@ export const AllStudentInfoProvider = ({
     children,
 }: {
     children: React.ReactNode;
-}) => {
-    const [studentInfo, setStudentInfo] = useState<Record<string, StudentInfo>>({});
+}) =>
+{
+    const [ studentInfo, setStudentInfo ] = useState<Record<string, StudentInfo>>({});
 
     const getStudentInfo = useCallback(
-        async (studentUsername: string, forceRefetch?: boolean) => {
+        async (studentUsername: string, forceRefetch?: boolean) =>
+        {
             if (!studentUsername) { throw new Error('Invalid student username!'); }
 
-            if (forceRefetch) {
+            if (forceRefetch)
+            {
                 const newStudentInfo = { ...studentInfo };
                 const queriedStudentInfo = await queryStudentInfo(
                     studentUsername
                 );
-                queriedStudentInfo.studentNumber = Number(queriedStudentInfo.studentUsername.split("-")[2]);
-                newStudentInfo[studentUsername] = queriedStudentInfo;
+                queriedStudentInfo.studentNumber = Number(queriedStudentInfo.studentUsername.split("-")[ 2 ]);
+                newStudentInfo[ studentUsername ] = queriedStudentInfo;
                 setStudentInfo(newStudentInfo);
             }
-            return studentInfo[studentUsername];
+            return studentInfo[ studentUsername ];
         },
-        [studentInfo, setStudentInfo]
+        [ studentInfo, setStudentInfo ]
     );
 
 
-    const getStudentInfoByHiveId = useCallback((hiveId: number) => {
-        return Object.values(studentInfo).filter((info) => info.hiveId === hiveId)[0];
-    }, [studentInfo]);
+    const getStudentInfoByHiveId = useCallback((hiveId: number) =>
+    {
+        return Object.values(studentInfo).filter((info) => info.hiveId === hiveId)[ 0 ];
+    }, [ studentInfo ]);
 
-    const refetchAllStudentInfo = useCallback(async () => {
+    const refetchAllStudentInfo = useCallback(async () =>
+    {
         return queryAllStudentInfo()
-            .then((data) => {
+            .then((data) =>
+            {
                 setStudentInfo(
                     data.filter(
-                        (item) => {
-                            const numberRegex = /^\w+\-\w+\-?(\d+)$/gi.exec(item.studentUsername);
-                            const number = numberRegex?.[1];
+                        (item) =>
+                        {
                             return (
                                 item.mentorUsername?.length >= 0 &&
-                                /\w+\-\w+\-?\d{1,2}/gi.test(item.studentUsername) &&
-                                number !== undefined &&
-                                parseInt(number) >= 1 && parseInt(number) <= 200 && parseInt(number) !== 90
+                                item.studentNumber !== undefined
                             );
                         })
-                        .reduce((acc, item) => {
-                            acc[item.studentUsername] = {
+                        .reduce((acc, item) =>
+                        {
+                            acc[ item.studentUsername ] = {
                                 ...item,
-                                studentNumber: parseInt(/^\w+\-\w+\-?(\d+)$/gi.exec(item.studentUsername)?.[1] ?? '0'),
+                                studentNumber: item.studentNumber,
                                 studentName: `${item.studentFirstName} ${item.studentLastName}`,
                             };
                             return acc;
                         }, {} as Record<string, StudentInfo>)
                 );
             })
-            .catch((error) => {
+            .catch((error) =>
+            {
                 enqueueApiErrorSnackbar("Failed to fetch all student's info", error);
             });
-    }, [setStudentInfo]);
+    }, [ setStudentInfo ]);
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         refetchAllStudentInfo();
-    }, [refetchAllStudentInfo]);
+    }, [ refetchAllStudentInfo ]);
 
+    console.log(studentInfo);
     return (
         <AllStudentInfoContextProvider.Provider
-            value={{
+            value={ {
                 default: false,
                 getStudentInfo,
                 studentInfo,
                 getStudentInfoByHiveId,
                 refetchAllStudentInfo,
-            }}
+            } }
         >
-            {children}
+            { children }
         </AllStudentInfoContextProvider.Provider>
     );
 };
 
-export function useAllStudentInfo() {
+export function useAllStudentInfo()
+{
     const context = useContext(AllStudentInfoContextProvider);
-    if (context.default) {
+    if (context.default)
+    {
         throw Error(
             "useAllStudentInfo must be used inside AllStudentInfoProvider!"
         );

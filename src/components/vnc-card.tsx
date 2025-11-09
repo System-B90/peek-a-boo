@@ -5,16 +5,17 @@ import VncCardInner from "@/components/vnc-card-inner";
 import { VncCardProps } from "@/components/vnc-card-inner-utils";
 
 export default function VncCard({
-    studentNumber,
+    studentUsername,
     onClose,
     ...props
-}: VncCardProps) {
+}: VncCardProps)
+{
     return (
-        <StudentInfoProvider studentNumber={studentNumber}>
+        <StudentInfoProvider studentUsername={ studentUsername }>
             <VncCardInner
-                studentNumber={studentNumber}
-                onClose={onClose}
-                {...props}
+                studentUsername={ studentUsername }
+                onClose={ onClose }
+                { ...props }
             />
         </StudentInfoProvider>
     );

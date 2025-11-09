@@ -4,21 +4,25 @@ import postgres from "postgres";
 
 let postgresClient: postgres.Sql<{}> | null = null;
 
-export async function queryPostgres(studentUsername?: string): Promise<unknown> {
-    if (null === postgresClient) {
+export async function queryPostgres(studentUsername?: string): Promise<unknown>
+{
+    if (null === postgresClient)
+    {
         postgresClient = postgres({
             username: process.env.HIVE_POSTGRES_USERNAME ?? 'grafanareader',
-            password: process.env.HIVE_PASSWOWRD,
+            password: process.env.HIVE_PASSWORD,
             database: 'core',
-            host: process.env.HIVE_URI,
+            host: process.env.HIVE_HOSTNAME,
         });
     }
     assert(postgresClient !== null, 'postgresClient cannot be null!');
-    if (studentUsername) {
+    if (studentUsername)
+    {
         return await postgresClient`SELECT   mentor.first_name AS "mentorFirstName", \
             mentor.last_name AS "mentorLastName", \
             mentor.username AS "mentorUsername", \
             mentee.username AS "studentUsername", \
+            mentee.number as "studentNumber", \
             mentee.first_name AS "studentFirstName", \
             mentee.last_name AS "studentLastName", \
             mentee.checkers_brief AS "checkersBrief", \
@@ -39,11 +43,13 @@ export async function queryPostgres(studentUsername?: string): Promise<unknown> 
             LEFT JOIN course_subject ON course_subject.id = course_module.parent_subject_id \
             JOIN course_program ON course_program.id = mentee.program_id \
             LEFT JOIN queues_queue ON queues_queue.id = mentee.queue_id WHERE mentee.clearance=1 and mentee.username=${studentUsername}`;
-    } else {
+    } else
+    {
         return await postgresClient`SELECT   mentor.first_name AS "mentorFirstName", \
             mentor.last_name AS "mentorLastName", \
             mentor.username AS "mentorUsername", \
             mentee.username AS "studentUsername", \
+            mentee.number as "studentNumber", \
             mentee.first_name AS "studentFirstName", \
             mentee.last_name AS "studentLastName", \
             mentee.checkers_brief AS "checkersBrief", \

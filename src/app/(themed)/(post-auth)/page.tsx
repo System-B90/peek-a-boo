@@ -9,15 +9,17 @@ import { useActiveStudents } from "@/components/active-students-provider";
 import { useCurrentTags } from "@/components/current-tags-provider";
 import { StudentInfo } from "@/components/student-info-provider";
 
-export default function Home() {
+export default function Home()
+{
     const { activeStudents, setActiveStudents } = useActiveStudents();
     const { studentInfo } = useAllStudentInfo();
     const { currentTags } = useCurrentTags();
 
-    const [shownStudents, setShownStudents] = useState<Array<{ isActive: boolean; student: StudentInfo }>>([]);
-    const [hiddenStudents, setHiddenStudents] = useState<Array<{ isActive: boolean; student: StudentInfo }>>([]);
+    const [ shownStudents, setShownStudents ] = useState<Array<{ isActive: boolean; student: StudentInfo; }>>([]);
+    const [ hiddenStudents, setHiddenStudents ] = useState<Array<{ isActive: boolean; student: StudentInfo; }>>([]);
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         const filteredStudentNumbers = currentTags
             .map((t) => t.students)
             .reduce((a, b) => a.concat(b), []);
@@ -28,18 +30,20 @@ export default function Home() {
                     filteredStudentNumbers.length === 0 ||
                     filteredStudentNumbers.includes(s.studentNumber)
             )
-            .map((s) => {
+            .map((s) =>
+            {
                 return {
-                    isActive: activeStudents.has(s.studentNumber),
+                    isActive: activeStudents.has(s.studentUsername),
                     student: s,
                 };
             });
 
         students.sort((a, b) => a.student.studentNumber - b.student.studentNumber);
-        setShownStudents([...students]);
-    }, [activeStudents, currentTags, studentInfo, setShownStudents]);
+        setShownStudents([ ...students ]);
+    }, [ activeStudents, currentTags, studentInfo, setShownStudents ]);
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         const filteredStudentNumbers = currentTags
             .map((t) => t.students)
             .reduce((a, b) => a.concat(b), []);
@@ -50,31 +54,32 @@ export default function Home() {
             .filter(
                 (s) =>
                     !filteredStudentNumbers.includes(s.studentNumber) &&
-                    activeStudents.has(s.studentNumber)
+                    activeStudents.has(s.studentUsername)
             )
-            .map((s) => {
+            .map((s) =>
+            {
                 return {
-                    isActive: activeStudents.has(s.studentNumber),
+                    isActive: activeStudents.has(s.studentUsername),
                     student: s,
                 };
             });
 
         students.sort((a, b) => a.student.studentNumber - b.student.studentNumber);
-        setHiddenStudents([...students]);
-    }, [activeStudents, currentTags, studentInfo, setHiddenStudents]);
+        setHiddenStudents([ ...students ]);
+    }, [ activeStudents, currentTags, studentInfo, setHiddenStudents ]);
 
     return (
         <div className="w-full h-full">
             <ClientOnly>
                 <div className="flex">
                     <Drawer
-                        students={shownStudents}
-                        hiddenStudents={hiddenStudents}
-                        setActiveStudents={setActiveStudents}
+                        students={ shownStudents }
+                        hiddenStudents={ hiddenStudents }
+                        setActiveStudents={ setActiveStudents }
                     />
                     <VncGrid
-                        activeUsers={activeStudents}
-                        setActiveStudents={setActiveStudents}
+                        activeUsers={ activeStudents }
+                        setActiveStudents={ setActiveStudents }
                     />
                 </div>
             </ClientOnly>

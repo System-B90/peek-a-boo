@@ -1,7 +1,7 @@
 "use client";
 
 import { safeApiFetcher } from "@/client-api/common-utils";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, Dispatch, SetStateAction, useContext, useEffect, useMemo, useState } from "react";
 import { enqueueApiErrorSnackbar } from "./snackbar-utils";
 
 export type ClientEnvConfig = {
@@ -17,6 +17,8 @@ export type AuthContext = {
     username: string;
     displayName: string;
     clientEnvConfig: ClientEnvConfig;
+    showMentorAccessBar: boolean;
+    setShowMentorAccessBar: Dispatch<SetStateAction<boolean>>;
 };
 
 const AuthContextProvider = createContext<AuthContext>({
@@ -30,6 +32,8 @@ const AuthContextProvider = createContext<AuthContext>({
         WEBSOCKET_PROTOCOL_PREFIX: "",
         HIVE_HOSTNAME: '',
     },
+    showMentorAccessBar: true,
+    setShowMentorAccessBar: () => { },
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode; }) =>
@@ -41,11 +45,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode; }) =>
     const [ username, setUsername ] = useState<string>("");
     const [ displayName, setDisplayName ] = useState<string>("");
     const [ clientEnvConfig, setClientEnvConfig ] = useState<ClientEnvConfig>({
-        WEBSOCKET_PORT: parseInt(process.env.WEBSOCKET_PORT ?? '443'),
+        WEBSOCKET_PORT: parseInt(process.env.WEBSOCKER_PORT ?? (process.env.NODE_ENV === 'development' ? '60800' : '443')),
         WEBSOCKET_SERVER_HOSTNAME: process.env.WEBSOCKET_SERVER_HOSTNAME ?? 'wss.peek-a-boo.eshel.dom',
         WEBSOCKET_PROTOCOL_PREFIX: process.env.WEBSOCKET_PROTOCOL_PREFIX ?? 'wss',
         HIVE_HOSTNAME: process.env.HIVE_HOSTNAME ?? 'hive.org',
     });
+    const [ showMentorAccessBar, setShowMentorAccessBar ] = useState<boolean>(true);
+
 
     useEffect(() =>
     {
@@ -112,6 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode; }) =>
                 username,
                 displayName,
                 clientEnvConfig,
+                showMentorAccessBar, setShowMentorAccessBar,
             } }
         >
             { children }

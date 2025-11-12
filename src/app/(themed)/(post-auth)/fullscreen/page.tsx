@@ -10,18 +10,20 @@ export default function Fullscreen()
 {
     const searchParams = useSearchParams();
     const { clientEnvConfig } = useAuth();
-    const [ studentNumber, setStudentNumber ] = useState<number>(parseInt(searchParams.get('id') ?? '0'));
+
+    // Fullscreen can be given one of the following:
+    // * hostname
+    // * username
+
+    const [ studentUsername, ] = useState<string>(searchParams.get('username') ?? '');
 
     useEffect(() =>
     {
         if (searchParams.get('hostname'))
         {
-            setStudentNumber(studentHostnameDestructor(clientEnvConfig, searchParams.get('hostname') ?? ''));
-        } else if (searchParams.get('username'))
-        {
-            setStudentNumber(parseInt(searchParams.get('username') ?? '0'));
+            console.error('Not implemented!');
         }
-    }, [ searchParams, clientEnvConfig, setStudentNumber ]);
+    }, [ searchParams, clientEnvConfig ]);
 
     return (
         <div className="w-screen h-screen m-0 p-0 flex flex-row content-center justify-center">

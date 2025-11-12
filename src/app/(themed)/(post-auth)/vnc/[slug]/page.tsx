@@ -1,25 +1,27 @@
+'use client';
+
 import { useAuth } from "@/components/auth-provider";
 import ClientVNC from "@/components/client-vnc";
 import { SettingsProvider } from "@/components/settings-provider";
+import React, { useEffect } from "react";
 import { useRef } from "react";
 import { VncScreenHandle } from "react-vnc";
 
-export default function VncPage()
+export default function VncPage({ params }: { params: Promise<{ slug: string; }>; })
 {
-    const { clientEnvConfig } = useAuth();
+    const { setShowMentorAccessBar } = useAuth();
     const vncRef = useRef<VncScreenHandle>(null);
+    const { slug } = React.use(params);
+
+    useEffect(() => setShowMentorAccessBar(false), [ setShowMentorAccessBar ]);
 
     return (
-        <div>
-            <SettingsProvider
-                defaultWsProxyUrl={ `${clientEnvConfig.WEBSOCKET_PROTOCOL_PREFIX}://${clientEnvConfig.WEBSOCKET_SERVER_HOSTNAME}:${clientEnvConfig.WEBSOCKET_PORT}?token=${desktopName}` }
-            >
-                <ClientVNC
-                    vncRef={ vncRef }
-                    width={ 1920 }
-                    height={ 1080 }
-                />
-            </SettingsProvider>
-        </div>
+        <SettingsProvider hostname={ slug as string }>
+            <ClientVNC
+                vncRef={ vncRef }
+                width={ 1920 }
+                height={ 1080 }
+            />
+        </SettingsProvider>
     );
 }

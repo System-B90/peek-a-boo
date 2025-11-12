@@ -8,32 +8,38 @@ import { getJwtSecret, JWTUserData } from "@/server-api/enc";
 import jwt from 'jsonwebtoken';
 import { NextApiRequest } from "next";
 
-export async function getUserData() {
+export async function getUserData()
+{
     const jwtSecret = getJwtSecret();
-
     const authToken = (await cookies()).get('auth');
-    if (!authToken) {
+    if (!authToken)
+    {
         throw new UserNotLoggedInError('User must be logged in to use this api!');
     }
 
     // Verify the JWT and get the user data
-    try {
-        try {
+    try
+    {
+        try
+        {
             const userData = jwt.verify(authToken.value, jwtSecret) as JWTUserData;
             return userData;
         }
-        catch (error: unknown) {
+        catch (error: unknown)
+        {
             console.error(error);
             throw new Error('Error verifying JWT!');
         }
     }
-    catch (e: unknown) {
+    catch (e: unknown)
+    {
         console.error(e);
         throw new Error('Error getting user data!');
     }
 }
 
-export async function setUserData(newData: JWTUserData, response?: NextResponse) {
+export async function setUserData(newData: JWTUserData, response?: NextResponse)
+{
     // Generate a JWT with the user data and a secret key
     const token = jwt.sign(
         newData,
@@ -54,42 +60,52 @@ export async function setUserData(newData: JWTUserData, response?: NextResponse)
 export type ApiResponseHeaders = Record<string, string>;
 export type ApiResponseInit = (Omit<ResponseInit, 'status' | 'headers'> & { headers: ApiResponseHeaders; }) | undefined;
 export type ApiCacheControl = 'no-cache' | 'no-store' | 'immutable' | 'must-revalidate' | number;
-export function ApiResponseMaker(data: unknown, cacheControl?: ApiCacheControl, init?: ApiResponseInit) {
+export function ApiResponseMaker(data: unknown, cacheControl?: ApiCacheControl, init?: ApiResponseInit)
+{
     const additionalHeaders: ApiResponseHeaders = {};
 
-    if (init === undefined) {
+    if (init === undefined)
+    {
         init = { headers: additionalHeaders };
     }
-    else if (init !== undefined && init.headers) {
+    else if (init !== undefined && init.headers)
+    {
         init.headers = { ...init.headers, ...additionalHeaders };
     }
 
     return new NextResponse(JSON.stringify({ 'status': 0, 'data': data }), { status: 200, ...init });
 }
-export function ApiErrorMaker(e: unknown) {
+export function ApiErrorMaker(e: unknown)
+{
     return new NextResponse(JSON.stringify({ 'status': -1, 'error': e }), { status: 200 });
 }
 
-export function ApiError(e: unknown) {
+export function ApiError(e: unknown)
+{
     return ApiErrorMaker(e);
 }
 
-export function ApiAccessError(e: unknown) {
+export function ApiAccessError(e: unknown)
+{
     return ApiErrorMaker(e);
 }
 
-export function ApiSuccess(data?: unknown, cacheControl?: ApiCacheControl, init?: ApiResponseInit) {
+export function ApiSuccess(data?: unknown, cacheControl?: ApiCacheControl, init?: ApiResponseInit)
+{
     return ApiResponseMaker(data, cacheControl, init);
 }
 
-export async function catchHandler<T extends NextRequest | NextApiRequest>(request: T, e: unknown) {
-    if (e instanceof UserNotLoggedInError) {
+export async function catchHandler<T extends NextRequest | NextApiRequest>(request: T, e: unknown)
+{
+    if (e instanceof UserNotLoggedInError)
+    {
         const requestHeaders = headers();
         const url = request.url ? new URL(request.url) : undefined;
         return friendlyRedirectToLogin(request, (await requestHeaders).get('referer') ?? url?.pathname ?? '/');
     }
 
-    if (e instanceof ClientApiError) {
+    if (e instanceof ClientApiError)
+    {
         return ApiErrorMaker(e);
     }
 
@@ -97,7 +113,8 @@ export async function catchHandler<T extends NextRequest | NextApiRequest>(reque
     return ApiError(e);
 }
 
-export async function assertUserLoggedIn() {
+export async function assertUserLoggedIn()
+{
     const userData = await getUserData();
     return userData;
 }

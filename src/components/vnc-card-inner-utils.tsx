@@ -34,6 +34,7 @@ import RefreshGlyph from "@/glyphs/refresh";
 import { useAllStudentInfo } from "./all-student-info-provider";
 import RecurringAppointmentExceptionGlyph from "@/glyphs/RecurringAppointmentException";
 import { enqueueApiErrorSnackbar } from "./snackbar-utils";
+import PcOnDeskGlyph from "@/glyphs/pc-on-desk";
 
 export type VncCardProps = {
     studentUsername: string;
@@ -283,25 +284,34 @@ export function VncRightModule({
     return (
         <div className="flex flex-col">
             <div className="w-full flex flex-row-reverse -mt-2 mb-2 items-center">
-                { hasSecurityError ? (
-                    <WarningShieldGlyph
-                        glyphTitle={ "Authentication Error!" }
+                { !desktopName ?
+                    <PcOnDeskGlyph
+                        glyphTitle={ "Hostname Unknown!" }
                         className="w-5 h-5"
-                        style={ { color: "rgba(250,5,5,0.98)" } }
-                    />
-                ) : connected ? (
-                    <OnlineGlyph
-                        glyphTitle={ "Connected" }
-                        className="w-5 h-5"
-                        style={ { color: "rgba(20,240,20,0.95)" } }
-                    />
-                ) : (
-                    <OfflineGlyph
-                        glyphTitle={ "Disconnected" }
-                        className="w-5 h-5"
-                        style={ { color: "red" } }
-                    />
-                ) }
+                        style={ { color: "rgba(250,20,20,0.98)" } }
+                    /> :
+                    (
+                        // Hostname known
+                        hasSecurityError ? (
+                            <WarningShieldGlyph
+                                glyphTitle={ "Authentication Error!" }
+                                className="w-5 h-5"
+                                style={ { color: "rgba(250,5,5,0.98)" } }
+                            />
+                        ) : connected ? (
+                            <OnlineGlyph
+                                glyphTitle={ "Connected" }
+                                className="w-5 h-5"
+                                style={ { color: "rgba(20,240,20,0.95)" } }
+                            />
+                        ) : (
+                            <OfflineGlyph
+                                glyphTitle={ "Disconnected" }
+                                className="w-5 h-5"
+                                style={ { color: "red" } }
+                            />
+                        )
+                    ) }
                 { displayIncludesCenterModule(displayState) && (
                     <>
                         <Box sx={ { width: "0.2rem" } } />

@@ -8,20 +8,25 @@ import base64
 import random
 import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import os
+
+
+def handle_import_error(module_name: str):
+    print(f"❌  Auto-setup requires '{module_name}' package.")
+    print(f"➡️   Install it via:\n    pip install {module_name}")
+    sys.exit(1)
+
 
 try:
     from dotenv import load_dotenv
 except ImportError:
-    pass  # dotenv
+    handle_import_error("dotenv")
 
 try:
     import requests
 except ImportError:
-    print("❌  Auto-setup requires 'requests' package.")
-    print("➡️   Install it via:\n    pip install requests")
-    sys.exit(1)
+    handle_import_error("requests")
 
 try:
     from pyhive import HiveClient
@@ -83,6 +88,12 @@ def b64_encode(value: str) -> str:
     return base64.b64encode(value.encode()).decode()
 
 
+def b64_decode(value: str) -> str:
+    if len(value) == 0:
+        return value
+    return base64.b64decode(value).decode()
+
+
 def project_root() -> Path:
     return Path(sys.argv[0]).resolve().parent
 
@@ -102,14 +113,20 @@ def test_hive_user(hostname: str, password: str) -> bool:
         return False
 
 
-def get_hive_students(hostname: str, password: str) -> List[str]:
+def get_hive_students(hostname: str, password: str) -> List[Tuple[str, str]]:
     with HiveClient(
         username="api",
         password=password,
         hive_url=f"https://{hostname}/",
         verify=False,
     ) as client:
-        return [x.username for x in client.get_students()]
+        return [
+            (
+                x.username,
+                str(x.hostname),
+            )
+            for x in client.get_students()
+        ]
 
 
 def test_values(values: Dict[str, str]):
@@ -140,7 +157,11 @@ def load_existing_env(env_path: Path) -> Dict[str, str]:
         return {}
     load_dotenv(env_path)  # loads into os.environ
     return {
-        var: os.getenv(var, "")
+        var: (
+            os.getenv(var, "")
+            if var != "VNC_CLIENT_PASSWORD"
+            else b64_decode(os.getenv(var, ""))
+        )
         for var in PROMPT_VARS.keys() | set(SECRET_VARS) | set(AUTO_VARS.keys())
     }
 
@@ -186,7 +207,10 @@ def create_tokens_file(token_path: Path, hive_hostname: str, hive_password: str)
     info("Fetching student list 🧑‍🎓")
     students = get_hive_students(hive_hostname, hive_password)
 
-    token_path.write_text("\n".join(f"{u}: {u}:5900" for u in students) + "\n")
+    token_path.write_text(
+        "\n".join(f"{hostname}: {hostname}:5900" for username, hostname in students)
+        + "\n"
+    )
     success(f"WebSocket token file created at {token_path}")
 
 

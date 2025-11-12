@@ -1,38 +1,50 @@
 'use client';
 
-import { createContext, useContext, useState } from "react";
+import { useAuth } from "@/components/auth-provider";
+import { createContext, useContext, useMemo, useState } from "react";
 
 export type SettingsContext = {
     default: boolean;
     wsProxyUrl: string;
+    hostname: string;
 };
 
 
 const SettingsContextProvider = createContext<SettingsContext>({
     default: true,
     wsProxyUrl: '',
+    hostname: '',
 });
 
 export const SettingsProvider = ({
     children,
-    defaultWsProxyUrl,
-}: { children: React.ReactNode; defaultWsProxyUrl: string; }) => {
-    /* eslint-disable @typescript-eslint/no-unused-vars */
-    const [wsProxyUrl, _setWsProxyUrl] = useState<string>(defaultWsProxyUrl);
+    hostname,
+}: { children: React.ReactNode; hostname: string; }) =>
+{
+    const { clientEnvConfig } = useAuth();
+    const [ wsProxyUrl, setWsProxyUrl ] = useState<string>('');
+
+    useMemo(() =>
+    {
+        setWsProxyUrl(`${clientEnvConfig.WEBSOCKET_PROTOCOL_PREFIX}://${clientEnvConfig.WEBSOCKET_SERVER_HOSTNAME}:${clientEnvConfig.WEBSOCKET_PORT}?token=${hostname}`);
+    }, [ setWsProxyUrl, hostname, clientEnvConfig ]);
 
     return (
-        <SettingsContextProvider.Provider value={{
+        <SettingsContextProvider.Provider value={ {
             default: false,
             wsProxyUrl,
-        }} >
-            {children}
+            hostname
+        } } >
+            { children }
         </SettingsContextProvider.Provider>
     );
 };
 
-export function useSettings() {
+export function useSettings()
+{
     const context = useContext(SettingsContextProvider);
-    if (context.default) {
+    if (context.default)
+    {
         throw Error('useSettings must be used inside SettingsProvider!');
     }
     return context;

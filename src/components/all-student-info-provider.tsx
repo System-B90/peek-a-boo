@@ -8,7 +8,7 @@ import
     useEffect,
     useState,
 } from "react";
-import { queryAllStudentInfo, queryStudentInfo } from "@/client-api/query";
+import { queryAllStudentInfo, queryStudentInfo } from "@/client-api/students";
 import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
 import { StudentInfo } from "./student-info-provider";
 
@@ -99,7 +99,6 @@ export const AllStudentInfoProvider = ({
                 const queriedStudentInfo = await queryStudentInfo(
                     studentUsername
                 );
-                queriedStudentInfo.studentNumber = Number(queriedStudentInfo.studentUsername.split("-")[ 2 ]);
                 newStudentInfo[ studentUsername ] = queriedStudentInfo;
                 setStudentInfo(newStudentInfo);
             }
@@ -120,14 +119,7 @@ export const AllStudentInfoProvider = ({
             .then((data) =>
             {
                 setStudentInfo(
-                    data.filter(
-                        (item) =>
-                        {
-                            return (
-                                item.mentorUsername?.length >= 0 &&
-                                item.studentNumber !== undefined
-                            );
-                        })
+                    data.filter((item) => item.studentNumber !== undefined)
                         .reduce((acc, item) =>
                         {
                             acc[ item.studentUsername ] = {
@@ -150,7 +142,6 @@ export const AllStudentInfoProvider = ({
         refetchAllStudentInfo();
     }, [ refetchAllStudentInfo ]);
 
-    console.log(studentInfo);
     return (
         <AllStudentInfoContextProvider.Provider
             value={ {

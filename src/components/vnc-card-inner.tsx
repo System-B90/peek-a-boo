@@ -14,7 +14,6 @@ import
 } from "./vnc-card-inner-utils";
 import { VncScreenHandle } from "react-vnc";
 import { useStudentInfo } from "./student-info-provider";
-import { useAuth } from "./auth-provider";
 
 export enum VncCardDisplayState
 {
@@ -48,7 +47,6 @@ export default function VncCardInner({
 }: VncCardProps)
 {
     const { studentName, hostname: studentHostname } = useStudentInfo();
-    const { clientEnvConfig } = useAuth();
     const [ connected, setConnected ] = useState<boolean>(false);
     const [ displayState, setDisplayState ] = useState<VncCardDisplayState>(
         isFullscreen ? VncCardDisplayState.Fullscreen : VncCardDisplayState.Default
@@ -64,6 +62,7 @@ export default function VncCardInner({
     const [ width, setWidth ] = useState<number>(1920 * scaleFactor);
     const [ height, setHeight ] = useState<number>(1200 * scaleFactor);
     const [ desktopName, setDesktopName ] = useState<string>(studentHostname);
+    console.log('desktopName', desktopName);
 
     const vncRef = useRef<VncScreenHandle>(null);
 
@@ -100,9 +99,9 @@ export default function VncCardInner({
         (event: VncDesktopNameEvent) =>
         {
             console.log(event.detail.name);
-            // setDesktopName(event.detail.name);
+            setDesktopName(event.detail.name);
         },
-        [] // setDesktopName
+        [ setDesktopName ]
     );
 
     const capabilitiesHandler = useCallback((event: VncCapabilitiesEvent) =>
@@ -174,9 +173,7 @@ export default function VncCardInner({
                         </div>
                     </div>
                 }
-                <SettingsProvider
-                    defaultWsProxyUrl={ `${clientEnvConfig.WEBSOCKET_PROTOCOL_PREFIX}://${clientEnvConfig.WEBSOCKET_SERVER_HOSTNAME}:${clientEnvConfig.WEBSOCKET_PORT}?token=${desktopName}` }
-                >
+                <SettingsProvider hostname={ studentHostname }>
                     <div className="p-4 flex flex-row justify-between">
                         <VncCardLeftModule key={ `vnc-card-left-${studentUsername}` } />
                         { displayIncludesCenterModule(displayState) && (
@@ -187,7 +184,7 @@ export default function VncCardInner({
                             displayState={ displayState }
                             hasSecurityError={ hasSecurityError }
                             connected={ connected }
-                            desktopName={ desktopName }
+                            desktopName={ studentHostname }
                             isViewOnly={ isViewOnly }
                             setIsViewOnly={ setIsViewOnly }
                             sideButtonClassnames={ sideButtonClassnames }

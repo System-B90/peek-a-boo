@@ -25,49 +25,57 @@ export const CurrentTagsProvider = ({
     children,
 }: {
     children: React.ReactNode;
-}) => {
-    const [tags, setTags] = useState<Array<Tag>>([]);
+}) =>
+{
+    const [ tags, setTags ] = useState<Array<Tag>>([]);
     const { knownTags } = useKnownTags();
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    const createQueryString = useCallback((name: string, value: string) => {
+    const createQueryString = useCallback((name: string, value: string) =>
+    {
         const params = new URLSearchParams(searchParams?.toString());
         params.set(name, value);
         return params.toString();
-    }, [searchParams]);
+    }, [ searchParams ]);
 
-    const doesTagExists = useCallback((tagName: string) => {
-        for (const tag of knownTags) {
+    const doesTagExists = useCallback((tagName: string) =>
+    {
+        for (const tag of knownTags)
+        {
             if (tag.name === tagName) return true;
         }
         return false;
-    }, [knownTags]);
+    }, [ knownTags ]);
 
-    const getTag = useCallback((tagName: string) => {
+    const getTag = useCallback((tagName: string) =>
+    {
         const filteredKnownTags = knownTags.filter((t) => t.name === tagName);
         if (filteredKnownTags.length !== 1) { console.error(`Tag ${tagName} not uniquely found!`); return undefined; }
-        return filteredKnownTags[0];
-    }, [knownTags]);
+        return filteredKnownTags[ 0 ];
+    }, [ knownTags ]);
 
-    const getTagsByUrl = useCallback(() => {
+    const getTagsByUrl = useCallback(() =>
+    {
         return searchParams?.get("filter")
             ? [
                 ...(searchParams
                     .get("filter")
-                    ?.split("\0")
+                    ?.split(",")
                     .filter(doesTagExists)
                     .map((v) => getTag(v) as Tag) ?? []),
             ]
-            : []
-    }, [searchParams, doesTagExists, getTag]);
+            : [];
+    }, [ searchParams, doesTagExists, getTag ]);
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         setTags(getTagsByUrl());
-    }, [getTagsByUrl, setTags]);
+    }, [ getTagsByUrl, setTags ]);
 
-    const addTag = useCallback((newTagName: string) => {
+    const addTag = useCallback((newTagName: string) =>
+    {
         newTagName = newTagName.trim();
         if (!doesTagExists(newTagName))
             throw Error(`Tag ${newTagName} is not recognized!`);
@@ -77,14 +85,15 @@ export const CurrentTagsProvider = ({
             "?" +
             createQueryString(
                 "filter",
-                [...tags.map((t) => t.name), newTagName].join("\0")
+                [ ...tags.map((t) => t.name), newTagName ].join(",")
             )
         );
 
-        setTags([...tags, getTag(newTagName) as Tag]);
-    }, [tags, router, pathname, setTags, createQueryString, doesTagExists, getTag]);
+        setTags([ ...tags, getTag(newTagName) as Tag ]);
+    }, [ tags, router, pathname, setTags, createQueryString, doesTagExists, getTag ]);
 
-    const removeTag = useCallback((oldTagName: string) => {
+    const removeTag = useCallback((oldTagName: string) =>
+    {
         router.replace(
             pathname +
             "?" +
@@ -93,32 +102,35 @@ export const CurrentTagsProvider = ({
                 tags
                     .map((t) => t.name)
                     .filter((t) => t !== oldTagName)
-                    .join("\0")
+                    .join(",")
             )
         );
         setTags(tags.filter((t) => t.name !== oldTagName));
-    }, [tags, router, pathname, setTags, createQueryString]);
+    }, [ tags, router, pathname, setTags, createQueryString ]);
 
-    const removeLastTag = useCallback(() => {
-        setTags(v => { v.pop(); return v; })
-    }, [setTags]);
+    const removeLastTag = useCallback(() =>
+    {
+        setTags(v => { v.pop(); return v; });
+    }, [ setTags ]);
 
     return (
         <CurrentTagsContextProvider.Provider
-            value={{
+            value={ {
                 default: false,
                 currentTags: tags,
                 addTag, removeTag, removeLastTag,
-            }}
+            } }
         >
-            {children}
+            { children }
         </CurrentTagsContextProvider.Provider>
     );
 };
 
-export function useCurrentTags() {
+export function useCurrentTags()
+{
     const context = useContext(CurrentTagsContextProvider);
-    if (context.default) {
+    if (context.default)
+    {
         throw Error(
             "useCurrentTags must be used inside CurrentTagsProvider!"
         );

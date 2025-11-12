@@ -1,4 +1,7 @@
-export async function getHiveApiToken() {
+'use server';
+
+export async function getHiveApiToken()
+{
     const request = await fetch(`https://${process.env.HIVE_HOSTNAME}/api/core/token/`, {
         method: 'POST',
         body: JSON.stringify({
@@ -16,18 +19,33 @@ export async function getHiveApiToken() {
     };
 }
 
-export async function performHiveApiRequest(endpoint: string) {
+export async function performHiveApiRequest({ endpoint, contentType, accept }: { endpoint: string; contentType?: string, accept?: string; })
+{
     const tokens = await getHiveApiToken();
-    const request = await fetch(`https://${process.env.HIVE_HOSTNAME}${endpoint}/`, {
+    const response = await fetch(`https://${process.env.HIVE_HOSTNAME}${endpoint}/`, {
         headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${tokens['access']}`
+            'Accept': accept ?? '*/*',
+            'Content-Type': contentType ?? 'application/json',
+            'Authorization': `Bearer ${tokens[ 'access' ]}`,
         }
     });
-    const data = await request.json();
-    return data;
+    if (response.headers.get('Content-Type') === 'application/json')
+    {
+        const data = await response.json();
+        return data;
+    }
+    else if (/image\/\w+/gi.test(response.headers.get('Content-Type') ?? ''))
+    {
+        return response.blob();
+    }
 }
 
-export async function getHiveClasses() {
-    return await performHiveApiRequest("/api/core/management/classes")
+export async function getHiveClasses()
+{
+    return await performHiveApiRequest({ endpoint: "/api/core/management/classes" });
+}
+
+export async function getHiveUserAvatar(userHiveId: number)
+{
+    return (await performHiveApiRequest({ endpoint: `/api/core/management/users/${userHiveId}/avatar/` }) as Blob).stream();
 }

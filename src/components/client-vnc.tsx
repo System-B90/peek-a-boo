@@ -6,7 +6,7 @@ import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from "re
 import { VncScreenHandle, VncScreenProps } from "react-vnc";
 import { useSettings } from "./settings-provider";
 import { useAuth } from "@/components/auth-provider";
-import { ErrorBoundary } from "next/dist/client/components/error-boundary";
+import { Button, Typography } from "@mui/material";
 
 const VncScreen = dynamic(() => import('react-vnc').then(mod => mod.VncScreen), { ssr: false });
 
@@ -31,15 +31,6 @@ export type VncClientProps = {
     height: number;
 } & Omit<VncScreenProps, 'url' | 'rfbOptons'>;
 
-function BugThrower({ throwBug }: { throwBug: boolean; })
-{
-    useEffect(() =>
-    {
-        new Error();
-    }, [ throwBug ]);
-    return (<></>);
-}
-
 export default function ClientVNC({ vncRef, onSecurityFailure, ...props }: { vncRef: RefObject<VncScreenHandle | null>; } & VncClientProps)
 {
     const { vncClientPassword } = useAuth();
@@ -58,10 +49,11 @@ export default function ClientVNC({ vncRef, onSecurityFailure, ...props }: { vnc
 
     const connectMe = useCallback(() =>
     {
+        setConnectionError(false);
         if (isConnecting.current) { return; }
         isConnecting.current = true;
         vncRef.current?.connect();
-    }, [ vncRef, isConnecting ]);
+    }, [ vncRef, isConnecting, setConnectionError ]);
 
     useMemo(() =>
     {
@@ -75,50 +67,46 @@ export default function ClientVNC({ vncRef, onSecurityFailure, ...props }: { vnc
     useEffect(() =>
     {
         if (typeof window === 'undefined') { return; }
-        setTimeout(() =>
+        setInterval(() =>
         {
-            const hasCanvasChild = !!containerRef.current?.getElementsByTagName('canvas');
+            const hasCanvasChild = (containerRef.current?.getElementsByTagName('canvas').length ?? 0) > 0;
             if (hasCanvasChild) { return; }
             isConnecting.current = false;
             setConnectionError(true);
-        }, 1500);
+        }, 1000);
     }, [ containerRef, isConnecting, setConnectionError ]);
 
     return (
-        <div ref={ containerRef }>
-            <ErrorBoundary errorComponent={ ({ error, reset }) => (
-                <div>
-                    <h2>Connection Error</h2>
-                    <p>{ error.message }</p>
-                    <button onClick={ () => { if (reset) { reset(); } connectMe(); } }>Retry</button>
-                </div>
-            ) }>
-                <BugThrower throwBug={ connectionError } />
-                <VncScreen
-                    url={ wsProxyUrl }
-                    scaleViewport={ true }
-                    background="#000000"
-                    style={ { width: props.width, height: props.height } }
-                    ref={ vncRef }
-                    viewOnly={ isViewOnly }
-                    showDotCursor={ true }
-                    rfbOptions={ {
-                        shared: true,
-                        credentials: {
-                            password: vncClientPassword,
-                            username: "",
-                            target: "",
-                        }
-                    } }
-                    autoConnect={ false }
-                    qualityLevel={ 9 } // Max quality
-                    retryDuration={ 15 }
-                    focusOnClick={ false }
-                    onSecurityFailure={ onSecurityFailureWrapper }
-                    debug={ true }
-                    { ...props }
-                />
-            </ErrorBoundary>
+        <div ref={ containerRef } className="relative flex items-center content-center justify-center">
+            { connectionError && <div className="absolute flex flex-col items-center justify-center content-center">
+                <Typography>Connection Error</Typography>
+                <Button onClick={ connectMe } >Retry</Button>
+                <br /><br />
+            </div> }
+            <VncScreen
+                url={ wsProxyUrl }
+                scaleViewport={ true }
+                background="#000000"
+                style={ { width: props.width, height: props.height } }
+                ref={ vncRef }
+                viewOnly={ isViewOnly }
+                showDotCursor={ true }
+                rfbOptions={ {
+                    shared: true,
+                    credentials: {
+                        password: vncClientPassword,
+                        username: "",
+                        target: "",
+                    }
+                } }
+                autoConnect={ false }
+                qualityLevel={ 9 } // Max quality
+                retryDuration={ 15 }
+                focusOnClick={ false }
+                onSecurityFailure={ onSecurityFailureWrapper }
+                debug={ true }
+                { ...props }
+            />
         </div>
     );
 }

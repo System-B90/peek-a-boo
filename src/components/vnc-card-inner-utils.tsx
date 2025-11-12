@@ -320,7 +320,7 @@ export function VncRightModule({
                 ) }
             </div>
             <div className="flex flex-row items-center content-center justify-center relative">
-                <div className="vnc-card-right-module flex flex-col items-center content-center justify-start">
+                { connected && <div className="vnc-card-right-module flex flex-col items-center content-center justify-start z-10">
                     <RefreshData className={ sideButtonClassnames } />
                     <TweetBotGlyph vncRef={ vncRef } className={ sideButtonClassnames } />
                     <Toggler
@@ -333,7 +333,7 @@ export function VncRightModule({
                         offGlyphCaption="View Only"
                         placement={ "right" }
                     />
-                </div>
+                </div> }
 
                 <Expander
                     isExpanded={ displayState === VncCardDisplayState.Expanded }

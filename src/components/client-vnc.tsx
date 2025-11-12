@@ -2,7 +2,7 @@
 'use client';
 
 import dynamic from "next/dynamic";
-import { RefObject, useCallback, useMemo, useRef } from "react";
+import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { VncScreenHandle, VncScreenProps } from "react-vnc";
 import { useSettings } from "./settings-provider";
 import { useAuth } from "@/components/auth-provider";
@@ -31,12 +31,23 @@ export type VncClientProps = {
     height: number;
 } & Omit<VncScreenProps, 'url' | 'rfbOptons'>;
 
+function BugThrower({ throwBug }: { throwBug: boolean; })
+{
+    useEffect(() =>
+    {
+        new Error();
+    }, [ throwBug ]);
+    return (<></>);
+}
+
 export default function ClientVNC({ vncRef, onSecurityFailure, ...props }: { vncRef: RefObject<VncScreenHandle | null>; } & VncClientProps)
 {
     const { vncClientPassword } = useAuth();
     const { wsProxyUrl } = useSettings();
+    const containerRef = useRef<HTMLDivElement>(null);
     const isConnecting = useRef(false);
     const isViewOnly = props.viewOnly ?? true;
+    const [ connectionError, setConnectionError ] = useState(false);
 
     const onSecurityFailureWrapper: SecurityFailureParams = useCallback((event) =>
     {
@@ -61,38 +72,53 @@ export default function ClientVNC({ vncRef, onSecurityFailure, ...props }: { vnc
         }, 1000);
     }, [ connectMe ]);
 
+    useEffect(() =>
+    {
+        if (typeof window === 'undefined') { return; }
+        setTimeout(() =>
+        {
+            const hasCanvasChild = !!containerRef.current?.getElementsByTagName('canvas');
+            if (hasCanvasChild) { return; }
+            isConnecting.current = false;
+            setConnectionError(true);
+        }, 1500);
+    }, [ containerRef, isConnecting, setConnectionError ]);
+
     return (
-        <ErrorBoundary errorComponent={ ({ error, reset }) => (
-            <div>
-                <h2>Connection Error</h2>
-                <p>{ error.message }</p>
-                <button onClick={ () => { if (reset) { reset(); } connectMe(); } }>Retry</button>
-            </div>
-        ) }>
-            <VncScreen
-                url={ wsProxyUrl }
-                scaleViewport={ true }
-                background="#000000"
-                style={ { width: props.width, height: props.height } }
-                ref={ vncRef }
-                viewOnly={ isViewOnly }
-                showDotCursor={ true }
-                rfbOptions={ {
-                    shared: true,
-                    credentials: {
-                        password: vncClientPassword,
-                        username: "",
-                        target: "",
-                    }
-                } }
-                autoConnect={ false }
-                qualityLevel={ 9 } // Max quality
-                retryDuration={ 5 }
-                focusOnClick={ false }
-                onSecurityFailure={ onSecurityFailureWrapper }
-                debug={ true }
-                { ...props }
-            />
-        </ErrorBoundary>
+        <div ref={ containerRef }>
+            <ErrorBoundary errorComponent={ ({ error, reset }) => (
+                <div>
+                    <h2>Connection Error</h2>
+                    <p>{ error.message }</p>
+                    <button onClick={ () => { if (reset) { reset(); } connectMe(); } }>Retry</button>
+                </div>
+            ) }>
+                <BugThrower throwBug={ connectionError } />
+                <VncScreen
+                    url={ wsProxyUrl }
+                    scaleViewport={ true }
+                    background="#000000"
+                    style={ { width: props.width, height: props.height } }
+                    ref={ vncRef }
+                    viewOnly={ isViewOnly }
+                    showDotCursor={ true }
+                    rfbOptions={ {
+                        shared: true,
+                        credentials: {
+                            password: vncClientPassword,
+                            username: "",
+                            target: "",
+                        }
+                    } }
+                    autoConnect={ false }
+                    qualityLevel={ 9 } // Max quality
+                    retryDuration={ 15 }
+                    focusOnClick={ false }
+                    onSecurityFailure={ onSecurityFailureWrapper }
+                    debug={ true }
+                    { ...props }
+                />
+            </ErrorBoundary>
+        </div>
     );
 }

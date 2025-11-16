@@ -34,17 +34,21 @@ jobs:
         run: |
           mkdir -p artifacts
           
-          # Extract the image name from docker-compose.yml
-          IMAGE_NAME=$(docker compose config | grep 'image:' | awk '{print $2}')
-          
-          echo "Saving image: $IMAGE_NAME"
-          
-          docker save "$IMAGE_NAME" | gzip > artifacts/image.tar.gz
+          docker save "peekaboo/peekaboo_nextjs" | gzip > artifacts/peekaboo_nextjs.tar.gz
+          docker save "peekaboo/peekaboo_websock" | gzip > artifacts/peekaboo_websock.tar.gz
 
       # 5. Upload artifact
-      - name: Upload Docker image artifact
+      - name: Upload NextJS Docker image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: docker-image
-          path: artifacts/image.tar.gz
+          name: peekaboo_nextjs.tar.gz
+          path: artifacts/peekaboo_nextjs.tar.gz
+          retention-days: 1
+      
+          # 6. Upload artifact
+      - name: Upload websock Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: peekaboo_websock.tar.gz
+          path: artifacts/peekaboo_websock.tar.gz
           retention-days: 1

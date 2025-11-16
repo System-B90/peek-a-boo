@@ -134,28 +134,31 @@ export function VncCardCenterModule()
         <div className="px-4">
             <div id="checkers-brief" className="rtl flex flex-row" dir="rtl">
                 <div className="text-center flex flex-row-reverse" dir="rtl">
-                    {/* Mentor error message */ }
-                    { (!mentorName || !mentorUsername) && (
-                        <Typography color="error" style={ { direction: "rtl" } }>
-                            אין לחניך מפקד!
-                        </Typography>
-                    ) }
-
+                    {
+                        /* Mentor error message */
+                        (!mentorName || !mentorUsername) && (
+                            <Typography color="error" style={ { direction: "rtl" } }>
+                                אין לחניך מפקד!
+                            </Typography>
+                        ) ||
+                        /* Mentor name and link */
+                        (
+                            <Link
+                                href={ `https://mattermost/eshel/messages/@${mentorUsername}` }
+                                target="_blank"
+                                className="hover:underline transition-all"
+                            >
+                                { mentorName }
+                            </Link>
+                        )
+                    }
+                    <Box sx={ { width: "0.3rem" } } />
                     {/* Checkers brief with inline placeholder */ }
                     <Typography>
                         &quot;
                         { checkersBrief ? checkersBrief : placeholder }
                         &quot; -
                     </Typography>
-
-                    { (!!mentorName && !!mentorUsername) && (
-                        <Link
-                            href={ `https://mattermost/eshel/messages/@${mentorUsername}` }
-                            target="_blank"
-                        >
-                            { mentorName }
-                        </Link>
-                    ) }
                 </div>
             </div>
         </div>

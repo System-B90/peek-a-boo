@@ -15,6 +15,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const FILTER_QUERY_PARAM = "filter";
 const ACTIVE_QUERY_PARAM = "active";
+export const ACTIVATE_ALL_QUERY_PARAM = "activate-all";
 
 export type Filter = string;
 export type Active = string;
@@ -23,6 +24,7 @@ export type QueryParamsContext = {
     default: boolean;
 
     initialized: boolean;
+    activateAllOnLoad: boolean;
 
     filters: Array<Filter>;
     actives: Array<Active>;
@@ -40,6 +42,7 @@ const QueryParamsContextProvider = createContext<QueryParamsContext>({
     default: true,
 
     initialized: false,
+    activateAllOnLoad: false,
 
     filters: [],
     actives: [],
@@ -74,6 +77,10 @@ export const QueryParamsProvider = ({ children }: { children: React.ReactNode; }
 
     const [ filters, setFilters ] = useState<Array<Filter>>([]);
     const [ actives, setActives ] = useState<Array<Active>>([]);
+    const activateAllOnLoad = useMemo(() =>
+    {
+        return searchParams.get(ACTIVATE_ALL_QUERY_PARAM) === "true";
+    }, [ searchParams ]);
 
     //
     // ---- Helpers ----
@@ -190,6 +197,7 @@ export const QueryParamsProvider = ({ children }: { children: React.ReactNode; }
                 default: false,
 
                 initialized,
+                activateAllOnLoad,
 
                 filters,
                 actives,

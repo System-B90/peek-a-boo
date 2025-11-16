@@ -1,0 +1,53 @@
+{
+    "name": "Peek-a-Boo",
+    "short_name": "Peek-a-Boo",
+    "start_url": "/?source=pwa",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#bb86fc",
+    "description": "Monitor your students the smart way.",
+    "lang": "he",
+    "dir": "rtl",
+    "orientation": "landscape",
+    "icons": [
+        {
+            "src": "/icons/icon.svg",
+            "sizes": "800x800",
+            "type": "image/svg+xml"
+        },
+        {
+            "src": "/icons/192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/icon.svg",
+            "sizes": "800x800",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "id": "/?source=pwa",
+    "scope": "/",
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "Monitor personal mentees",
+            "short_name": "Mentees",
+            "description": "Quick access to monitor your personal mentees.",
+            "url": "/mentees?source=pwa",
+            "icons": [
+                {
+                    "src": "/icons/512.png",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        }
+    ]
+}

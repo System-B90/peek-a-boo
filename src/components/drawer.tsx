@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import SearchFilterBar from "./search/search-bar";
 import StudentsPanel from "@/components/students-panel";
 import { StudentTileInfo } from "@/interfaces/student";
@@ -12,6 +12,7 @@ import { Box } from "@mui/material";
 import { useAuth } from "./auth-provider";
 import { useCurrentTags } from "./current-tags-provider";
 import { useActiveStudents } from "@/components/active-students-provider";
+import { useQueryParams } from "@/components/query-params-provider";
 
 interface Props
 {
@@ -27,6 +28,7 @@ export default function Drawer({
     const { setActiveStudents } = useActiveStudents();
     const { addTag } = useCurrentTags();
     const { username: mentorUsername } = useAuth();
+    const { activateAllOnLoad } = useQueryParams();
 
     const [ isOpen, setIsOpen ] = useState(true);
     const [ allSelected, setAllSelected ] = useState<boolean>(false);
@@ -68,6 +70,17 @@ export default function Drawer({
     {
         addTag(mentorUsername);
     }, [ mentorUsername, addTag ]);
+
+    useEffect(() =>
+    {
+        if (activateAllOnLoad)
+        {
+            setTimeout(() =>
+            {
+                selectAll();
+            }, 500);
+        }
+    }, [ activateAllOnLoad, selectAll ]);
 
     return (
         <>

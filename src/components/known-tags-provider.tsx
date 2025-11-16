@@ -25,9 +25,9 @@ export const KnownTagsProvider = ({
     children: React.ReactNode;
 }) =>
 {
-    const [ tags, setTags ] = useState<Array<Tag>>([]);
     const { studentInfoList } = useAllStudentInfo();
     const { classes } = useClasses();
+    const [ tags, setTags ] = useState<Array<Tag>>([]);
 
     useMemo(() =>
     {

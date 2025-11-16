@@ -87,7 +87,6 @@ export const StudentInfoProvider = ({
         getStudentInfo(studentUsername).then((data) =>
         {
             if (!data) { return; }
-            console.log(data);
             setStudentFirstName(data.studentFirstName);
             setStudentLastName(data.studentLastName);
             setStudentStatus(data.studentStatus);

@@ -37,14 +37,14 @@ jobs:
         run: |
           mkdir -p artifacts
           docker save "peekaboo/peekaboo_nextjs" | gzip > artifacts/peekaboo_nextjs.tar.gz
-          echo "artifacts/peekaboo_nextjs.tar.gz" >> $GITHUB_OUTPUT
+          echo "image_path=artifacts/peekaboo_nextjs.tar.gz" >> $GITHUB_OUTPUT
 
       - name: Save Websock Docker image
         id: save_websock
         run: |
           mkdir -p artifacts
           docker save "peekaboo/peekaboo_websock" | gzip > artifacts/peekaboo_websock.tar.gz
-          echo "artifacts/peekaboo_websock.tar.gz" >> $GITHUB_OUTPUT
+          echo "image_path=artifacts/peekaboo_websock.tar.gz" >> $GITHUB_OUTPUT
 
       # 5. Upload artifacts
       - name: Upload NextJS Docker image artifact

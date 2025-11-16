@@ -1,0 +1,61 @@
+name: Build and Release Docker Image
+
+on:
+  push:
+    tags:
+      - 'v*'   # Only trigger on tags like v1, v2, v8
+  workflow_dispatch: # Optional manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Load .env
+        run: |
+          if [ -f .env ]; then
+            cat .env >> $GITHUB_ENV
+          fi
+
+      - name: Build with docker-compose
+        run: docker compose build
+
+      - name: Save Docker images
+        run: |
+          mkdir -p artifacts
+          docker save "peekaboo/peekaboo_nextjs" | gzip > artifacts/peekaboo_nextjs.tar.gz
+          docker save "peekaboo/peekaboo_websock" | gzip > artifacts/peekaboo_websock.tar.gz
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-images
+          path: artifacts/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-images
+          path: artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: "Automated release from GitHub Actions"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Docker images to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

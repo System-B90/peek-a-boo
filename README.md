@@ -1,24 +1,31 @@
 # Peek-a-Boo
-
-## Monitor your students the smart way
+Monitor your students the smart way
 
 ---
 
-### Quick Start
+## Quick Start
+1) Acquire an Ubuntu machine with docker.
+2) Create a TLS certificate for your peek-a-boo domain and place it in ./utils/certs.
+3) Pull / import the 3 images required.
+4) Setup the environment.
 
-1) Fill in the `.env` file.
+```bash
+py -3.11 -m venv .venv
+source ./.venv/bin/activate
+pip install PyHiveLMS dotenv requests
+python ./setup.py
 
-2) Run the following:
+sudo docker-compose up
+```
 
+
+## Development Setup (Windows)
 ```powershell
-git pull
-C:\Python310\python.exe -m venv venv
+$env:ALLOW_LOGIN_BYPASS = "true"
+py -3.11 -m venv venv
 .\venv\Scripts\activate
-pip install -r ./requirements.txt
+pip install PyHiveLMS dotenv requests
+python .\setup.py
 
-python configure_env.py
-python start_websockify.py
-npm i
-npm run build
-npm start
+npm run dev
 ```

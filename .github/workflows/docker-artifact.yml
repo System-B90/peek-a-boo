@@ -1,4 +1,4 @@
-name: Build Docker Image (Artifact)
+name: Build and Release Docker Image
 
 on:
   push:
@@ -8,13 +8,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    outputs:
+      nextjs_image: ${{ steps.save_nextjs.outputs.image_path }}
+      websock_image: ${{ steps.save_websock.outputs.image_path }}
     steps:
       # 1. Checkout repository
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Create .env file inside Action runner (Compose auto-loads it)
+      # 2. Load .env into workflow environment
       - name: Load .env into workflow environment
         run: |
           if [ -f .env ]; then
@@ -24,31 +26,71 @@ jobs:
             echo ".env does not exist, skipping."
           fi
 
-      # 3. Build using docker-compose
+      # 3. Build with docker-compose
       - name: Build with docker-compose
         run: |
           docker compose build
 
-      # 4. Save built image(s)
-      - name: Save Docker image as tarball
+      # 4. Save Docker images as tarballs
+      - name: Save NextJS Docker image
+        id: save_nextjs
         run: |
           mkdir -p artifacts
-          
           docker save "peekaboo/peekaboo_nextjs" | gzip > artifacts/peekaboo_nextjs.tar.gz
-          docker save "peekaboo/peekaboo_websock" | gzip > artifacts/peekaboo_websock.tar.gz
+          echo "artifacts/peekaboo_nextjs.tar.gz" >> $GITHUB_OUTPUT
 
-      # 5. Upload artifact
+      - name: Save Websock Docker image
+        id: save_websock
+        run: |
+          mkdir -p artifacts
+          docker save "peekaboo/peekaboo_websock" | gzip > artifacts/peekaboo_websock.tar.gz
+          echo "artifacts/peekaboo_websock.tar.gz" >> $GITHUB_OUTPUT
+
+      # 5. Upload artifacts
       - name: Upload NextJS Docker image artifact
         uses: actions/upload-artifact@v4
         with:
           name: peekaboo_nextjs.tar.gz
           path: artifacts/peekaboo_nextjs.tar.gz
           retention-days: 1
-      
-          # 6. Upload artifact
-      - name: Upload websock Docker image artifact
+
+      - name: Upload Websock Docker image artifact
         uses: actions/upload-artifact@v4
         with:
           name: peekaboo_websock.tar.gz
           path: artifacts/peekaboo_websock.tar.gz
           retention-days: 1
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download NextJS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: peekaboo_nextjs.tar.gz
+          path: artifacts/
+
+      - name: Download Websock artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: peekaboo_websock.tar.gz
+          path: artifacts/
+
+      # Optional: Create GitHub release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Release ${{ github.run_number }}
+          body: "Automated release from GitHub Actions"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Optional: Upload Docker images to GitHub release
+      - name: Upload artifacts to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

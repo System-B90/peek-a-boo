@@ -35,6 +35,7 @@ import { useAllStudentInfo } from "./all-student-info-provider";
 import RecurringAppointmentExceptionGlyph from "@/glyphs/RecurringAppointmentException";
 import { enqueueApiErrorSnackbar } from "./snackbar-utils";
 import PcOnDeskGlyph from "@/glyphs/pc-on-desk";
+import { useAuth } from "@/components/auth-provider";
 
 export type VncCardProps = {
     studentUsername: string;
@@ -163,19 +164,22 @@ export function VncCardCenterModule()
 
 export function VncCardLeftModule()
 {
-    const { studentNumber, studentName, currentExerciseUrl, currentExerciseName } = useStudentInfo();
+    const { clientEnvConfig } = useAuth();
+    const { studentNumber, studentName, currentExerciseUrl, currentExerciseName, hiveId } = useStudentInfo();
 
     return (
         <div className="flex flex-col min-w-[30%] -mt-2">
-            <div className="flex flex-row items-center">
-                <div className="p-2 bg-[rgba(50,20,20,0.85)] rounded-full w-8 h-8 flex flex-row items-center content-center justify-center text-center">
-                    <Typography>{ studentNumber }</Typography>
+            <Link href={ `https://${clientEnvConfig.HIVE_HOSTNAME}/mentor/students?id=${hiveId}` }>
+                <div className="flex flex-row items-center">
+                    <div className="p-2 bg-[rgba(50,20,20,0.85)] rounded-full w-8 h-8 flex flex-row items-center content-center justify-center text-center">
+                        <Typography>{ studentNumber }</Typography>
+                    </div>
+                    <Box sx={ { width: "0.3rem" } } />
+                    <Typography fontSize={ "1.2rem" } fontWeight={ 600 }>
+                        { studentName }
+                    </Typography>
                 </div>
-                <Box sx={ { width: "0.3rem" } } />
-                <Typography fontSize={ "1.2rem" } fontWeight={ 600 }>
-                    { studentName }
-                </Typography>
-            </div>
+            </Link>
             <div className="ml-9">
                 <Link href={ currentExerciseUrl }>
                     <Typography fontSize={ "0.8rem" }>{ currentExerciseName }</Typography>
@@ -347,20 +351,22 @@ export function VncRightModule({
                 ) }
             </div>
             <div className="flex flex-row items-center content-center justify-center relative">
-                { connected && <div className="vnc-card-right-module flex flex-col items-center content-center justify-start z-10">
-                    <RefreshData className={ sideButtonClassnames } />
-                    <TweetBotGlyph vncRef={ vncRef } className={ sideButtonClassnames } />
-                    <Toggler
-                        value={ isViewOnly }
-                        setValue={ setIsViewOnly }
-                        className={ sideButtonClassnames }
-                        onGlyph={ NaturalUserInterface2Glyph }
-                        onGlyphCaption="Take Control"
-                        offGlyph={ WallMountCameraGlyph }
-                        offGlyphCaption="View Only"
-                        placement={ "right" }
-                    />
-                </div> }
+                {
+                    connected && <div className="vnc-card-right-module flex flex-col items-center content-center justify-start z-10">
+                        <RefreshData className={ sideButtonClassnames } />
+                        <TweetBotGlyph vncRef={ vncRef } className={ sideButtonClassnames } />
+                        <Toggler
+                            value={ isViewOnly }
+                            setValue={ setIsViewOnly }
+                            className={ sideButtonClassnames }
+                            onGlyph={ NaturalUserInterface2Glyph }
+                            onGlyphCaption="Take Control"
+                            offGlyph={ WallMountCameraGlyph }
+                            offGlyphCaption="View Only"
+                            placement={ "right" }
+                        />
+                    </div>
+                }
 
                 <Expander
                     isExpanded={ displayState === VncCardDisplayState.Expanded }

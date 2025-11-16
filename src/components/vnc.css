@@ -1,18 +1,23 @@
-[data-vnc-refresh-data=true][data-animating=true] {
+[data-vnc-refresh-data=true][data-animating=true]
+{
     animation: vnc-refresh-data-anim 0.75s linear 0s infinite forwards;
 }
 
-@keyframes vnc-refresh-data-anim {
-    0% {
+@keyframes vnc-refresh-data-anim
+{
+    0%
+    {
         transform: rotate(0deg);
     }
 
-    100% {
+    100%
+    {
         transform: rotate(359deg);
     }
 }
 
-.vnc-card .vnc-card-right-module {
+.vnc-card .vnc-card-right-module
+{
     height: 0px;
     right: 0px;
     transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -22,10 +27,12 @@
     background-color: rgba(10, 10, 10, 0.85);
     border-radius: 0.3rem;
     backdrop-filter: blur(5px);
-    box-shadow: 2px 2px 1px 1px rgba(4, 4, 4, 0.15);
+    box-shadow: 2px 2px 1px 1px rgba(4, 4, 4, 0);
 }
 
-.vnc-card[data-is-expanded=true] .vnc-card-right-module,
-.vnc-card:hover .vnc-card-right-module {
+/* .vnc-card[data-is-expanded=true] .vnc-card-right-module, */
+.vnc-card:hover .vnc-card-right-module
+{
     height: calc(var(--spacing)* 6 * 4);
+    box-shadow: 2px 2px 1px 1px rgba(4, 4, 4, 0.15);
 }

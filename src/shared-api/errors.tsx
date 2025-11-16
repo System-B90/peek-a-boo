@@ -49,6 +49,34 @@ export class UserNotLoggedInError extends ClientApiError
     }
 };
 
+export class MattermostError extends ClientApiError
+{
+    constructor(message?: string)
+    {
+        super(message);
+        this.name = 'MattermostError';
+    }
+};
+
+export class MattermostConnectionError extends MattermostError
+{
+    constructor(message?: string)
+    {
+        super(message);
+        this.name = 'MattermostConnectionError';
+    }
+};
+
+
+export class MattermostApiError extends MattermostError
+{
+    constructor(message?: string)
+    {
+        super(message);
+        this.name = 'MattermostApiError';
+    }
+};
+
 
 export function constructErrorFromNetworkMessage(networkMessage: ClientApiError): ClientApiError
 {

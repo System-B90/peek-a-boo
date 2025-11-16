@@ -6,6 +6,10 @@ import { useAllStudentInfo } from "./all-student-info-provider";
 import RefreshGlyph from "@/glyphs/refresh";
 import RecurringAppointmentExceptionGlyph from "@/glyphs/RecurringAppointmentException";
 import { enqueueApiErrorSnackbar } from "./snackbar-utils";
+import Link from "next/link";
+import SettingsGlyph from "@/glyphs/settings";
+import { usePathname } from "next/navigation";
+import HomeGlyph from "@/glyphs/home";
 
 function RefreshAllData()
 {
@@ -62,7 +66,28 @@ function RefreshAllData()
     );
 
 }
+function GotoSettings()
+{
+    const pathname = usePathname();
 
+
+    if (pathname === '/settings')
+    {
+        return (
+            <Link href={ "/" }>
+                <HomeGlyph glyphTitle="Goto Home" className="w-6 h-6" onClick={ (event) => { event.stopPropagation(); } } />
+            </Link>
+        );
+    }
+    else
+    {
+        return (
+            <Link href={ "/settings" }>
+                <SettingsGlyph glyphTitle="Goto Settings" className="w-6 h-6" onClick={ (event) => { event.stopPropagation(); } } />
+            </Link>
+        );
+    }
+}
 export default function MentorAccessBar()
 {
     const { displayName, showMentorAccessBar } = useAuth();
@@ -84,7 +109,7 @@ export default function MentorAccessBar()
             { showMentorAccessBar &&
                 <div className={ `flex items-start flex-row` } data-static>
                     <div
-                        className={ `relative cursor-pointer flex items-center flex-row rounded-[0px_0px_0px_1rem] bg-[#bb86fc] p-4 z-10 transition-all ${minimized ? 'transform-[translateX(calc(100%_-_4rem))]' : 'transform-[translateX(0)]'}` }
+                        className={ `relative cursor-pointer flex items-center flex-row rounded-[0px_0px_0px_1rem] bg-[#bb86fc] p-4 z-10 transition-all ${minimized ? 'transform-[translateX(calc(100%-4rem))]' : 'transform-[translateX(0)]'}` }
                         dir="rtl"
                         onClick={ toggleMinimize }
                     >
@@ -96,7 +121,8 @@ export default function MentorAccessBar()
                                     <Typography fontSize={ '0.8rem' } fontWeight={ 600 }>{ displayName }</Typography>
                                 </div>
                             </div>
-                            <div className={ `flex flex-row items-center justify-end ${minimized ? 'transform-[translateX(calc(100%))_translateY(-100%)]' : 'transform-[translateX(0)]'}` }>
+                            <div className={ `flex flex-row items-center justify-end gap-x-1 ${minimized ? 'transform-[translateX(calc(100%))_translateY(-100%)]' : 'transform-[translateX(0)]'}` }>
+                                <GotoSettings />
                                 <RefreshAllData />
                             </div>
                         </div>

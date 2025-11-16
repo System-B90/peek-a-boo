@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useContext, createContext, useCallback } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { Tag, useKnownTags } from "@/components/known-tags-provider";
-
+import { useKnownTags } from "@/components/known-tags-provider";
+import { useQueryParams } from "@/components/query-params-provider";
+import { Tag } from "@/shared-api/types";
 
 export type KnownTagsContext = {
     default: boolean;
@@ -29,16 +29,7 @@ export const CurrentTagsProvider = ({
 {
     const [ tags, setTags ] = useState<Array<Tag>>([]);
     const { knownTags } = useKnownTags();
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
-
-    const createQueryString = useCallback((name: string, value: string) =>
-    {
-        const params = new URLSearchParams(searchParams?.toString());
-        params.set(name, value);
-        return params.toString();
-    }, [ searchParams ]);
+    const { filters, addFilter, removeFilter } = useQueryParams();
 
     const doesTagExists = useCallback((tagName: string) =>
     {
@@ -49,69 +40,32 @@ export const CurrentTagsProvider = ({
         return false;
     }, [ knownTags ]);
 
-    const getTag = useCallback((tagName: string) =>
+    const resolveTag = useCallback((tagName: string) =>
     {
         const filteredKnownTags = knownTags.filter((t) => t.name === tagName);
         if (filteredKnownTags.length !== 1) { console.error(`Tag ${tagName} not uniquely found!`); return undefined; }
         return filteredKnownTags[ 0 ];
     }, [ knownTags ]);
 
-    const getTagsByUrl = useCallback(() =>
-    {
-        return searchParams?.get("filter")
-            ? [
-                ...(searchParams
-                    .get("filter")
-                    ?.split(",")
-                    .filter(doesTagExists)
-                    .map((v) => getTag(v) as Tag) ?? []),
-            ]
-            : [];
-    }, [ searchParams, doesTagExists, getTag ]);
-
     useEffect(() =>
     {
-        setTags(getTagsByUrl());
-    }, [ getTagsByUrl, setTags ]);
+        setTags(filters
+            .filter(doesTagExists)
+            .map((v) => resolveTag(v) as Tag));
+    }, [ filters, doesTagExists, resolveTag, setTags ]);
 
     const addTag = useCallback((newTagName: string) =>
     {
         newTagName = newTagName.trim();
         if (!doesTagExists(newTagName))
+        {
             throw Error(`Tag ${newTagName} is not recognized!`);
+        }
+        addFilter(newTagName);
+    }, [ doesTagExists, addFilter ]);
 
-        router.replace(
-            pathname +
-            "?" +
-            createQueryString(
-                "filter",
-                [ ...tags.map((t) => t.name), newTagName ].join(",")
-            )
-        );
-
-        setTags([ ...tags, getTag(newTagName) as Tag ]);
-    }, [ tags, router, pathname, setTags, createQueryString, doesTagExists, getTag ]);
-
-    const removeTag = useCallback((oldTagName: string) =>
-    {
-        router.replace(
-            pathname +
-            "?" +
-            createQueryString(
-                "filter",
-                tags
-                    .map((t) => t.name)
-                    .filter((t) => t !== oldTagName)
-                    .join(",")
-            )
-        );
-        setTags(tags.filter((t) => t.name !== oldTagName));
-    }, [ tags, router, pathname, setTags, createQueryString ]);
-
-    const removeLastTag = useCallback(() =>
-    {
-        setTags(v => { v.pop(); return v; });
-    }, [ setTags ]);
+    const removeTag = useCallback((oldTagName: string) => removeFilter(oldTagName), [ removeFilter ]);
+    const removeLastTag = useCallback(() => removeTag(filters[ filters.length - 1 ]), [ filters, removeTag ]);
 
     return (
         <CurrentTagsContextProvider.Provider

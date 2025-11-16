@@ -3,24 +3,7 @@
 import { useState, useContext, createContext, useMemo } from "react";
 import { useAllStudentInfo } from "@/components/all-student-info-provider";
 import { useClasses } from "./classes-provider";
-
-export enum TagType
-{
-    Unknown = 0,
-    Mentor = 'mentor',
-    Classroom = 'classroom',
-    StudentGroup = 'student-group',
-    Level = 'level',
-    StudentName = 'student-name',
-    StudentNumber = 'student-number',
-};
-
-export interface Tag
-{
-    name: string;
-    type: TagType;
-    students: Array<number>;
-}
+import { Tag, TagType } from "@/shared-api/types";
 
 export type KnownTagsContext = {
     default: boolean;
@@ -40,7 +23,7 @@ export const KnownTagsProvider = ({
 }) =>
 {
     const [ tags, setTags ] = useState<Array<Tag>>([]);
-    const { studentInfo } = useAllStudentInfo();
+    const { studentInfoDict: studentInfo } = useAllStudentInfo();
     const { classes } = useClasses();
 
     useMemo(() =>
@@ -49,7 +32,7 @@ export const KnownTagsProvider = ({
         {
             return {
                 name: s.studentName,
-                students: [ s.studentNumber ],
+                students: [ s.studentUsername ],
                 type: TagType.StudentName,
             };
         });
@@ -57,7 +40,7 @@ export const KnownTagsProvider = ({
         {
             return {
                 name: s.studentNumber.toString(),
-                students: [ s.studentNumber ],
+                students: [ s.studentUsername ],
                 type: TagType.StudentNumber,
             };
         });
@@ -82,7 +65,7 @@ export const KnownTagsProvider = ({
                     type: TagType.Mentor,
                 };
             }
-            mentors[ s.mentorUsername ].students.push(s.studentNumber);
+            mentors[ s.mentorUsername ].students.push(s.studentUsername);
         });
 
         setTags([ ...Object.values(mentors), ...studentNameTags, ...studentNumberTags, ...classTags ]);

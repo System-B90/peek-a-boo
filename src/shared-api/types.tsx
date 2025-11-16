@@ -1,27 +1,32 @@
 
 /* eslint-disable @typescript-eslint/no-namespace */
-namespace Api {
-    export namespace Request {
+namespace Api
+{
+    export namespace Request
+    {
         export type LoginData = {
             username: string;
             password: string;
         };
     }
-    export namespace Response {
+    export namespace Response
+    {
 
     }
 }
 
 export default Api;
 
-export interface ApiResponseJson {
+export interface ApiResponseJson
+{
     status: number;
     data?: unknown;
     error?: unknown;
 }
 
 
-export interface RawHiveClass {
+export interface RawHiveClass
+{
     id: number;
     name: string;
     display_name: string;
@@ -30,17 +35,38 @@ export interface RawHiveClass {
     email: string;
     type: string;
     program__name: string;
-    description: string
+    description: string;
 }
 
-export interface HiveClass {
+export interface HiveClass
+{
     id: number;
     name: string;
     displayName: string;
     program: number;
-    users: Array<number>;
+    users: Array<string>; // Student usernames
     email: string;
     type: 'Room' | 'Student Group' | 'Level';
     programName: string;
     description: string;
 }
+
+
+export enum TagType
+{
+    Unknown = 0,
+    Mentor = 'mentor',
+    Classroom = 'classroom',
+    StudentGroup = 'student-group',
+    Level = 'level',
+    StudentName = 'student-name',
+    StudentNumber = 'student-number',
+};
+
+export interface Tag
+{
+    name: string;
+    type: TagType;
+    students: Array<string>; // Student usernames
+}
+

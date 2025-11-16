@@ -21,53 +21,60 @@ export const ClassesProvider = ({
     children,
 }: {
     children: React.ReactNode;
-}) => {
-    const [classes, setClasses] = useState<Array<HiveClass>>([]);
+}) =>
+{
+    const [ classes, setClasses ] = useState<Array<HiveClass>>([]);
     const { getStudentInfoByHiveId } = useAllStudentInfo();
 
-    const rawHiveClassToClass = useCallback((rawClass: RawHiveClass): HiveClass => {
+    const rawHiveClassToClass = useCallback((rawClass: RawHiveClass): HiveClass =>
+    {
         const classType = rawClass.type;
-        assert(['Room', 'Student Group', 'Level'].includes(classType), `Class type ${classType} is not recognized!`);
+        assert([ 'Room', 'Student Group', 'Level' ].includes(classType), `Class type ${classType} is not recognized!`);
         return {
             id: rawClass.id,
             name: rawClass.name,
             displayName: rawClass.display_name,
             program: rawClass.program,
             users: rawClass.users.map((userId) =>
-                getStudentInfoByHiveId(userId)?.studentNumber
+                getStudentInfoByHiveId(userId)?.studentUsername
             ),
             email: rawClass.email,
-            type: classType as HiveClass['type'],
+            type: classType as HiveClass[ 'type' ],
             programName: rawClass.program__name,
             description: rawClass.description,
-        }
-    }, [getStudentInfoByHiveId]);
+        };
+    }, [ getStudentInfoByHiveId ]);
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         queryHiveClasses()
-            .then((rawClasses) => {
-                setClasses(rawClasses.map((rawClass) => rawHiveClassToClass(rawClass)))
+            .then((rawClasses) =>
+            {
+                setClasses(rawClasses.map((rawClass) => rawHiveClassToClass(rawClass)));
             })
-            .catch((error) => {
+            .catch((error) =>
+            {
                 enqueueApiErrorSnackbar("Failed to fetch all student's info", error);
             });
-    }, [setClasses, rawHiveClassToClass]);
+    }, [ setClasses, rawHiveClassToClass ]);
 
     return (
         <ClassesContextProvider.Provider
-            value={{
+            value={ {
                 default: false,
                 classes,
-            }}
+            } }
         >
-            {children}
+            { children }
         </ClassesContextProvider.Provider>
     );
 };
 
-export function useClasses() {
+export function useClasses()
+{
     const context = useContext(ClassesContextProvider);
-    if (context.default) {
+    if (context.default)
+    {
         throw Error(
             "useClasses must be used inside ClassesProvider!"
         );

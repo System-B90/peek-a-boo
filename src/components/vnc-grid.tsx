@@ -1,28 +1,25 @@
 "use client";
 
-import { Dispatch, SetStateAction, useCallback } from "react";
-import VncCard from "./vnc-card";
+import { useCallback } from "react";
+import VncCard, { VncCardSkeleton } from "./vnc-card";
+import { useQueryParams } from "@/components/query-params-provider";
+import { useActiveStudents } from "@/components/active-students-provider";
 
-export interface Props
+
+export default function VncGrid()
 {
-    activeUsers: Set<string>;
-    setActiveStudents: Dispatch<SetStateAction<Set<string>>>;
-}
+    const { activeStudents } = useActiveStudents();
+    const { removeActive, initialized: queryParamsInitialized } = useQueryParams();
 
-export default function VncGrid({ activeUsers, setActiveStudents }
-    : Props
-)
-{
-    const onClose = useCallback((username: string) =>
-    {
-        setActiveStudents(new Set([ ...activeUsers ].filter((s) => s !== username)));
-    }, [ setActiveStudents, activeUsers ]);
+    const onClose = useCallback((username: string) => removeActive(username), [ removeActive ]);
 
-    const vncCards = [ ...activeUsers ].map((username) => (
+    const vncCards = queryParamsInitialized ? [ ...activeStudents ].map((username) => (
         <VncCard key={ `vnc-card-${username}` } studentUsername={ username } onClose={ onClose } />
-    ));
+    )) : (
+        [ ...Array(3).keys() ].map((i) => (<VncCardSkeleton key={ `vnc-card-skeleton-${i}` } />))
+    );
 
-    if (vncCards.length === 0)
+    if (vncCards.length === 0 && queryParamsInitialized)
     {
         return (
             <div className="flex-5 h-screen">

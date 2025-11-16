@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, SetStateAction, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import SearchFilterBar from "./search/search-bar";
 import StudentsPanel from "@/components/students-panel";
 import { StudentTileInfo } from "@/interfaces/student";
@@ -11,20 +11,20 @@ import CheckAllGlyph from "@/glyphs/check-all";
 import { Box } from "@mui/material";
 import { useAuth } from "./auth-provider";
 import { useCurrentTags } from "./current-tags-provider";
+import { useActiveStudents } from "@/components/active-students-provider";
 
 interface Props
 {
     students: StudentTileInfo[];
-    hiddenStudents: StudentTileInfo[];
-    setActiveStudents: Dispatch<SetStateAction<Set<string>>>;
+    activeStudentsOutsideFilter: StudentTileInfo[];
 }
 
 export default function Drawer({
     students,
-    setActiveStudents,
-    hiddenStudents,
+    activeStudentsOutsideFilter,
 }: Props)
 {
+    const { setActiveStudents } = useActiveStudents();
     const { addTag } = useCurrentTags();
     const { username: mentorUsername } = useAuth();
 
@@ -36,13 +36,15 @@ export default function Drawer({
 
     const selectNone = useCallback(() =>
     {
-        setActiveStudents(new Set(hiddenStudents.map((s) => s.student.studentUsername)));
-    }, [ setActiveStudents, hiddenStudents ]);
+        // Deselects all filtered students, keeping students which are not currently selected but are active
+        setActiveStudents(activeStudentsOutsideFilter.map((s) => s.student.studentUsername));
+    }, [ setActiveStudents, activeStudentsOutsideFilter ]);
 
     const selectAll = useCallback(() =>
     {
-        setActiveStudents(new Set([ ...students, ...hiddenStudents ].map((s) => s.student.studentUsername)));
-    }, [ setActiveStudents, students, hiddenStudents ]);
+        // Selects all filtered students, keeping students which are not currently selected but are active
+        setActiveStudents([ ...students, ...activeStudentsOutsideFilter ].map((s) => s.student.studentUsername));
+    }, [ setActiveStudents, students, activeStudentsOutsideFilter ]);
 
     const toggleSelectAll = useCallback(() =>
     {
@@ -92,8 +94,7 @@ export default function Drawer({
                 { isOpen && (
                     <StudentsPanel
                         students={ students }
-                        hiddenStudents={ hiddenStudents }
-                        setActiveStudents={ setActiveStudents }
+                        activeStudentsOutsideFilter={ activeStudentsOutsideFilter }
                     />
                 ) }
             </div>

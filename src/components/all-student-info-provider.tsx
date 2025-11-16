@@ -6,6 +6,7 @@ import
     useCallback,
     useContext,
     useEffect,
+    useMemo,
     useState,
 } from "react";
 import { queryAllStudentInfo, queryStudentInfo } from "@/client-api/students";
@@ -18,7 +19,8 @@ export type AllStudentInfoContext = {
         username: string,
         forceRefetch?: boolean
     ) => Promise<StudentInfo>;
-    studentInfo: Record<string, StudentInfo>;
+    studentInfoDict: Record<string, StudentInfo>;
+    studentInfoList: Array<StudentInfo>;
     getStudentInfoByHiveId: (id: number) => StudentInfo;
     refetchAllStudentInfo: () => Promise<void>;
 };
@@ -51,7 +53,8 @@ const AllStudentInfoContextProvider = createContext<AllStudentInfoContext>({
             hostname: '',
         };
     },
-    studentInfo: {},
+    studentInfoDict: {},
+    studentInfoList: [],
     getStudentInfoByHiveId: () =>
     {
         return {
@@ -87,6 +90,7 @@ export const AllStudentInfoProvider = ({
 }) =>
 {
     const [ studentInfo, setStudentInfo ] = useState<Record<string, StudentInfo>>({});
+    const studentInfoList = useMemo(() => Object.values(studentInfo), [ studentInfo ]);
 
     const getStudentInfo = useCallback(
         async (studentUsername: string, forceRefetch?: boolean) =>
@@ -147,7 +151,8 @@ export const AllStudentInfoProvider = ({
             value={ {
                 default: false,
                 getStudentInfo,
-                studentInfo,
+                studentInfoDict: studentInfo,
+                studentInfoList,
                 getStudentInfoByHiveId,
                 refetchAllStudentInfo,
             } }

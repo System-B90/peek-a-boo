@@ -117,22 +117,49 @@ export function VncCardCenterModule()
 {
     const { checkersBrief, mentorName, mentorUsername } = useStudentInfo();
 
+    const placeholder = (
+        <span
+            style={ {
+                direction: "rtl",
+                opacity: 0.5,
+                fontStyle: "italic",
+            } }
+        >
+            מכוון בודק
+        </span>
+    );
+
     return (
         <div className="px-4">
             <div id="checkers-brief" className="rtl flex flex-row" dir="rtl">
                 <Typography>
-                    &quot;{ checkersBrief }&quot; -{ " " }
-                    <Link
-                        href={ `https://mattermost/eshel/messages/@${mentorUsername}` }
-                        target="_blank"
-                    >
-                        { mentorName }
-                    </Link>
+
+                    {/* Mentor error message */ }
+                    { (!mentorName || !mentorUsername) && (
+                        <Typography color="error" style={ { direction: "rtl" } }>
+                            אין לחניך מפקד!
+                        </Typography>
+                    ) }
+
+                    {/* Checkers brief with inline placeholder */ }
+                    &quot;
+                    { checkersBrief ? checkersBrief : placeholder }
+                    &quot; -
+
+                    { (!!mentorName && !!mentorUsername) && (
+                        <Link
+                            href={ `https://mattermost/eshel/messages/@${mentorUsername}` }
+                            target="_blank"
+                        >
+                            { mentorName }
+                        </Link>
+                    ) }
                 </Typography>
             </div>
         </div>
     );
 }
+
 
 export function VncCardLeftModule()
 {

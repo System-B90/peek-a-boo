@@ -62,7 +62,6 @@ export default function VncCardInner({
     const [ width, setWidth ] = useState<number>(1920 * scaleFactor);
     const [ height, setHeight ] = useState<number>(1200 * scaleFactor);
     const [ desktopName, setDesktopName ] = useState<string>(studentHostname);
-    console.log('desktopName', desktopName);
 
     const vncRef = useRef<VncScreenHandle>(null);
 

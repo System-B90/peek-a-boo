@@ -27,5 +27,13 @@ py -3.11 -m venv venv
 pip install PyHiveLMS dotenv requests
 python .\setup.py
 
+pushd .\websock\
+py -3.11 -m venv venv
+.\venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install -r .\requirements.txt
+python .\start_websockify.py &
+popd
+
 npm run dev
 ```

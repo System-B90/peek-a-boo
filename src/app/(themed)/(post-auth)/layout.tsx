@@ -1,8 +1,7 @@
-'use client'
+'use client';
 
 import "@/style/globals.css";
 import { AuthProvider } from "@/components/auth-provider";
-import { SnackbarProvider } from "notistack";
 import { AllStudentInfoProvider } from "@/components/all-student-info-provider";
 import { KnownTagsProvider } from "@/components/known-tags-provider";
 import { ActiveStudentsProvider } from "@/components/active-students-provider";
@@ -14,29 +13,22 @@ export default function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
-}>) {
+}>)
+{
     return (
-
-        <SnackbarProvider
-            anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-            }}>
-            <AuthProvider>
-                <AllStudentInfoProvider>
-                    <MentorAccessBar />
-                    <ClassesProvider>
-                        <KnownTagsProvider>
-                            <ActiveStudentsProvider>
-                                <CurrentTagsProvider>
-                                    {children}
-                                </CurrentTagsProvider>
-                            </ActiveStudentsProvider>
-                        </KnownTagsProvider>
-                    </ClassesProvider>
-                </AllStudentInfoProvider>
-            </AuthProvider>
-        </SnackbarProvider >
-
+        <AuthProvider>
+            <AllStudentInfoProvider>
+                <MentorAccessBar />
+                <ClassesProvider>
+                    <KnownTagsProvider>
+                        <ActiveStudentsProvider>
+                            <CurrentTagsProvider>
+                                { children }
+                            </CurrentTagsProvider>
+                        </ActiveStudentsProvider>
+                    </KnownTagsProvider>
+                </ClassesProvider>
+            </AllStudentInfoProvider>
+        </AuthProvider>
     );
 }

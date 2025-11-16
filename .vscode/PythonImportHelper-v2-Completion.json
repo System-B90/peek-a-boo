@@ -18,12 +18,51 @@
         "documentation": {}
     },
     {
-        "label": "base64",
-        "kind": 6,
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
         "isExtraImport": true,
-        "importPath": "base64",
-        "description": "base64",
-        "detail": "base64",
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Literal",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
         "documentation": {}
     },
     {
@@ -33,6 +72,55 @@
         "importPath": "random",
         "description": "random",
         "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "shuffle",
+        "importPath": "random",
+        "description": "random",
+        "isExtraImport": true,
+        "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "randint",
+        "importPath": "random",
+        "description": "random",
+        "isExtraImport": true,
+        "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "HiveClient",
+        "importPath": "pyhive",
+        "description": "pyhive",
+        "isExtraImport": true,
+        "detail": "pyhive",
+        "documentation": {}
+    },
+    {
+        "label": "GenderEnum",
+        "importPath": "pyhive.src.types.enums.gender_enum",
+        "description": "pyhive.src.types.enums.gender_enum",
+        "isExtraImport": true,
+        "detail": "pyhive.src.types.enums.gender_enum",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "base64",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "base64",
+        "description": "base64",
+        "detail": "base64",
         "documentation": {}
     },
     {
@@ -85,17 +173,215 @@
         "kind": 2,
         "importPath": "websock.start_websockify",
         "description": "websock.start_websockify",
-        "peekOfCode": "def start():\n    websocket_port = os.environ.get(\"WEBSOCKET_PORT\", 60800)\n    os.system(\n        f\"websockify --verbose --token-plugin=TokenFile {websocket_port} --token-source=/app/websocket_token_source.txt\"\n    )\nif __name__ == \"__main__\":\n    start()",
+        "peekOfCode": "def start():\n    websocket_port = os.environ.get(\"WEBSOCKET_PORT\", 60800)\n    token_source_file_index = 0\n    token_source_file = Path(TOKEN_SOURCE_FILE_LOCATIONS[token_source_file_index])\n    while not token_source_file.exists():\n        token_source_file_index += 1\n        token_source_file = Path(TOKEN_SOURCE_FILE_LOCATIONS[token_source_file_index])\n    print(f\"Using token file: {token_source_file}\")\n    os.system(\n        f\"websockify --verbose --token-plugin=TokenFile {websocket_port} --token-source={token_source_file}\"",
         "detail": "websock.start_websockify",
         "documentation": {}
     },
     {
-        "label": "configure",
+        "label": "TOKEN_SOURCE_FILE_LOCATIONS",
+        "kind": 5,
+        "importPath": "websock.start_websockify",
+        "description": "websock.start_websockify",
+        "peekOfCode": "TOKEN_SOURCE_FILE_LOCATIONS = (\n    \"/app/websocket_token_source.txt\",\n    \"./websocket_token_source.txt\",\n)\ndef start():\n    websocket_port = os.environ.get(\"WEBSOCKET_PORT\", 60800)\n    token_source_file_index = 0\n    token_source_file = Path(TOKEN_SOURCE_FILE_LOCATIONS[token_source_file_index])\n    while not token_source_file.exists():\n        token_source_file_index += 1",
+        "detail": "websock.start_websockify",
+        "documentation": {}
+    },
+    {
+        "label": "UserData",
+        "kind": 6,
+        "importPath": "create_fake_students",
+        "description": "create_fake_students",
+        "peekOfCode": "class UserData:\n    first_name: str\n    last_name: str\n    gender: GenderEnum\nMOCK_STUDENTS: list[UserData] = [\n    UserData(first_name=\"Alice\", last_name=\"Rosen\", gender=GenderEnum.FEMALE),\n    UserData(first_name=\"Ben\", last_name=\"Katz\", gender=GenderEnum.MALE),\n    UserData(first_name=\"Clara\", last_name=\"Weiss\", gender=GenderEnum.FEMALE),\n    UserData(first_name=\"Daniel\", last_name=\"Levi\", gender=GenderEnum.MALE),\n    UserData(first_name=\"Ella\", last_name=\"Cohen\", gender=GenderEnum.FEMALE),",
+        "detail": "create_fake_students",
+        "documentation": {}
+    },
+    {
+        "label": "main",
         "kind": 2,
-        "importPath": "configure_env",
-        "description": "configure_env",
-        "peekOfCode": "def configure():\n    ENVIRONMENT_VARIABLE_NAMES = {\n        \"NODE_TLS_REJECT_UNAUTHORIZED\": \"Force strict TLS (0 or 1)\",\n        \"SYM_ENC_KEY\": \"Leave blank for auto-generation\",\n        \"JWT_SECRET\": \"Leave blank for auto-generation\",\n        \"HIVE_PASSWOWRD\": \"Password for Hive PostgreSQL\",\n        \"HIVE_API_PASSWORD\": \"Password for Hive API\",\n        \"VNC_CLIENT_PASSWORD\": \"Password for VNC on student's PCs\",\n        \"TWEET_CHANNEL_ID\": \"ID of Mattermost channel to which to tweet\",\n        \"MATTERMOST_ACCESS_TOKEN\": \"Personal Access Token of Mattermost account to use for tweets\",",
-        "detail": "configure_env",
+        "importPath": "create_fake_students",
+        "description": "create_fake_students",
+        "peekOfCode": "def main():\n    with HiveClient(\n        \"michaelks\", \"Password1\", \"https://hive.org/\", verify=False\n    ) as client:\n        mentor = client.get_user_by_name(\"michaelks\")\n        assert mentor is not None\n        classes = list(client.get_classes())\n        programs = list(client.get_programs())\n        for number, student_data in enumerate(MOCK_STUDENTS, start=4):\n            shuffle(classes)",
+        "detail": "create_fake_students",
+        "documentation": {}
+    },
+    {
+        "label": "handle_import_error",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def handle_import_error(module_name: str):\n    print(f\"❌  Auto-setup requires '{module_name}' package.\")\n    print(f\"➡️   Install it via:\\n    pip install {module_name}\")\n    sys.exit(1)\ntry:\n    from dotenv import load_dotenv\nexcept ImportError:\n    handle_import_error(\"dotenv\")\ntry:\n    import requests",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "banner",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def banner(msg: str):\n    print(f\"\\n✨ {msg}\")\ndef info(msg: str):\n    print(f\"🔹 {msg}\")\ndef success(msg: str):\n    print(f\"✅ {msg}\")\ndef warn(msg: str):\n    print(f\"⚠️  {msg}\")\ndef error(msg: str):\n    print(f\"❌ {msg}\")",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "info",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def info(msg: str):\n    print(f\"🔹 {msg}\")\ndef success(msg: str):\n    print(f\"✅ {msg}\")\ndef warn(msg: str):\n    print(f\"⚠️  {msg}\")\ndef error(msg: str):\n    print(f\"❌ {msg}\")\ndef gen_random_b64_str(byte_len: int = 32) -> str:\n    return base64.b64encode(random.randbytes(byte_len)).decode()",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "success",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def success(msg: str):\n    print(f\"✅ {msg}\")\ndef warn(msg: str):\n    print(f\"⚠️  {msg}\")\ndef error(msg: str):\n    print(f\"❌ {msg}\")\ndef gen_random_b64_str(byte_len: int = 32) -> str:\n    return base64.b64encode(random.randbytes(byte_len)).decode()\ndef b64_encode(value: str) -> str:\n    return base64.b64encode(value.encode()).decode()",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "warn",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def warn(msg: str):\n    print(f\"⚠️  {msg}\")\ndef error(msg: str):\n    print(f\"❌ {msg}\")\ndef gen_random_b64_str(byte_len: int = 32) -> str:\n    return base64.b64encode(random.randbytes(byte_len)).decode()\ndef b64_encode(value: str) -> str:\n    return base64.b64encode(value.encode()).decode()\ndef b64_decode(value: str) -> str:\n    if len(value) == 0:",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "error",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def error(msg: str):\n    print(f\"❌ {msg}\")\ndef gen_random_b64_str(byte_len: int = 32) -> str:\n    return base64.b64encode(random.randbytes(byte_len)).decode()\ndef b64_encode(value: str) -> str:\n    return base64.b64encode(value.encode()).decode()\ndef b64_decode(value: str) -> str:\n    if len(value) == 0:\n        return value\n    return base64.b64decode(value).decode()",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "gen_random_b64_str",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def gen_random_b64_str(byte_len: int = 32) -> str:\n    return base64.b64encode(random.randbytes(byte_len)).decode()\ndef b64_encode(value: str) -> str:\n    return base64.b64encode(value.encode()).decode()\ndef b64_decode(value: str) -> str:\n    if len(value) == 0:\n        return value\n    return base64.b64decode(value).decode()\ndef project_root() -> Path:\n    return Path(sys.argv[0]).resolve().parent",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "b64_encode",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def b64_encode(value: str) -> str:\n    return base64.b64encode(value.encode()).decode()\ndef b64_decode(value: str) -> str:\n    if len(value) == 0:\n        return value\n    return base64.b64decode(value).decode()\ndef project_root() -> Path:\n    return Path(sys.argv[0]).resolve().parent\ndef test_hive_user(hostname: str, password: str) -> bool:\n    try:",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "b64_decode",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def b64_decode(value: str) -> str:\n    if len(value) == 0:\n        return value\n    return base64.b64decode(value).decode()\ndef project_root() -> Path:\n    return Path(sys.argv[0]).resolve().parent\ndef test_hive_user(hostname: str, password: str) -> bool:\n    try:\n        with HiveClient(\n            username=\"api\",",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "project_root",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def project_root() -> Path:\n    return Path(sys.argv[0]).resolve().parent\ndef test_hive_user(hostname: str, password: str) -> bool:\n    try:\n        with HiveClient(\n            username=\"api\",\n            password=password,\n            hive_url=f\"https://{hostname}/\",\n            verify=False,\n        ) as client:",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "test_hive_user",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def test_hive_user(hostname: str, password: str) -> bool:\n    try:\n        with HiveClient(\n            username=\"api\",\n            password=password,\n            hive_url=f\"https://{hostname}/\",\n            verify=False,\n        ) as client:\n            client.get_hive_version()\n            return True",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "get_hive_students",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def get_hive_students(hostname: str, password: str) -> List[Tuple[str, str]]:\n    with HiveClient(\n        username=\"api\",\n        password=password,\n        hive_url=f\"https://{hostname}/\",\n        verify=False,\n    ) as client:\n        return [\n            (\n                x.username,",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "test_values",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def test_values(values: Dict[str, str]):\n    info(\"Testing Hive hostname connectivity 🌐\")\n    try:\n        resp = requests.get(f\"https://{values['HIVE_HOSTNAME']}/\", verify=False)\n        resp.raise_for_status()\n    except Exception as e:\n        error(f\"Unable to reach Hive: {e}\")\n        sys.exit(1)\n    info(\"Testing Hive credentials 🔐\")\n    if not test_hive_user(values[\"HIVE_HOSTNAME\"], values[\"HIVE_API_PASSWORD\"]):",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "load_existing_env",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def load_existing_env(env_path: Path) -> Dict[str, str]:\n    \"\"\"Load existing .env file into a dictionary if it exists.\"\"\"\n    if not env_path.exists():\n        return {}\n    load_dotenv(env_path)  # loads into os.environ\n    return {\n        var: (\n            os.getenv(var, \"\")\n            if var != \"VNC_CLIENT_PASSWORD\"\n            else b64_decode(os.getenv(var, \"\"))",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "collect_vars",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def collect_vars() -> Dict[str, str]:\n    banner(\"Hive Setup Wizard 🚀\")\n    root = project_root()\n    env_path = root / \".env\"\n    existing_values = load_existing_env(env_path)\n    values = AUTO_VARS.copy()\n    info(\"Generating secure secrets 🔑\")\n    for s in SECRET_VARS:\n        # reuse existing value if present\n        values[s] = existing_values.get(s, gen_random_b64_str())",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "write_env",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def write_env(values: Dict[str, str], env_path: Path):\n    env_content = \"\\n\".join(f\"{k}='{v}'\" for k, v in values.items())\n    env_path.write_text(env_content)\n    success(f\".env file created at {env_path}\")\ndef create_tokens_file(token_path: Path, hive_hostname: str, hive_password: str):\n    info(\"Fetching student list 🧑‍🎓\")\n    students = get_hive_students(hive_hostname, hive_password)\n    token_path.write_text(\n        \"\\n\".join(f\"{hostname}: {hostname}:5900\" for username, hostname in students)\n        + \"\\n\"",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "create_tokens_file",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def create_tokens_file(token_path: Path, hive_hostname: str, hive_password: str):\n    info(\"Fetching student list 🧑‍🎓\")\n    students = get_hive_students(hive_hostname, hive_password)\n    token_path.write_text(\n        \"\\n\".join(f\"{hostname}: {hostname}:5900\" for username, hostname in students)\n        + \"\\n\"\n    )\n    success(f\"WebSocket token file created at {token_path}\")\ndef main():\n    root = project_root()",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def main():\n    root = project_root()\n    env_file = root / \".env\"\n    token_file = root / \"websock\" / \"websocket_token_source.txt\"\n    values = collect_vars()\n    banner(\"Validating inputs ✅\")\n    test_values(values)\n    banner(\"Writing configuration files 📁\")\n    write_env(values, env_file)\n    create_tokens_file(token_file, values[\"HIVE_HOSTNAME\"], values[\"HIVE_API_PASSWORD\"])",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "AUTO_VARS",
+        "kind": 5,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "AUTO_VARS = {\n    \"NODE_TLS_REJECT_UNAUTHORIZED\": \"0\",  # Allow self-signed certs\n}\nSECRET_VARS = (\"SYM_ENC_KEY\", \"JWT_SECRET\")\nPROMPT_VARS: Dict[str, str] = {\n    \"HIVE_HOSTNAME\": \"Hostname of Hive instance (e.g. hive.dother.mil)\",\n    \"HIVE_PASSWORD\": \"Password for Hive PostgreSQL\",\n    \"HIVE_API_PASSWORD\": \"Password for Hive API\",\n    \"VNC_CLIENT_PASSWORD\": \"Password for VNC on student PCs\",\n    \"TWEET_CHANNEL_ID\": \"Mattermost channel ID for tweets\",",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "SECRET_VARS",
+        "kind": 5,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "SECRET_VARS = (\"SYM_ENC_KEY\", \"JWT_SECRET\")\nPROMPT_VARS: Dict[str, str] = {\n    \"HIVE_HOSTNAME\": \"Hostname of Hive instance (e.g. hive.dother.mil)\",\n    \"HIVE_PASSWORD\": \"Password for Hive PostgreSQL\",\n    \"HIVE_API_PASSWORD\": \"Password for Hive API\",\n    \"VNC_CLIENT_PASSWORD\": \"Password for VNC on student PCs\",\n    \"TWEET_CHANNEL_ID\": \"Mattermost channel ID for tweets\",\n    \"MATTERMOST_ACCESS_TOKEN\": \"Mattermost personal access token\",\n    \"WEBSOCKET_SERVER_HOSTNAME\": \"Hostname for WebSocket server\",\n}",
+        "detail": "setup",
         "documentation": {}
     }
 ]

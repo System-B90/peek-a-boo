@@ -5,6 +5,14 @@ import { Typography } from "@mui/material";
 export const metadata: Metadata = {
   title: "Peek-a-Boo",
   description: "Student Monitor | By Bis90",
+  manifest: "/manifest.webmanifest",
+  themeColor: '#bb86fc',
+  applicationName: 'Peek-a-Boo',
+  authors: [
+    { name: 'Michael K. Steinberg (Bis 90 כ"ה)' },
+  ],
+  creator: 'Michael K. Steinberg',
+  keywords: [ 'peekaboo', 'peek-a-boo', 'student monitor', 'bis90', 'vnc', 'shadow', 'rdp', 'x-control', 'x-shadow', 'x-rdp', 'bisvnc', 'bis-vnc', 'tightvnc', ],
 };
 
 function Footer()
@@ -27,7 +35,7 @@ export default function RootLayout({
 {
   return (
     <html lang="en">
-      <body className={ `antialiased bg-[#121212] w-full overflow-x-hidden` }>
+      <body className={ `antialiased bg-[#0a0a0a] w-full overflow-x-hidden` }>
         { children }
         <Footer />
       </body>

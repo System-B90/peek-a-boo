@@ -1,25 +1,26 @@
 "use client";
 
-import { Dispatch, SetStateAction, useCallback } from "react";
-import VncCard from "./vnc-card";
+import { useCallback } from "react";
+import VncCard, { VncCardSkeleton } from "./vnc-card";
+import { useQueryParams } from "@/components/query-params-provider";
+import { useActiveStudents } from "@/components/active-students-provider";
 
-export interface Props {
-    activeUsers: Set<number>;
-    setActiveStudents: Dispatch<SetStateAction<Set<number>>>;
-}
 
-export default function VncGrid({ activeUsers, setActiveStudents }
-    : Props
-) {
-    const onClose = useCallback((number: number) => {
-        setActiveStudents(new Set([...activeUsers].filter((s) => s !== number)));
-    }, [setActiveStudents, activeUsers]);
+export default function VncGrid()
+{
+    const { activeStudents } = useActiveStudents();
+    const { removeActive, initialized: queryParamsInitialized } = useQueryParams();
 
-    const vncCards = [...activeUsers].map((n) => (
-        <VncCard key={`vnc-card-${n}`} studentNumber={n} onClose={onClose} />
-    ));
+    const onClose = useCallback((username: string) => removeActive(username), [ removeActive ]);
 
-    if (vncCards.length === 0) {
+    const vncCards = queryParamsInitialized ? [ ...activeStudents ].map((username) => (
+        <VncCard key={ `vnc-card-${username}` } studentUsername={ username } onClose={ onClose } />
+    )) : (
+        [ ...Array(3).keys() ].map((i) => (<VncCardSkeleton key={ `vnc-card-skeleton-${i}` } />))
+    );
+
+    if (vncCards.length === 0 && queryParamsInitialized)
+    {
         return (
             <div className="flex-5 h-screen">
                 <div className="flex flex-col space-y-5 flex-wrap justify-center items-center h-screen">
@@ -34,7 +35,7 @@ export default function VncGrid({ activeUsers, setActiveStudents }
 
     return (
         <div className="flex-5 overflow-y-scroll h-screen">
-            <div className="flex flex-row flex-wrap justify-center ">{vncCards}</div>
+            <div className="flex flex-row flex-wrap justify-center ">{ vncCards }</div>
         </div>
     );
 }

@@ -10,9 +10,11 @@ import
     Button,
     Box,
     Typography,
+    Tooltip,
 } from "@mui/material";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import SendIcon from '@mui/icons-material/Send';
+import Image from "next/image";
 
 type TweetDialogProps = {
     title: string;
@@ -35,6 +37,24 @@ export default function TweetDialog({ title, description, imageSrc, baseMessageT
         setText("");
     };
 
+    const screenshotClickHandler = useCallback(() =>
+    {
+        if (!imageSrc) return;
+        // Convert base64 to Blob
+        const byteString = atob(imageSrc.split(",")[ 1 ]);
+        const mimeString = imageSrc.split(",")[ 0 ].split(":")[ 1 ].split(";")[ 0 ];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++)
+        {
+            ia[ i ] = byteString.charCodeAt(i);
+        }
+        const blob = new Blob([ ab ], { type: mimeString });
+        const url = URL.createObjectURL(blob);
+
+        window.open(url, "_blank");
+    }, [ imageSrc ]);
+
     return (
         <Dialog open={ open } onClose={ onClose } maxWidth="sm" fullWidth dir="rtl">
             <DialogTitle dir="rtl" className="flex flex-row items-center gap-2">
@@ -46,7 +66,18 @@ export default function TweetDialog({ title, description, imageSrc, baseMessageT
                     { description }
                 </DialogContentText>
                 <Box mt={ 2 } mb={ 2 }>
-                    <img src={ imageSrc } alt="צילום מסך" style={ { width: "100%", maxHeight: 200, objectFit: "contain" } } />
+                    <Tooltip title="לחץ לפתיחת התמונה בחלון חדש" arrow placement="right">
+                        <Image
+                            className="cursor-pointer"
+                            onClick={ screenshotClickHandler }
+                            src={ imageSrc ?? "" }
+                            alt="צילום מסך"
+                            width={ 1920 }
+                            height={ 1200 }
+                            style={ { width: "100%", maxHeight: 200, objectFit: "contain" } }
+                            unoptimized
+                        />
+                    </Tooltip>
                 </Box>
                 <Typography variant="subtitle1" className="mb-0 pb-0 mt-2 pt-2" fontStyle={ 'italic' }>
                     { baseMessageText }

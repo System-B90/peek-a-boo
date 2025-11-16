@@ -11,12 +11,12 @@ import TweetDialog from "@/components/tweet-dialog";
 
 export default function TweetButton({ vncRef, ...props }: { vncRef: RefObject<VncScreenHandle | null>; } & Exclude<React.HTMLAttributes<HTMLDivElement>, 'onClick'>)
 {
-    const { displayName } = useAuth();
+    const { displayName: commanderDisplayName } = useAuth();
     const { studentFirstName, studentLastName, } = useStudentInfo();
     const [ dialogOpen, setDialogOpen ] = useState(false);
     const [ screenShotData, setScreenShotData ] = useState<string | undefined>(undefined);
 
-    const baseTweetMessage = useMemo(() => `המפקד/ת ${displayName} על ${studentFirstName} ${studentLastName}`, [ displayName, studentFirstName, studentLastName ]);
+    const baseTweetMessage = useMemo(() => `המפקד/ת ${commanderDisplayName} על ${studentFirstName} ${studentLastName}`, [ commanderDisplayName, studentFirstName, studentLastName ]);
 
     const handleDialogSubmit = useCallback((text: string) =>
     {
@@ -41,7 +41,7 @@ export default function TweetButton({ vncRef, ...props }: { vncRef: RefObject<Vn
         handler()
             .catch((error) => enqueueApiErrorSnackbar('Failed to send tweet!', error));
 
-    }, [ vncRef, displayName, studentFirstName, studentLastName, screenShotData, setScreenShotData ]);
+    }, [ screenShotData, baseTweetMessage ]);
 
     const openDialog = useCallback(() =>
     {

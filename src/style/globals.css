@@ -38,6 +38,12 @@
   }
 }
 
+input.MuiInputBase-input:-webkit-autofill
+{
+  /* Override Chrome's disgusting background on autofill */
+  -webkit-box-shadow: unset !important;
+}
+
 body
 {
   background: var(--background);

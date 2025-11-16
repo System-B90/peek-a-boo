@@ -100,8 +100,9 @@ export async function catchHandler<T extends NextRequest | NextApiRequest>(reque
     if (e instanceof UserNotLoggedInError)
     {
         const requestHeaders = headers();
-        const url = request.url ? new URL(request.url) : undefined;
-        return friendlyRedirectToLogin(request, (await requestHeaders).get('referer') ?? url?.pathname ?? '/');
+        const refferer = (await requestHeaders).get('Referer');
+        const reffererPathname = refferer ? new URL(refferer).pathname : '/';
+        return friendlyRedirectToLogin(request, reffererPathname);
     }
 
     if (e instanceof ClientApiError)

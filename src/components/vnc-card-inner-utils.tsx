@@ -133,8 +133,7 @@ export function VncCardCenterModule()
     return (
         <div className="px-4">
             <div id="checkers-brief" className="rtl flex flex-row" dir="rtl">
-                <Typography>
-
+                <div className="text-center flex flex-row-reverse" dir="rtl">
                     {/* Mentor error message */ }
                     { (!mentorName || !mentorUsername) && (
                         <Typography color="error" style={ { direction: "rtl" } }>
@@ -143,9 +142,11 @@ export function VncCardCenterModule()
                     ) }
 
                     {/* Checkers brief with inline placeholder */ }
-                    &quot;
-                    { checkersBrief ? checkersBrief : placeholder }
-                    &quot; -
+                    <Typography>
+                        &quot;
+                        { checkersBrief ? checkersBrief : placeholder }
+                        &quot; -
+                    </Typography>
 
                     { (!!mentorName && !!mentorUsername) && (
                         <Link
@@ -155,7 +156,7 @@ export function VncCardCenterModule()
                             { mentorName }
                         </Link>
                     ) }
-                </Typography>
+                </div>
             </div>
         </div>
     );
@@ -171,7 +172,7 @@ export function VncCardLeftModule()
         <div className="flex flex-col min-w-[30%] -mt-2">
             <Link href={ `https://${clientEnvConfig.HIVE_HOSTNAME}/mentor/students?id=${hiveId}` }>
                 <div className="flex flex-row items-center">
-                    <div className="p-2 bg-[rgba(50,20,20,0.85)] rounded-full w-8 h-8 flex flex-row items-center content-center justify-center text-center">
+                    <div className="p-2 bg-secondary-light rounded-full w-8 h-8 flex flex-row items-center content-center justify-center text-center">
                         <Typography>{ studentNumber }</Typography>
                     </div>
                     <Box sx={ { width: "0.3rem" } } />

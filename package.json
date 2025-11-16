@@ -9,6 +9,7 @@
     "lint": "eslint ./src/**/*.{js,jsx,ts,tsx}"
   },
   "dependencies": {
+    "@mui/icons-material": "^7.3.5",
     "jsonwebtoken": "^9.0.2",
     "ldapjs": "^3.0.7",
     "next": "^16.0.1",
@@ -17,7 +18,9 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-error-boundary": "^6.0.0",
-    "react-vnc": "^3.0.8"
+    "react-vnc": "^3.0.8",
+    "stylis": "^4.3.6",
+    "stylis-plugin-rtl": "^2.1.1"
   },
   "devDependencies": {
     "@emotion/react": "^11.14.0",

@@ -142,8 +142,7 @@ export default function VncCardInner({
     return (
         <div>
             <div
-                className={ `${isFullscreen ? "m-0" : "m-4"
-                    } pt-2 bg-slate-800 rounded-xl shadow-2xl transition-all vnc-card` }
+                className={ `${isFullscreen ? "m-0" : "m-4"} bg-secondary-dark pt-2 rounded-xl shadow-2xl transition-all vnc-card` }
                 style={ { width } }
                 data-is-expanded={
                     displayState === VncCardDisplayState.Expanded ||

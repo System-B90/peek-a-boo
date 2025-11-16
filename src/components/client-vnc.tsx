@@ -86,7 +86,7 @@ export default function ClientVNC({ vncRef, onSecurityFailure, ...props }: { vnc
             <VncScreen
                 url={ wsProxyUrl }
                 scaleViewport={ true }
-                background="#000000"
+                background="var(--color-secondary-dark)"
                 style={ { width: props.width, height: props.height } }
                 ref={ vncRef }
                 viewOnly={ isViewOnly }

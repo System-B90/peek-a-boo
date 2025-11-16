@@ -32,7 +32,7 @@ export function VncCardSkeleton()
         <div>
             <div
                 className={ `${isFullscreen ? "m-0" : "m-4"
-                    } pt-2 bg-slate-800 rounded-xl shadow-2xl transition-all vnc-card` }
+                    } pt-2 bg-secondary-dark rounded-xl shadow-2xl transition-all vnc-card` }
                 style={ { width } }
                 data-is-expanded={ false }
             >

@@ -23,7 +23,7 @@ import NaturalUserInterface2Glyph from "@/glyphs/NaturalUserInterface2";
 import WallMountCameraGlyph from "@/glyphs/WallMountCamera";
 import Grid from "@/glyphs/Grid";
 import { useStudentInfo } from "./student-info-provider";
-import TweetBotGlyph from "@/components/tweet-bot";
+import TweetButton from "@/components/tweet-bot";
 import { VncScreenHandle } from "react-vnc";
 import
 {
@@ -319,7 +319,7 @@ export function VncRightModule({
                     <PcOnDeskGlyph
                         glyphTitle={ "Hostname Unknown!" }
                         className="w-5 h-5"
-                        style={ { color: "rgba(250,20,20,0.98)" } }
+                        style={ { color: "var(--color-error)" } }
                     /> :
                     (
                         // Hostname known
@@ -327,19 +327,19 @@ export function VncRightModule({
                             <WarningShieldGlyph
                                 glyphTitle={ "Authentication Error!" }
                                 className="w-5 h-5"
-                                style={ { color: "rgba(250,5,5,0.98)" } }
+                                style={ { color: "var(--color-warning)" } }
                             />
                         ) : connected ? (
                             <OnlineGlyph
                                 glyphTitle={ "Connected" }
                                 className="w-5 h-5"
-                                style={ { color: "rgba(20,240,20,0.95)" } }
+                                style={ { color: "var(--color-success)" } }
                             />
                         ) : (
                             <OfflineGlyph
                                 glyphTitle={ "Disconnected" }
                                 className="w-5 h-5"
-                                style={ { color: "red" } }
+                                style={ { color: "var(--color-error)" } }
                             />
                         )
                     ) }
@@ -354,7 +354,7 @@ export function VncRightModule({
                 {
                     connected && <div className="vnc-card-right-module flex flex-col items-center content-center justify-start z-10">
                         <RefreshData className={ sideButtonClassnames } />
-                        <TweetBotGlyph vncRef={ vncRef } className={ sideButtonClassnames } />
+                        <TweetButton vncRef={ vncRef } className={ sideButtonClassnames } />
                         <Toggler
                             value={ isViewOnly }
                             setValue={ setIsViewOnly }

@@ -49,7 +49,11 @@ export const CurrentTagsProvider = ({
     }, [ doesTagExists, addFilter ]);
 
     const removeTag = useCallback((oldTagName: string) => removeFilter(oldTagName.toLowerCase()), [ removeFilter ]);
-    const removeLastTag = useCallback(() => removeTag(filters[ filters.length - 1 ].toLowerCase()), [ filters, removeTag ]);
+    const removeLastTag = useCallback(() =>
+    {
+        if (filters.length === 0) { return; }
+        removeTag(filters[ filters.length - 1 ].toLowerCase());
+    }, [ filters, removeTag ]);
 
     return (
         <CurrentTagsContextProvider.Provider

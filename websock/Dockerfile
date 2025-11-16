@@ -1,5 +1,11 @@
+ARG PYTHON_DOCKER_REGISTRY
+ARG PIP_CONF_PATH
+
 # Use a local Node.js image
-FROM 8200artifactory.dother.mil/uni-registry/base-images/python:3.10.12-slim-bullseye AS builder
+FROM ${PYTHON_DOCKER_REGISTRY}python:3.10.12-slim-bullseye AS builder
+
+ARG PYTHON_DOCKER_REGISTRY
+ARG PIP_CONF_PATH
 
 # Set working directory
 WORKDIR /app
@@ -7,14 +13,17 @@ WORKDIR /app
 COPY . .
 
 RUN mkdir ~/.pip/
-COPY ./pip.conf ~/.pip/pip.conf
-COPY ./pip.conf /etc/pip.conf
+COPY ./${PIP_CONF_PATH} ~/.pip/pip.conf
+COPY ./${PIP_CONF_PATH} /etc/pip.conf
 
 RUN pip install --root-user-action=ignore --upgrade pip 
 RUN pip install --root-user-action=ignore -r ./requirements.txt
 
 # Final stage: production server
-FROM 8200artifactory.dother.mil/uni-registry/base-images/python:3.10.12-slim-bullseye
+FROM ${PYTHON_DOCKER_REGISTRY}python:3.10.12-slim-bullseye
+
+ARG PYTHON_DOCKER_REGISTRY
+ARG PIP_CONF_PATH
 
 WORKDIR /app
 

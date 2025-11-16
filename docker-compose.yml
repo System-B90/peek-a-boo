@@ -4,7 +4,13 @@ services:
     container_name: peekaboo_nextjs
     build:
       context: ./
+      args:
+        NODE_DOCKER_REGISTRY: ${NODE_DOCKER_REGISTRY}
+        LDAP_URL: ${LDAP_URL}
       dockerfile: Dockerfile
+    environment:
+      - LDAP_URL=${LDAP_URL}
+      - LDAP_DC=${LDAP_DC}
     restart: always
     volumes:
       - ./.env:/app/.env:ro
@@ -18,14 +24,17 @@ services:
     container_name: peekaboo_nginx
     restart: always
     ports:
-      - "443:443"
-      - "80:80"
+      - "4443:4443"
+      - "8180:8180"
     depends_on:
       - nextjs
       - websock
+    environment:
+      - SERVER_HOSTNAME=${HOSTNAME}
+      - WEBSOCKET_SERVER_HOSTNAME=${WEBSOCKET_SERVER_HOSTNAME}
     volumes:
       - ./utils/certs:/etc/nginx/certs:ro
-      - ./scripts/configs/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./scripts/configs/nginx.conf.template:/etc/nginx/templates/nginx.conf.template:ro
     networks:
       - backend
       - frontend
@@ -35,10 +44,13 @@ services:
     container_name: peekaboo_websock
     build:
       context: ./websock/
+      args:
+        PYTHON_DOCKER_REGISTRY: ${PYTHON_DOCKER_REGISTRY}
+        PIP_CONF_PATH: ${PIP_CONF_PATH}
       dockerfile: Dockerfile
     restart: always
     volumes:
-      - ./websocket_token_source.txt:/app/websocket_token_source.txt:ro
+      - ./websock/websocket_token_source.txt:/app/websocket_token_source.txt:ro
       - ./.env:/app/.env:ro
     ports:
       - "60800"

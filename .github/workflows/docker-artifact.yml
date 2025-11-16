@@ -1,0 +1,50 @@
+name: Build Docker Image (Artifact)
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Create .env file inside Action runner (Compose auto-loads it)
+      - name: Load .env into workflow environment
+        run: |
+          if [ -f .env ]; then
+            echo "Loading .env..."
+            cat .env >> $GITHUB_ENV
+          else
+            echo ".env does not exist, skipping."
+          fi
+
+      # 3. Build using docker-compose
+      - name: Build with docker-compose
+        run: |
+          docker compose build
+
+      # 4. Save built image(s)
+      - name: Save Docker image as tarball
+        run: |
+          mkdir -p artifacts
+          
+          # Extract the image name from docker-compose.yml
+          IMAGE_NAME=$(docker compose config | grep 'image:' | awk '{print $2}')
+          
+          echo "Saving image: $IMAGE_NAME"
+          
+          docker save "$IMAGE_NAME" | gzip > artifacts/image.tar.gz
+
+      # 5. Upload artifact
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: artifacts/image.tar.gz
+          retention-days: 1

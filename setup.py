@@ -5,11 +5,13 @@ Name: setup.py
 """
 
 import base64
+import os
+import pathlib
 import random
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Tuple
-import os
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def handle_import_error(module_name: str):
@@ -17,6 +19,24 @@ def handle_import_error(module_name: str):
     print(f"➡️   Install it via:\n    pip install {module_name}")
     sys.exit(1)
 
+
+try:
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.hazmat.primitives.serialization import (
+        Encoding,
+        NoEncryption,
+        PrivateFormat,
+    )
+    from cryptography.x509.oid import NameOID
+except ImportError:
+    handle_import_error("cryptography")
+
+try:
+    import ipaddress
+except ImportError:
+    handle_import_error("ipaddress")
 
 try:
     from dotenv import load_dotenv
@@ -39,20 +59,61 @@ except ImportError:
 # Configuration Constants
 # ---------------------------------------------------------------------------
 
+
+def is_connected_to_cnet() -> bool:
+    CNET_TEST_URL = "https://8200artifactory.dother.mil/"
+    try:
+        requests.get(CNET_TEST_URL, timeout=2)
+        return True
+    except requests.RequestException:
+        return False
+
+
+def choose_docker_registry():
+    """Choose Docker registry based on network connectivity."""
+    return (
+        {
+            "NODE_DOCKER_REGISTRY": "8200artifactory.dother.mil/docker-images/",
+            "PYTHON_DOCKER_REGISTRY": "8200artifactory.dother.mil/uni-registry/base-images/",
+        }
+        if is_connected_to_cnet()
+        else {
+            "NODE_DOCKER_REGISTRY": "",
+            "PYTHON_DOCKER_REGISTRY": "",
+        }
+    )
+
+
+def choose_pip_conf_name():
+    """Choose pip.conf file name based on network connectivity."""
+    return "pip_cnet.conf" if is_connected_to_cnet() else "pip_online.conf"
+
+
 AUTO_VARS = {
     "NODE_TLS_REJECT_UNAUTHORIZED": "0",  # Allow self-signed certs
+    **choose_docker_registry(),
+    "PIP_CONF_PATH": choose_pip_conf_name(),
+    "IS_IN_CNET": "1" if is_connected_to_cnet() else "0",
 }
 
 SECRET_VARS = ("SYM_ENC_KEY", "JWT_SECRET")
 
 PROMPT_VARS: Dict[str, str] = {
-    "HIVE_HOSTNAME": "Hostname of Hive instance (e.g. hive.dother.mil)",
+    "HOSTNAME": "Hostname for Peek-a-Boo (Used for certificate)",
+    # "WEBSOCKET_SERVER_HOSTNAME": "Hostname for WebSocket server",
+    "VNC_CLIENT_PASSWORD": "Password for VNC on student PCs",
+    
+    "HIVE_HOSTNAME": 'Hostname of Hive instance (e.g. "hive.org")',
     "HIVE_PASSWORD": "Password for Hive PostgreSQL",
     "HIVE_API_PASSWORD": "Password for Hive API",
-    "VNC_CLIENT_PASSWORD": "Password for VNC on student PCs",
-    "TWEET_CHANNEL_ID": "Mattermost channel ID for tweets",
+    
+    "MATTERMOST_URL": 'URL for Mattermost (e.g. "\'https://mattermost.domain.tld")',
     "MATTERMOST_ACCESS_TOKEN": "Mattermost personal access token",
-    "WEBSOCKET_SERVER_HOSTNAME": "Hostname for WebSocket server",
+    "TWEET_CHANNEL_ID": "Mattermost channel ID for tweets",
+
+    "LDAP_DC": 'Domain for LDAP authentication (e.g. "dc=DOMAIN,dc=TLD")',
+    "LDAP_URL": 'LDAP URL for authentication (e.g. "ldaps://domain.tld")',
+    "SEGEL_OU_PATH": "OU path in the DC in which to search for Segel users (e.g. OU=Segel,OU=Course,DC=DOMAIN,DC=TLD)",
 }
 
 # ---------------------------------------------------------------------------
@@ -166,6 +227,92 @@ def load_existing_env(env_path: Path) -> Dict[str, str]:
     }
 
 
+def generate_self_signed_cert(
+    cert_path: Path,
+    key_path: Path,
+    common_name: str,
+    alt_names: Optional[list[str]] = None,  # list of DNS names or IP addresses
+):
+    alt_names = alt_names or [common_name]
+
+    # Generate private key
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+    # Certificate subject & issuer (self‑signed => identical)
+    subject = issuer = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "IL"),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Peek-a-Boo"),
+            x509.NameAttribute(NameOID.COMMON_NAME, common_name),
+            x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, "Dev"),
+        ]
+    )
+
+    # Prepare SANs
+    san_list = []
+    for name in alt_names:
+        try:
+            # If it's an IP address
+            san_list.append(x509.IPAddress(ipaddress.ip_address(name)))
+        except ValueError:
+            # Otherwise treat as DNS name
+            san_list.append(x509.DNSName(name))
+
+    # Build certificate
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(datetime.utcnow())
+        .not_valid_after(datetime.utcnow() + timedelta(days=365))
+        .add_extension(x509.SubjectAlternativeName(san_list), critical=False)
+        .sign(key, hashes.SHA256())
+    )
+
+    # Save private key
+    with open(key_path, "wb") as f:
+        f.write(
+            key.private_bytes(
+                encoding=Encoding.PEM,
+                format=PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=NoEncryption(),
+            )
+        )
+
+    # Save certificate
+    with open(cert_path, "wb") as f:
+        f.write(cert.public_bytes(Encoding.PEM))
+
+    return Path(cert_path), Path(key_path)
+
+
+def handle_certs(values: dict[str, Any]):
+    ROOT_CERT_PATH = Path("./utils/certs/")
+
+    CERT_PATH = ROOT_CERT_PATH / "star.crt"
+    KEY_PATH = ROOT_CERT_PATH / "star.key"
+
+    if CERT_PATH.exists() or KEY_PATH.exists():
+        success("Using existing certificates")
+        return
+
+    cert, key = generate_self_signed_cert(
+        cert_path=CERT_PATH,
+        key_path=KEY_PATH,
+        common_name=values["HOSTNAME"],
+        alt_names=[
+            f'wss.{values["HOSTNAME"]}',
+            values["WEBSOCKET_SERVER_HOSTNAME"],
+            "localhost",
+        ],
+    )
+
+    assert cert == CERT_PATH
+    assert key == KEY_PATH
+
+
 def collect_vars() -> Dict[str, str]:
     banner("Hive Setup Wizard 🚀")
     root = project_root()
@@ -178,6 +325,12 @@ def collect_vars() -> Dict[str, str]:
     for s in SECRET_VARS:
         # reuse existing value if present
         values[s] = existing_values.get(s, gen_random_b64_str())
+
+    existing_values["HOSTNAME"] = (
+        existing_values.get("HOSTNAME")
+        if existing_values.get("HOSTNAME")
+        else "peek-a-boo"
+    )
 
     # Prompt for interactive vars
     for var, desc in PROMPT_VARS.items():
@@ -193,6 +346,8 @@ def collect_vars() -> Dict[str, str]:
             val = b64_encode(val)
 
         values[var] = val
+
+    existing_values["WEBSOCKET_SERVER_HOSTNAME"] = f'wss.{values["HOSTNAME"]}'
 
     return values
 
@@ -227,6 +382,8 @@ def main():
     banner("Writing configuration files 📁")
     write_env(values, env_file)
     create_tokens_file(token_file, values["HIVE_HOSTNAME"], values["HIVE_API_PASSWORD"])
+
+    handle_certs(values)
 
     banner("Setup complete 🎉")
     success("Peek-a-boo environment is ready to go! 🚀🔥")

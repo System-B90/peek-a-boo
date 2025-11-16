@@ -1,6 +1,6 @@
 import { ClientApiError, MattermostApiError, MattermostConnectionError } from "@/shared-api/errors";
 
-const MATTERMOST_URL = process.env.MATTERMOST_URL ?? 'https://mattermost.eshel.dom';
+const MATTERMOST_URL = process.env.MATTERMOST_URL ?? 'https://mattermost';
 
 export async function sendMessage({ botToken, channelId, message, image, }: { botToken: string, channelId: string, message: string, image?: string, })
 {

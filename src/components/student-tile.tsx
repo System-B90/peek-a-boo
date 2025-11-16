@@ -55,7 +55,7 @@ export default function StudentTile({
                 </div>
             </div>
             <StudentAvatar
-                className="rounded-l-2xl h-[70px] aspect-sqare"
+                className="rounded-l-2xl h-[70px] aspect-square"
                 src={ `/api/avatar/${student.hiveId}` }
                 width={ 70 }
                 height={ 70 }
@@ -72,26 +72,31 @@ export default function StudentTile({
 export function StudentTileSkeleton()
 {
     return (
-        <Skeleton
+        <div
             className={ `h-[70px] flex-grow flex bg-[#bb86fc] overflow-clip relative cursor-pointer opacity-100` }
             dir="rtl"
             style={ { borderRadius: '1rem 0 0 1rem' } }
         >
             <div className="bg-[#121212] aspect-[5/7] rounded-l-full flex justify-center items-center font-bold text-xl overflow-hidden">
-                <span className="ml-4"><Typography fontWeight={ 600 } fontSize={ '1.5rem' }></Typography></span>
+                <span className="ml-4"><Typography fontWeight={ 600 } fontSize={ '1.5rem' }>0</Typography></span>
             </div>
             <div className="flex flex-col bg-[#bb86fc] flex-grow text-black p-2">
                 <div className="font-bold">
-                    <Typography fontWeight={ 600 }></Typography>
+                    <Skeleton variant="text" width={ 140 } />
                 </div>
                 <div dir="rtl" className="flex flex-row items-center">
-                    <Typography fontSize={ '0.9rem' }></Typography>
+                    <Typography fontSize={ '0.9rem' }><Skeleton variant="text" width={ 40 } /></Typography>
                     <Box sx={ { width: '0.2rem' } } />
                 </div>
             </div>
+            <Box
+                className="rounded-l-2xl h-[70px] aspect-square relative overflow-hidden"
+                width={ 70 }
+                height={ 70 }
+            ><div className="absolute inset-0 animate-pulse bg-purple-300 dark:bg-purple-700" /></Box>
             <div
-                className={ `rounded-full bg-[#1afb1a] aspect-square w-[20px] absolute -left-[5px] -top-[5px] transition-all duration-200 opacity-100` }
+                className={ `rounded-full bg-[#1e1e1e] aspect-square w-[20px] absolute -left-[5px] -top-[5px] transition-all duration-200 opacity-50` }
             ></div>
-        </Skeleton>
+        </div>
     );
 }

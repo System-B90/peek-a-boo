@@ -41,6 +41,8 @@ COPY ./next.config.ts /app/next.config.ts
 # COPY ./.next /app/.next
 # COPY ./node_modules /app/node_modules
 
+RUN npm install
+
 RUN chmod -R +x ./.next/* || true
 RUN chmod -R +x ./node_modules/.bin/* || true
 

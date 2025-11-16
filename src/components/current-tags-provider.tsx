@@ -28,24 +28,8 @@ export const CurrentTagsProvider = ({
 }) =>
 {
     const [ tags, setTags ] = useState<Array<Tag>>([]);
-    const { knownTags } = useKnownTags();
+    const { doesTagExists, resolveTag } = useKnownTags();
     const { filters, addFilter, removeFilter } = useQueryParams();
-
-    const doesTagExists = useCallback((tagName: string) =>
-    {
-        for (const tag of knownTags)
-        {
-            if (tag.name === tagName) return true;
-        }
-        return false;
-    }, [ knownTags ]);
-
-    const resolveTag = useCallback((tagName: string) =>
-    {
-        const filteredKnownTags = knownTags.filter((t) => t.name === tagName);
-        if (filteredKnownTags.length !== 1) { console.error(`Tag ${tagName} not uniquely found!`); return undefined; }
-        return filteredKnownTags[ 0 ];
-    }, [ knownTags ]);
 
     useEffect(() =>
     {
@@ -61,11 +45,11 @@ export const CurrentTagsProvider = ({
         {
             throw Error(`Tag ${newTagName} is not recognized!`);
         }
-        addFilter(newTagName);
+        addFilter(newTagName.toLowerCase());
     }, [ doesTagExists, addFilter ]);
 
-    const removeTag = useCallback((oldTagName: string) => removeFilter(oldTagName), [ removeFilter ]);
-    const removeLastTag = useCallback(() => removeTag(filters[ filters.length - 1 ]), [ filters, removeTag ]);
+    const removeTag = useCallback((oldTagName: string) => removeFilter(oldTagName.toLowerCase()), [ removeFilter ]);
+    const removeLastTag = useCallback(() => removeTag(filters[ filters.length - 1 ].toLowerCase()), [ filters, removeTag ]);
 
     return (
         <CurrentTagsContextProvider.Provider

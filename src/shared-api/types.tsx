@@ -57,10 +57,10 @@ export enum TagType
     Unknown = 0,
     Mentor = 'mentor',
     Classroom = 'classroom',
-    StudentGroup = 'student-group',
+    StudentGroup = 'group',
     Level = 'level',
-    StudentName = 'student-name',
-    StudentNumber = 'student-number',
+    StudentName = 'name',
+    StudentNumber = 'number',
 };
 
 export interface Tag

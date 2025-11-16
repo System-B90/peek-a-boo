@@ -34,12 +34,12 @@ RUN npm config fix
 # COPY ./ /app/
 COPY ./src /app/src
 COPY ./public /app/public
-COPY ./.env /app/.env
+# COPY ./.env /app/.env
 COPY ./tsconfig.json /app/tsconfig.json
 COPY ./postcss.config.mjs /app/postcss.config.mjs
 COPY ./next.config.ts /app/next.config.ts
-COPY ./.next /app/.next
-COPY ./node_modules /app/node_modules
+# COPY ./.next /app/.next
+# COPY ./node_modules /app/node_modules
 
 RUN chmod -R +x ./.next/* || true
 RUN chmod -R +x ./node_modules/.bin/* || true

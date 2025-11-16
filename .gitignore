@@ -48,3 +48,4 @@ src/hanichim-info/
 utils/certs/
 my_utils/
 websock/*.txt
+.vscode/PythonImportHelper-v2-Completion.json

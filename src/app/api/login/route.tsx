@@ -8,6 +8,7 @@ import { ClientApiError } from "@/shared-api/errors";
 import { sendAdminMessage } from "@/server-api/mattermost";
 import { headers } from "next/headers";
 import assert from "assert";
+import { getSetting } from "@/server-api/settings";
 
 const ALLOW_LOGIN_BYPASS = process.env.ALLOW_LOGIN_BYPASS === "true";
 
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest)
                 name: user.cn,
                 username: user.sAMAccountName,
                 webSocketHost: "",
-                vncClientPassword: atob(process.env.VNC_CLIENT_PASSWORD ?? ""),
+                vncClientPassword: await getSetting("VNC_CLIENT_PASSWORD") ?? "",
             };
         } else
         {
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest)
                 name: username,
                 username: username,
                 webSocketHost: "",
-                vncClientPassword: atob(process.env.VNC_CLIENT_PASSWORD ?? ""),
+                vncClientPassword: await getSetting("VNC_CLIENT_PASSWORD") ?? "",
             };
         }
 

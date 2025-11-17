@@ -4,6 +4,7 @@ import path from "path";
 
 export type UserControlledSettings = {
     VNC_CLIENT_PASSWORD: string;
+    VNC_MASTER_PASSWORD: string;
     HIVE_HOSTNAME: string;
     HIVE_PASSWORD: string;
     HIVE_API_USERNAME: string;
@@ -18,6 +19,7 @@ export const SETTINGS_PATH = path.join(process.cwd(), "settings.json");
 
 const DEFAULT_SETTINGS = {
     VNC_CLIENT_PASSWORD: atob(process.env.VNC_CLIENT_PASSWORD ?? ""),
+    VNC_MASTER_PASSWORD: atob(process.env.VNC_CLIENT_PASSWORD ?? ""),
     HIVE_HOSTNAME: process.env.HIVE_HOSTNAME ?? 'hive.org',
     HIVE_PASSWORD: process.env.HIVE_PASSWORD ?? '',
     HIVE_API_USERNAME: process.env.HIVE_API_USERNAME ?? 'api',

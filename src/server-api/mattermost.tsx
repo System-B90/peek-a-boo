@@ -1,5 +1,5 @@
 import { getSetting } from "@/server-api/settings";
-import { ClientApiError, isNetworkHostNotFoundError, MattermostApiError, MattermostConnectionError } from "@/shared-api/errors";
+import { ClientApiError, MattermostApiError, MattermostConnectionError, parseNetworkHostNotFoundError } from "@/shared-api/errors";
 
 
 export async function sendMessage({ botToken, channelId, message, image, }: { botToken: string, channelId: string, message: string, image?: string, })
@@ -57,9 +57,10 @@ export async function sendMessage({ botToken, channelId, message, image, }: { bo
     } catch (error: unknown)
     {
         if (!(error instanceof Error)) { throw error; }
-        if (isNetworkHostNotFoundError(error))
+        const networkHostError = parseNetworkHostNotFoundError(error);
+        if (networkHostError)
         {
-            throw new MattermostConnectionError(`${error.cause.hostname} is unreachable! Please check MATTERMOST_URL in settings or environment variables.`);
+            throw new MattermostConnectionError(`${networkHostError.hostname} is unreachable! Please check MATTERMOST_URL in settings or environment variables.`);
         }
         throw error;
     }

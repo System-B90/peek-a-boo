@@ -48,6 +48,19 @@
                     "type": "image/png"
                 }
             ]
+        },
+        {
+            "name": "Configure settings",
+            "short_name": "Settings",
+            "description": "Configure and administer variables and VNC clients.",
+            "url": "/settings?source=pwa",
+            "icons": [
+                {
+                    "src": "/icons/settings_512.png",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
         }
     ]
 }

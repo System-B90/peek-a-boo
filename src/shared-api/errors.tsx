@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import assert from "assert";
-
 export class ClientError extends Error
 {
     status?: string;

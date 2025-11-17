@@ -22,10 +22,14 @@ jobs:
       - name: Build with docker-compose
         run: docker compose build
 
-      - name: Save Docker images
+      - name: Save Docker NextJS image
         run: |
           mkdir -p artifacts
           docker save "peekaboo/peekaboo_nextjs" | gzip > artifacts/peekaboo_nextjs.tar.gz
+
+      - name: Save Docker Websock image
+        run: |
+          mkdir -p artifacts
           docker save "peekaboo/peekaboo_websock" | gzip > artifacts/peekaboo_websock.tar.gz
 
       - name: Upload artifacts

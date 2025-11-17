@@ -1,20 +1,29 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
+import { hiveErrorHandler } from "@/server-api/hive";
+import { getSetting } from "@/server-api/settings";
+import { HiveConnectionError, isNetworkHostNotFoundError, isSyscallError } from "@/shared-api/errors";
 import postgres, { Sql } from "postgres";
 
 let pg: Sql<{}> | undefined;
 
-function getPostgres(): Sql<{}>
+async function getPostgres(): Promise<Sql<{}>>
 {
-    if (!pg)
+    try
     {
-        pg = postgres({
-            username: process.env.HIVE_POSTGRES_USERNAME ?? "grafanareader",
-            password: process.env.HIVE_PASSWORD,
-            database: "core",
-            host: process.env.HIVE_HOSTNAME,
-        });
+        if (!pg)
+        {
+            pg = postgres({
+                username: await getSetting('HIVE_POSTGRES_USERNAME'),
+                password: await getSetting('HIVE_PASSWORD'),
+                database: "core",
+                host: await getSetting('HIVE_HOSTNAME'),
+            });
+        }
+        return pg;
+    } catch (error: unknown)
+    {
+        throw await hiveErrorHandler(error);
     }
-    return pg;
 }
 
 const baseQuery = `SELECT
@@ -48,12 +57,18 @@ const baseQuery = `SELECT
 
 export async function queryPostgres(studentUsername?: string): Promise<unknown>
 {
-    const sql = getPostgres();
-
-    if (studentUsername)
+    try
     {
-        return sql.unsafe(`${baseQuery} AND mentee.username = '${studentUsername}'`);
-    }
+        const sql = await getPostgres();
 
-    return sql.unsafe(baseQuery);
+        if (studentUsername)
+        {
+            return await sql.unsafe(`${baseQuery} AND mentee.username = '${studentUsername}'`);
+        }
+
+        return await sql.unsafe(baseQuery);
+    } catch (error: unknown)
+    {
+        throw await hiveErrorHandler(error);
+    }
 }

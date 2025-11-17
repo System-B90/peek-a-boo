@@ -86,7 +86,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode; }) =>
         {
             return;
         }
-        console.log(`setVncClientPassword : ${clientPassword}`);
         setVncClientPassword(atob(clientPassword));
     }, [ cookies, setVncClientPassword ]);
 
@@ -100,7 +99,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode; }) =>
         setUsername(cookies[ "username" ]);
         try
         {
-            console.log(`setVncClientPassword : ${cookies[ "vncClientPassword" ]}`);
             setVncClientPassword(atob(cookies[ "vncClientPassword" ]));
         } catch { }
     }, [ cookies, setDisplayName, setUsername, setVncClientPassword ]);

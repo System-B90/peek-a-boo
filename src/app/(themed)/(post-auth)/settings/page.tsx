@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import
 {
     FormGroup,
@@ -11,94 +11,125 @@ import
     Stack,
     Box,
     CircularProgress,
-    Alert,
     IconButton,
-    InputAdornment
+    InputAdornment,
+    Divider,
+    Collapse,
 } from "@mui/material";
 
-import { Visibility, VisibilityOff, RestartAlt } from "@mui/icons-material";
+import { Visibility, VisibilityOff, RestartAlt, ExpandMore, ExpandLess } from "@mui/icons-material";
 import { safeApiFetcher } from "@/client-api/common-utils";
 import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
 import { enqueueSnackbar } from "notistack";
+import { UserControlledSettings } from "@/server-api/settings";
 
-type Settings = {
-    VNC_CLIENT_PASSWORD: string;
-    HIVE_HOSTNAME: string;
-    HIVE_PASSWORD: string;
-    HIVE_API_PASSWORD: string;
-    MATTERMOST_URL: string;
-    MATTERMOST_ACCESS_TOKEN: string;
-    TWEET_CHANNEL_ID: string;
-};
+function Section({ title, children }: {
+    title: string;
+    children: React.ReactNode;
+})
+{
+    const [ expanded, setExpanded ] = useState<boolean>(true);
+    const toggleSection = useCallback(() => setExpanded(v => !v), []);
 
-// If the server returns nothing, these are the defaults
-const DEFAULT_SETTINGS: Settings = {
-    VNC_CLIENT_PASSWORD: atob(process.env.VNC_CLIENT_PASSWORD ?? ""),
-    HIVE_HOSTNAME: process.env.HIVE_HOSTNAME ?? 'hive.org',
-    HIVE_PASSWORD: process.env.HIVE_PASSWORD ?? '',
-    HIVE_API_PASSWORD: process.env.HIVE_API_PASSWORD ?? '',
-    MATTERMOST_URL: process.env.MATTERMOST_URL ?? 'https://mattermost',
-    MATTERMOST_ACCESS_TOKEN: process.env.MATTERMOST_ACCESS_TOKEN ?? '',
-    TWEET_CHANNEL_ID: process.env.TWEET_CHANNEL_ID ?? '',
-};
+    return (
+        <Box>
+            <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                onClick={ toggleSection }
+                sx={ { cursor: "pointer" } }
+            >
+                <Typography variant="subtitle1" fontWeight={ 600 }>
+                    { title }
+                </Typography>
+                <IconButton size="small">
+                    { expanded ? <ExpandLess /> : <ExpandMore /> }
+                </IconButton>
+            </Stack>
+            <Collapse in={ expanded }>
+                <Stack spacing={ 2 } mt={ 1 }>
+                    { children }
+                </Stack>
+            </Collapse>
+            <Divider sx={ { mt: 2, mb: 2 } } />
+        </Box>
+    );
+}
+
+
+function PasswordField({ label, handleChange, value }: {
+    label: string;
+    handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    value: string;
+})
+{
+    const [ censored, setCensored ] = useState<boolean>(true);
+
+    return (
+        <TextField
+            label={ label }
+            fullWidth
+            type={ censored ? "password" : "text" }
+            value={ value }
+            onChange={ handleChange }
+            InputProps={ {
+                endAdornment: (
+                    <InputAdornment position="end">
+                        <IconButton onClick={ () => setCensored(v => !v) }>
+                            { censored ? <Visibility /> : <VisibilityOff /> }
+                        </IconButton>
+                    </InputAdornment>
+                ),
+            } }
+        />
+    );
+}
 
 export default function SettingsPage()
 {
-    const [ values, setValues ] = useState<Settings | null>(null);
-    const [ initialValues, setInitialValues ] = useState<Settings>(DEFAULT_SETTINGS);
+    const [ values, setValues ] = useState<UserControlledSettings | null>(null);
     const [ saving, setSaving ] = useState(false);
 
-    // Track which password fields are visible
-    const [ visibility, setVisibility ] = useState({
-        VNC_CLIENT_PASSWORD: false,
-        HIVE_PASSWORD: false,
-        HIVE_API_PASSWORD: false,
-        MATTERMOST_ACCESS_TOKEN: false,
-    });
-
-    const toggleVisibility = useCallback((key: keyof typeof visibility) =>
-    {
-        setVisibility((prev) => ({ ...prev, [ key ]: !prev[ key ] }));
-    }, [ setVisibility ]);
+    const defaultSettings = useMemo(() => safeApiFetcher("/api/settings/default") as Promise<UserControlledSettings>, []);
 
     useEffect(() =>
     {
-        safeApiFetcher('/api/settings')
+        safeApiFetcher("/api/settings")
             .then(setValues)
-            .catch((error) => enqueueApiErrorSnackbar('Failed to fetch settings!', error));
-    }, [ setValues ]);
+            .catch((error) => enqueueApiErrorSnackbar("Failed to fetch settings!", error));
+    }, []);
 
     const handleChange = useCallback(
-        (key: keyof Settings) => (e: React.ChangeEvent<HTMLInputElement>) =>
+        (key: keyof UserControlledSettings) => (e: React.ChangeEvent<HTMLInputElement>) =>
         {
             if (!values) return;
             setValues({ ...values, [ key ]: e.target.value });
-        }, [ values, setValues ]);
+        },
+        [ values ]
+    );
 
     const handleSave = useCallback(async () =>
     {
         if (!values) return;
-
         setSaving(true);
-
-        safeApiFetcher('/api/settings', { method: 'POST', body: JSON.stringify(values) })
+        safeApiFetcher("/api/settings", { method: "POST", body: JSON.stringify(values) })
             .then(() =>
             {
-                setInitialValues(values); // update baseline for "reset"
                 setSaving(false);
-                enqueueSnackbar('Settings saved!', { variant: 'success' });
+                enqueueSnackbar("Settings saved!", { variant: "success" });
             })
             .catch((error) =>
             {
                 setSaving(false);
-                enqueueApiErrorSnackbar('Failed to save settings!', error);
+                enqueueApiErrorSnackbar("Failed to save settings!", error);
             });
-    }, [ values, setInitialValues, setSaving ]);
+    }, [ values ]);
 
     const handleReset = useCallback(() =>
     {
-        setValues({ ...initialValues });
-    }, [ setValues ]);
+        defaultSettings.then((defaults) => setValues({ ...defaults }));
+    }, [ defaultSettings ]);
 
     if (!values)
     {
@@ -111,30 +142,6 @@ export default function SettingsPage()
         );
     }
 
-    // Utility: wrap password text fields with icon button
-    const PasswordField = (
-        key: keyof Settings,
-        label: string,
-        visibilityKey: keyof typeof visibility
-    ) => (
-        <TextField
-            label={ label }
-            fullWidth
-            type={ visibility[ visibilityKey ] ? "text" : "password" }
-            value={ (values as Settings)[ key ] }
-            onChange={ handleChange(key) }
-            InputProps={ {
-                endAdornment: (
-                    <InputAdornment position="end">
-                        <IconButton onClick={ () => toggleVisibility(visibilityKey) }>
-                            { visibility[ visibilityKey ] ? <VisibilityOff /> : <Visibility /> }
-                        </IconButton>
-                    </InputAdornment>
-                ),
-            } }
-        />
-    );
-
     return (
         <div className="w-full h-full flex justify-center p-8">
             <Paper className="w-full max-w-2xl p-6" elevation={ 3 }>
@@ -142,66 +149,59 @@ export default function SettingsPage()
                     Peek-a-Boo Settings
                 </Typography>
 
-                <Box sx={ { height: "1rem" } } />
+                <Box sx={ { height: '1.5rem' } } />
 
                 <FormGroup>
                     <Stack spacing={ 3 }>
 
-                        {/* Non-password */ }
-                        <TextField
-                            label="VNC Client Password"
-                            fullWidth
-                            type={ visibility.VNC_CLIENT_PASSWORD ? "text" : "password" }
-                            value={ values.VNC_CLIENT_PASSWORD }
-                            onChange={ handleChange("VNC_CLIENT_PASSWORD") }
-                            InputProps={ {
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            onClick={ () =>
-                                                toggleVisibility("VNC_CLIENT_PASSWORD")
-                                            }
-                                        >
-                                            { visibility.VNC_CLIENT_PASSWORD ? (
-                                                <VisibilityOff />
-                                            ) : (
-                                                <Visibility />
-                                            ) }
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            } }
-                        />
+                        {/* VNC */ }
+                        <Section title="VNC Settings">
+                            <PasswordField label="VNC Client Password" handleChange={ handleChange("VNC_CLIENT_PASSWORD") } value={ values[ "VNC_CLIENT_PASSWORD" ] } />
+                        </Section>
 
-                        <TextField
-                            label="Hive Hostname"
-                            fullWidth
-                            value={ values.HIVE_HOSTNAME }
-                            onChange={ handleChange("HIVE_HOSTNAME") }
-                        />
+                        {/* Hive */ }
+                        <Section title="Hive Settings">
+                            <TextField
+                                label="Hive Hostname"
+                                fullWidth
+                                value={ values.HIVE_HOSTNAME }
+                                onChange={ handleChange("HIVE_HOSTNAME") }
+                            />
+                            <PasswordField label="Hive Password" handleChange={ handleChange("HIVE_PASSWORD") } value={ values[ "HIVE_PASSWORD" ] } />
+                            <TextField
+                                label="Hive API Username"
+                                fullWidth
+                                value={ values.HIVE_API_USERNAME }
+                                onChange={ handleChange("HIVE_API_USERNAME") }
+                            />
+                            <PasswordField label="Hive API Password" handleChange={ handleChange("HIVE_API_PASSWORD") } value={ values[ "HIVE_API_PASSWORD" ] } />
+                            <TextField
+                                label="Hive Postgres Username"
+                                fullWidth
+                                value={ values.HIVE_POSTGRES_USERNAME }
+                                onChange={ handleChange("HIVE_POSTGRES_USERNAME") }
+                            />
+                        </Section>
 
-                        { PasswordField("HIVE_PASSWORD", "Hive Password", "HIVE_PASSWORD") }
-                        { PasswordField("HIVE_API_PASSWORD", "Hive API Password", "HIVE_API_PASSWORD") }
-                        <TextField
-                            label="Mattermost URL"
-                            fullWidth
-                            value={ values.MATTERMOST_URL }
-                            onChange={ handleChange("MATTERMOST_URL") }
-                        />
+                        {/* Mattermost */ }
+                        <Section title="Mattermost Settings">
+                            <TextField
+                                label="Mattermost URL"
+                                fullWidth
+                                value={ values.MATTERMOST_URL }
+                                onChange={ handleChange("MATTERMOST_URL") }
+                            />
+                            <PasswordField label="Mattermost Access Token" handleChange={ handleChange("MATTERMOST_ACCESS_TOKEN") } value={ values[ "MATTERMOST_ACCESS_TOKEN" ] } />
+                            <TextField
+                                label="Tweet Channel ID"
+                                fullWidth
+                                value={ values.TWEET_CHANNEL_ID }
+                                onChange={ handleChange("TWEET_CHANNEL_ID") }
+                            />
+                        </Section>
 
-                        { PasswordField(
-                            "MATTERMOST_ACCESS_TOKEN",
-                            "Mattermost Access Token",
-                            "MATTERMOST_ACCESS_TOKEN"
-                        ) }
 
-                        <TextField
-                            label="Tweet Channel ID"
-                            fullWidth
-                            value={ values.TWEET_CHANNEL_ID }
-                            onChange={ handleChange("TWEET_CHANNEL_ID") }
-                        />
-
+                        {/* Actions */ }
                         <Stack direction="row" spacing={ 2 } sx={ { mt: 1 } }>
                             <Button
                                 variant="contained"

@@ -1,9 +1,10 @@
-import { ClientApiError, MattermostApiError, MattermostConnectionError } from "@/shared-api/errors";
+import { getSetting } from "@/server-api/settings";
+import { ClientApiError, isNetworkHostNotFoundError, isSyscallError, MattermostApiError, MattermostConnectionError } from "@/shared-api/errors";
 
-const MATTERMOST_URL = process.env.MATTERMOST_URL ?? 'https://mattermost';
 
 export async function sendMessage({ botToken, channelId, message, image, }: { botToken: string, channelId: string, message: string, image?: string, })
 {
+    const MATTERMOST_URL = await getSetting('MATTERMOST_URL');
     try
     {
         const fileIds: Array<string> = [];
@@ -52,21 +53,13 @@ export async function sendMessage({ botToken, channelId, message, image, }: { bo
         {
             throw new MattermostApiError(`Failed to send mattermost message! ${await response.text()}`);
         }
-        console.log(await response.text());
+        return await response.text();
     } catch (error: unknown)
     {
         if (!(error instanceof Error)) { throw error; }
-        if (error.name === 'TypeError'
-            && typeof error.cause === 'object'
-            && error.cause !== null
-            && 'code' in error.cause
-            && 'syscall' in error.cause
-            && 'hostname' in error.cause
-            && error.cause.code === 'ENOTFOUND'
-            && error.cause.syscall === 'getaddrinfo'
-        )
+        if (isNetworkHostNotFoundError(error))
         {
-            throw new MattermostConnectionError(`${error.cause.hostname} is unreachable! Please check MATTERMOST_URL environment variable.`);
+            throw new MattermostConnectionError(`${error.cause.hostname} is unreachable! Please check MATTERMOST_URL in settings or environment variables.`);
         }
         throw error;
     }
@@ -74,20 +67,22 @@ export async function sendMessage({ botToken, channelId, message, image, }: { bo
 
 export async function sendBotMessage({ channelId, message, image, }: { channelId: string, message: string, image?: string, })
 {
+    const botToken = await getSetting("MATTERMOST_ACCESS_TOKEN");
     return sendMessage({
         message,
         image: image,
-        botToken: process.env.MATTERMOST_ACCESS_TOKEN ?? '',
-        channelId: channelId,
+        botToken,
+        channelId,
     });
 }
 
 export async function sendTweet({ message, image }: { message: string; image?: string; })
 {
+    const channelId = await getSetting("TWEET_CHANNEL_ID");
     return sendBotMessage({
         message,
         image: image,
-        channelId: process.env.TWEET_CHANNEL_ID ?? '',
+        channelId,
     });
 }
 

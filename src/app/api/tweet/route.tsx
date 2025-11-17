@@ -6,12 +6,15 @@ import { sendTweet } from "@/server-api/mattermost";
 
 export async function POST(
     request: NextRequest,
-) {
-    try {
+)
+{
+    try
+    {
         const { message, image } = await request.json();
         await sendTweet({ message, image });
         return ApiSuccess({ 'ok': 'ok' });
-    } catch (e: unknown) {
+    } catch (e: unknown)
+    {
         return catchHandler(request, e);
     }
 }

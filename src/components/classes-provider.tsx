@@ -54,7 +54,7 @@ export const ClassesProvider = ({
             })
             .catch((error) =>
             {
-                enqueueApiErrorSnackbar("Failed to fetch all student's info", error);
+                enqueueApiErrorSnackbar("Failed to fetch classes info!", error);
             });
     }, [ setClasses, rawHiveClassToClass ]);
 

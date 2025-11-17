@@ -110,7 +110,10 @@ export async function catchHandler<T extends NextRequest | NextApiRequest>(reque
         return ApiErrorMaker(e);
     }
 
-    console.error(e);
+    if (e instanceof Error)
+    {
+        console.error(e, e.stack);
+    }
     return ApiError(e);
 }
 

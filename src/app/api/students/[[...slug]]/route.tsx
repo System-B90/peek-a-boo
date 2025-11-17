@@ -4,6 +4,7 @@ import { queryPostgres } from "@/server-api/postgres";
 import { NextRequest } from "next/server";
 import { ApiSuccess, assertUserLoggedIn, catchHandler } from "@/app/api/common";
 import { ClientApiError } from "@/shared-api/errors";
+import { hiveErrorHandler } from "@/server-api/hive";
 
 export async function GET(
     request: NextRequest,

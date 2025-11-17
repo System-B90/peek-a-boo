@@ -102,80 +102,64 @@ export function constructErrorFromNetworkMessage(networkMessage: ClientApiError)
     return new ClientApiError(networkMessage);
 }
 
-// Define the shape of the syscall error cause
-interface SyscallErrorCause
-{
-    code: string;
-    syscall: string;
-}
-
-// Narrowed type for errors matching the syscall pattern
-export function isSyscallError(error: unknown): error is
-    | (Error & { cause: SyscallErrorCause; })
-    | (Error & SyscallErrorCause) 
-{
-    if (!(error instanceof Error)) return false;
-    const cause = (error as any).cause;
-    return (
-        typeof cause === 'object' &&
-        cause !== null &&
-        'code' in cause &&
-        'syscall' in cause &&
-        typeof (cause as any).code === 'string' &&
-        typeof (cause as any).syscall === 'string'
-    ) || (
-            'code' in error &&
-            'syscall' in error &&
-            typeof (error as any).code === 'string' &&
-            typeof (error as any).syscall === 'string'
-
-        );
-}
-
-export function parseSyscallError(error: unknown): { syscall: string; code: string; }
-{
-    if (!isSyscallError(error))
-    {
-        throw new TypeError('Cannot parse non-syscall error as SyscallError!');
-    }
-    if ('cause' in error && error.cause)
-    {
-        assert(typeof error.cause === 'object');
-        assert('code' in error.cause && typeof error.cause.code === 'string');
-        assert('syscall' in error.cause && typeof error.cause.syscall === 'string');
-        return {
-            code: error.cause.code,
-            syscall: error.cause.syscall,
-        };
-    } else
-    {
-        return {
-            code: (error as SyscallErrorCause).code,
-            syscall: (error as SyscallErrorCause).syscall,
-        };
-    }
-}
-
-export function isNetworkHostNotFoundError(error: unknown): error is Error & { cause: SyscallErrorCause; } & { cause: { code: 'ENOTFOUND'; syscall: 'getaddrinfo'; hostname: string; }; }
-{
-    if (!isSyscallError(error)) { return false; }
-    const { code, syscall } = parseSyscallError(error);
-    if (
-        code !== 'ENOTFOUND'
-        || syscall !== 'getaddrinfo') { return false; }
-
-    const hostname = (typeof error.cause === 'object' && error.cause && 'hostname' in error.cause) ? error.cause.hostname : ('hostname' in error ? error.hostname : null);
-    if (typeof hostname !== 'string') { return false; }
-
-    return true;
-}
-
 export function parseNetworkHostNotFoundError(error: unknown)
 {
-    if (!isNetworkHostNotFoundError(error)) { throw error; }
-    const hostname = (typeof error.cause === 'object' && error.cause && 'hostname' in error.cause) ? error.cause.hostname : ('hostname' in error ? error.hostname : null);
+    if (!(error instanceof Error)) { return; }
+    const data: { code?: unknown; syscall?: unknown; hostname?: unknown; } | unknown = (typeof error.cause === 'object' && error.cause !== null) ? { ...error, ...error.cause } : { ...error };
+
+    if (!(
+        typeof data === 'object' &&
+        data !== null &&
+        'code' in data &&
+        'syscall' in data &&
+        'hostname' in data
+    )) { return; }
+
+    const { code, syscall, hostname } = data;
+
+    if (code !== 'ENOTFOUND') { return; }
+    if (syscall !== 'getaddrinfo') { return; }
+    if (typeof hostname === 'undefined' || hostname === undefined) { return; }
 
     return {
-        ...parseSyscallError(error), hostname,
+        code: 'ENOTFOUND',
+        syscall,
+        hostname,
+    };
+}
+
+export function parseNetworkConnectionResetError(error: unknown)
+{
+    if (!(error instanceof Error)) { return; }
+    if (typeof error.cause !== 'object' || error.cause === null) { return; }
+    if (!('code' in error.cause)) { return; }
+    if (error.cause.code !== 'ECONNRESET') { return; }
+    if (!('host' in error.cause)) { return; }
+    if (typeof error.cause.host !== 'string') { return; }
+    if (!('port' in error.cause)) { return; }
+    if (typeof error.cause.port !== 'number') { return; }
+
+    return {
+        host: error.cause.host,
+        code: error.cause.code,
+        port: error.cause.port,
+    };
+}
+
+export function parseNetworkTimeoutError(error: unknown)
+{
+    if (!(error instanceof Error)) { return; }
+    if (typeof error.cause !== 'object' || error.cause === null) { return; }
+    if (!('code' in error.cause)) { return; }
+    if (error.cause.code !== 'CONNECT_TIMEOUT') { return; }
+    if (!('address' in error.cause)) { return; }
+    if (typeof error.cause.address !== 'string') { return; }
+    if (!('port' in error.cause)) { return; }
+    if (typeof error.cause.port !== 'number') { return; }
+
+    return {
+        host: error.cause.address,
+        code: error.cause.code,
+        port: error.cause.port,
     };
 }

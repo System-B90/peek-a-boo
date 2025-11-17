@@ -1,16 +1,31 @@
 'use server';
 
 import { getSetting } from "@/server-api/settings";
-import { HiveConnectionError, HiveError, isNetworkHostNotFoundError, parseNetworkHostNotFoundError } from "@/shared-api/errors";
+import { HiveError, parseNetworkHostNotFoundError, HiveConnectionError, parseNetworkConnectionResetError, parseNetworkTimeoutError } from "@/shared-api/errors";
 
 export async function hiveErrorHandler(error: unknown): Promise<unknown | HiveError>
 {
     if (error instanceof HiveError) { return error; }
-    if (isNetworkHostNotFoundError(error))
+
+    const hostNotFound = parseNetworkHostNotFoundError(error);
+    if (hostNotFound)
     {
-        const { hostname } = parseNetworkHostNotFoundError(error);
-        return new HiveConnectionError(`Failed to connect to ${hostname}. Check HIVE_HOSTNAME setting or enivornment variable.`);
+        return new HiveConnectionError(`Failed to resolve DNS ${hostNotFound.hostname}. Check HIVE_HOSTNAME setting or enivornment variable.`);
     }
+
+    const connectionReset = parseNetworkConnectionResetError(error);
+    if (connectionReset)
+    {
+        return new HiveConnectionError(`Failed to connect to ${connectionReset.host}:${connectionReset.port}. Port returned TCP Reset. Is Hive running? Are the docker ports forwarded?`);
+    }
+
+    const connectionTimeout = parseNetworkTimeoutError(error);
+    if (connectionTimeout)
+    {
+        return new HiveConnectionError(`Connection timed out on ${connectionTimeout.host}. Is Hive healthy?`);
+    }
+
+
     return error;
 }
 

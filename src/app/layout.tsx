@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "@/style/globals.css";
 import { Typography } from "@mui/material";
 
@@ -6,13 +6,16 @@ export const metadata: Metadata = {
   title: "Peek-a-Boo",
   description: "Student Monitor | By Bis90",
   manifest: "/manifest.webmanifest",
-  themeColor: '#bb86fc',
   applicationName: 'Peek-a-Boo',
   authors: [
     { name: 'Michael K. Steinberg (Bis 90 כ"ה)' },
   ],
   creator: 'Michael K. Steinberg',
   keywords: [ 'peekaboo', 'peek-a-boo', 'student monitor', 'bis90', 'vnc', 'shadow', 'rdp', 'x-control', 'x-shadow', 'x-rdp', 'bisvnc', 'bis-vnc', 'tightvnc', ],
+};
+
+export const viewport: Viewport = {
+  themeColor: '#bb86fc',
 };
 
 function Footer()

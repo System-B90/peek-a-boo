@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import { hiveErrorHandler } from "@/server-api/hive";
 import { getSetting } from "@/server-api/settings";
-import { HiveConnectionError, isNetworkHostNotFoundError, isSyscallError } from "@/shared-api/errors";
 import postgres, { Sql } from "postgres";
 
 let pg: Sql<{}> | undefined;

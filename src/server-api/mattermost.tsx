@@ -1,5 +1,5 @@
 import { getSetting } from "@/server-api/settings";
-import { ClientApiError, isNetworkHostNotFoundError, isSyscallError, MattermostApiError, MattermostConnectionError } from "@/shared-api/errors";
+import { ClientApiError, isNetworkHostNotFoundError, MattermostApiError, MattermostConnectionError } from "@/shared-api/errors";
 
 
 export async function sendMessage({ botToken, channelId, message, image, }: { botToken: string, channelId: string, message: string, image?: string, })

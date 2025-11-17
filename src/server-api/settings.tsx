@@ -37,7 +37,7 @@ async function loadSettingsFile(): Promise<UserControlledSettings>
     {
         const raw = await fs.readFile(SETTINGS_PATH, "utf8");
         return JSON.parse(raw);
-    } catch (_)
+    } catch
     {
         // file does not exist yet → return defaults
         return DEFAULT_SETTINGS;

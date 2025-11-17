@@ -1,5 +1,5 @@
 import "./glyphs.css";
-import { Tooltip, TooltipProps } from "@mui/material";
+import { TooltipProps } from "@mui/material";
 import Glypher from "./glypher";
 export default function HomeGlyph({ glyphTitle, placement, ...props }: { glyphTitle: string, placement?: TooltipProps[ "placement" ]; } & React.HTMLAttributes<HTMLDivElement>)
 {

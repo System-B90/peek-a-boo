@@ -25,12 +25,12 @@ jobs:
       - name: Save Docker NextJS image
         run: |
           mkdir -p artifacts
-          docker save "peekaboo/peekaboo_nextjs" | gzip > artifacts/peekaboo_nextjs.tar.gz
+          docker save "peekaboo/nextjs" | gzip > artifacts/peekaboo_nextjs.tar.gz
 
       - name: Save Docker Websock image
         run: |
           mkdir -p artifacts
-          docker save "peekaboo/peekaboo_websock" | gzip > artifacts/peekaboo_websock.tar.gz
+          docker save "peekaboo/websock" | gzip > artifacts/peekaboo_websock.tar.gz
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

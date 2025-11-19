@@ -24,11 +24,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - image: peekaboo_nextjs
+          - image: nextjs
             context: .
             dockerfile: ./Dockerfile
 
-          - image: peekaboo_websock
+          - image: websock
             context: ./websock
             dockerfile: ./websock/Dockerfile
 

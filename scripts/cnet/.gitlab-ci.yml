@@ -60,8 +60,8 @@ compose-all:
     - docker-compose version
     # - unset DOCKER_HOST
     - docker-compose build
-    - docker push peekaboo/peekaboo_nextjs
-    - docker push peekaboo/peekaboo_websock
+    - docker push peekaboo/nextjs
+    - docker push peekaboo/websock
   tags:
     - shell
     - docker-compose

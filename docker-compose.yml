@@ -1,6 +1,6 @@
 services:
   nextjs:
-    image: peekaboo/peekaboo_nextjs
+    image: peekaboo/nextjs
     container_name: peekaboo_nextjs
     build:
       context: ./
@@ -40,7 +40,7 @@ services:
       - frontend
 
   websock:
-    image: peekaboo/peekaboo_websock
+    image: peekaboo/websock
     container_name: peekaboo_websock
     build:
       context: ./websock/

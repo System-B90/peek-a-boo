@@ -23,9 +23,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image:
-          - peekaboo_nextjs
-          - peekaboo_websock
+        include:
+          - image: peekaboo_nextjs
+            context: .
+            dockerfile: ./Dockerfile
+
+          - image: peekaboo_websock
+            context: ./websock
+            dockerfile: ./websock/Dockerfile
 
     steps:
       - name: Checkout repository
@@ -49,8 +54,8 @@ jobs:
         id: push
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

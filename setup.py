@@ -6,7 +6,6 @@ Name: setup.py
 
 import base64
 import os
-import pathlib
 import random
 import sys
 from datetime import datetime, timedelta
@@ -100,17 +99,18 @@ SECRET_VARS = ("SYM_ENC_KEY", "JWT_SECRET")
 
 PROMPT_VARS: Dict[str, str] = {
     "HOSTNAME": "Hostname for Peek-a-Boo (Used for certificate)",
-    # "WEBSOCKET_SERVER_HOSTNAME": "Hostname for WebSocket server",
+    "WEBSOCKET_SERVER_HOSTNAME": "Hostname for WebSocket server",
     "VNC_CLIENT_PASSWORD": "Password for VNC on student PCs",
-    
+    #
     "HIVE_HOSTNAME": 'Hostname of Hive instance (e.g. "hive.org")',
     "HIVE_PASSWORD": "Password for Hive PostgreSQL",
     "HIVE_API_PASSWORD": "Password for Hive API",
-    
+    #
     "MATTERMOST_URL": 'URL for Mattermost (e.g. "\'https://mattermost.domain.tld")',
     "MATTERMOST_ACCESS_TOKEN": "Mattermost personal access token",
     "TWEET_CHANNEL_ID": "Mattermost channel ID for tweets",
-
+    #
+    "AUTH_SYSTEM": 'Authentication system to use ("ldap" or "hive")',
     "LDAP_DC": 'Domain for LDAP authentication (e.g. "dc=DOMAIN,dc=TLD")',
     "LDAP_URL": 'LDAP URL for authentication (e.g. "ldaps://domain.tld")',
     "SEGEL_OU_PATH": "OU path in the DC in which to search for Segel users (e.g. OU=Segel,OU=Course,DC=DOMAIN,DC=TLD)",
@@ -166,6 +166,7 @@ def test_hive_user(hostname: str, password: str) -> bool:
             password=password,
             hive_url=f"https://{hostname}/",
             verify=False,
+            skip_version_check=True,
         ) as client:
             client.get_hive_version()
             return True
@@ -180,6 +181,7 @@ def get_hive_students(hostname: str, password: str) -> List[Tuple[str, str]]:
         password=password,
         hive_url=f"https://{hostname}/",
         verify=False,
+        skip_version_check=True,
     ) as client:
         return [
             (

@@ -1,13 +1,16 @@
 'use client';
+import { getAuthSystem } from "@/client-api/auth";
 import { safeApiFetcher } from "@/client-api/common-utils";
+import { AuthSystem } from "@/shared-api/types";
 import { Box, Button, Grid, TextField, Typography } from "@mui/material";
-import { FormEventHandler, useCallback, useState } from "react";
+import { FormEventHandler, useCallback, useMemo, useState } from "react";
 
 export default function LoginPage()
 {
     const [ username, setUsername ] = useState('');
     const [ password, setPassword ] = useState('');
     const [ error, setError ] = useState<null | string>(null);
+    const [ authSystem, setAuthSystem ] = useState<AuthSystem>();
     const handleSubmit: FormEventHandler = useCallback((event) =>
     {
         event.preventDefault();
@@ -44,6 +47,11 @@ export default function LoginPage()
             setPassword('');
         });
     }, [ username, password, setError, setPassword ]);
+
+    useMemo(() =>
+    {
+        getAuthSystem().then(setAuthSystem);
+    }, [ setAuthSystem ]);
 
     return (
         <div className="flex flex-col items-center pt-20">
@@ -86,7 +94,7 @@ export default function LoginPage()
                         </form>
                     </Grid>
                     <Typography variant="h6" component="h6" dir="rtl">
-                        השתמשו במשתמש ה-LDAP שלכם
+                        השתמשו במשתמש ה-{ authSystem === 'ldap' ? 'LDAP' : 'Hive' } שלכם
                     </Typography>
                 </Grid>
             </Box>

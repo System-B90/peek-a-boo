@@ -70,3 +70,9 @@ export interface Tag
     students: Array<string>; // Student usernames
 }
 
+
+export enum AuthSystem
+{
+    LDAP = "ldap",
+    HIVE = "hive",
+}

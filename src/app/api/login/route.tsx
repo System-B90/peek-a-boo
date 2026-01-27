@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import { isUserSegel, verifyUser } from "@/server-api/ldap";
 import { NextRequest } from "next/server";
 import { ApiSuccess, catchHandler, setUserData } from "@/app/api/common";
 import { JWTUserData } from "@/server-api/enc";
@@ -9,6 +8,7 @@ import { sendAdminMessage } from "@/server-api/mattermost";
 import { headers } from "next/headers";
 import assert from "assert";
 import { getSetting } from "@/server-api/settings";
+import { verifyUser } from "@/server-api/auth";
 
 const ALLOW_LOGIN_BYPASS = process.env.ALLOW_LOGIN_BYPASS === "true";
 
@@ -31,21 +31,21 @@ export async function POST(request: NextRequest)
                 requestHeaders.get("X-Forwarded-For") ??
                 requestHeaders.get("origin") ??
                 request.nextUrl.toString();
-            if (!isUserSegel(user))
+            if (!user.isUserAllowedToPeek)
             {
                 sendAdminMessage({
-                    message: `Login blocked for ${user.sAMAccountName} to ${origin}.`,
+                    message: `Login blocked for ${user.username} to ${origin}.`,
                 });
                 throw new ClientApiError("Authentication failed!");
             }
 
             sendAdminMessage({
-                message: `${user.sAMAccountName} logged in from ${origin}.`,
+                message: `${user.username} logged in from ${origin}.`,
             });
 
             clientSideUserData = {
-                name: user.cn,
-                username: user.sAMAccountName,
+                name: user.displayName,
+                username: user.username,
                 webSocketHost: "",
                 vncClientPassword: await getSetting("VNC_CLIENT_PASSWORD") ?? "",
             };

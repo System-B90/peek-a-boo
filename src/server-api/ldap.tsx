@@ -98,7 +98,7 @@ export async function verifyUser(
                     if (error)
                     {
                         console.error(error);
-                        reject(new ClientApiError("Invalid username or password!"));
+                        reject(new ClientApiError("Authentication failed!"));
                     } else
                     {
                         // Search for the user's information

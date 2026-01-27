@@ -5,18 +5,27 @@ Monitor your students the smart way
 
 ## Quick Start
 1) Acquire an Ubuntu machine with docker.
-2) Create a TLS certificate for your peek-a-boo domain and place it in ./utils/certs.
+2) Create a TLS certificate for your peek-a-boo domain (and the "wss." domain) and place it in ./utils/certs.
+   1) Your certificate should look like this:
+    ```
+    DOMAIN NAME: peek-a-boo.my-domain.dom
+    ALT NAME: wss.peek-a-boo.my-domain.dom
+    ```
 3) Pull / import the 3 images required.
+   1) nginx
+   2) peekaboo_nextjs _(from releases tab)_
+   3) peekaboo_websock _(from releases tab)_
 4) Setup the environment.
-
-```bash
-py -3.11 -m venv .venv
-source ./.venv/bin/activate
-pip install PyHiveLMS dotenv requests
-python ./setup.py
-
-sudo docker-compose up
-```
+   ```bash
+   py -3.11 -m venv .venv
+   source ./.venv/bin/activate
+   pip install PyHiveLMS dotenv requests cryptography
+   python ./setup.py
+    ```
+5) Boot up the environment.
+    ```bash
+   sudo docker-compose up
+   ```
 
 
 ## Development Setup (Windows)

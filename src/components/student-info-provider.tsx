@@ -102,7 +102,7 @@ export const StudentInfoProvider = ({
             setMentorLastName(data.mentorLastName);
             setProgramName(data.programName);
             setHiveId(data.hiveId);
-            setHostname(data.hostname);
+            setHostname(data.hostname ? data.hostname : studentUsername);
             setStudentNumber(data.studentNumber);
 
         }).catch((error) =>

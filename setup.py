@@ -292,6 +292,7 @@ def generate_self_signed_cert(
 
 def handle_certs(values: dict[str, Any]):
     ROOT_CERT_PATH = Path("./utils/certs/")
+    os.makedirs(ROOT_CERT_PATH, exist_ok=True)
 
     CERT_PATH = ROOT_CERT_PATH / "star.crt"
     KEY_PATH = ROOT_CERT_PATH / "star.key"

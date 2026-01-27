@@ -1,13 +1,13 @@
 client_max_body_size 30M;
 
 server {
-    listen 8180;
+    listen 80;
     server_name $SERVER_HOSTNAME;
     return 301 https://$SERVER_HOSTNAME$request_uri;
 }
 
 server {
-    listen 4443 ssl;
+    listen 443 ssl;
     server_name $SERVER_HOSTNAME;
 
     ssl_certificate /etc/nginx/certs/star.crt;
@@ -29,7 +29,7 @@ server {
 }
 
 server {
-    listen 4443 ssl;
+    listen 443 ssl;
     server_name $WEBSOCKET_SERVER_HOSTNAME;
 
     ssl_certificate /etc/nginx/certs/star.crt;

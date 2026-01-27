@@ -1,6 +1,6 @@
 import { authenticateHiveUser } from "@/server-api/hive";
 import { Clearance } from "@/server-api/hive-types";
-import { isUserSegel, verifyUser as verifyUserLDAP } from "@/server-api/ldap.tsx";
+import { isUserSegel, verifyUser as verifyUserLDAP } from "@/server-api/ldap";
 import { AuthSystem } from "@/shared-api/types";
 
 export function getAuthSystem(): AuthSystem

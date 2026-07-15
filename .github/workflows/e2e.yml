@@ -227,7 +227,7 @@ jobs:
             - name: Wait for Peek-a-boo to be ready
               run: |
                   for i in $(seq 1 90); do
-                    code=$(curl -ks -o /dev/null -w "%{http_code}" https://peekaboo.dev/login || true)
+                    code=$(curl -ks -o /dev/null -w "%{http_code}" https://peekaboo.dev:8443/login || true)
                     if [ "$code" -ge 200 ] && [ "$code" -lt 500 ]; then
                       echo "Peek-a-boo is up (HTTP $code)"
                       exit 0
@@ -243,7 +243,7 @@ jobs:
               run: npm run test:e2e
               env:
                   CI: true
-                  BASE_URL: https://peekaboo.dev
+                  BASE_URL: https://peekaboo.dev:8443
 
             # ── Artifacts ────────────────────────────────────────────────────────
             - name: Upload Playwright Report

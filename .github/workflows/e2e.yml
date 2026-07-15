@@ -11,10 +11,6 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
 
-env:
-    HIVE_REPO: hivelms/Hive
-    HIVE_REF: feature/sso
-
 jobs:
     e2e:
         name: Full E2E Tests (with Hive)
@@ -25,128 +21,22 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v7
 
-            # Preinstalled SDKs (dotnet/android/ghc) eat ~30GB the job never
-            # uses. Building + saving ~13 Hive images later fills the root
-            # partition without this ("no space left on device" on docker save).
-            - name: Free disk space
-              run: |
-                  sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup
-                  df -h /
-
             # ── Hive (identity provider + organizational data) ────────────────
-            - name: Verify Hive checkout token and SSO branch
-              env:
-                  HIVE_CHECKOUT_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-              run: |
-                  if [ -z "$HIVE_CHECKOUT_TOKEN" ]; then
-                    echo "::error::No Hive checkout token configured. Add ACCESS_TOKEN (PAT with read access to hivelms/Hive) under Settings → Secrets and variables → Actions."
-                    exit 1
-                  fi
-                  repo_code=$(curl -s -o /dev/null -w "%{http_code}" \
-                    -H "Authorization: token ${HIVE_CHECKOUT_TOKEN}" \
-                    "https://api.github.com/repos/${HIVE_REPO}")
-                  if [ "$repo_code" = "401" ]; then
-                    echo "::error::The Hive checkout token is invalid, expired, or revoked (HTTP 401). Generate a new PAT and update the secret."
-                    exit 1
-                  fi
-                  if [ "$repo_code" != "200" ]; then
-                    echo "::error::The token cannot read ${HIVE_REPO} (HTTP $repo_code). Check: classic PAT has the 'repo' scope; the hivelms org allows classic PATs (or SSO-authorize the token for the org); a fine-grained PAT must be approved by the hivelms org admins."
-                    exit 1
-                  fi
-                  branch_code=$(curl -s -o /dev/null -w "%{http_code}" \
-                    -H "Authorization: token ${HIVE_CHECKOUT_TOKEN}" \
-                    "https://api.github.com/repos/${HIVE_REPO}/branches/${HIVE_REF}")
-                  if [ "$branch_code" != "200" ]; then
-                    echo "::error::The token can read ${HIVE_REPO}, but branch '${HIVE_REF}' was not found (HTTP $branch_code)."
-                    exit 1
-                  fi
-                  echo "Hive token OK — repository and branch '${HIVE_REF}' are reachable."
-
-            - name: Checkout Hive (SSO branch)
-              uses: actions/checkout@v7
+            # Shared org action: disk cleanup, token verify, Hive checkout,
+            # commit-keyed image cache (or registry pull once Hive publishes
+            # images), boot + init, readiness check. Hive repo/ref defaults
+            # live in the action — one place to update for all consumer repos.
+            - name: Set up Hive
+              uses: System-B15/.github/actions/setup-hive@main
               with:
-                  repository: ${{ env.HIVE_REPO }}
-                  ref: ${{ env.HIVE_REF }}
-                  token: ${{ secrets.ACCESS_TOKEN }}
-                  path: hive
-                  filter: blob:limit=50k
-                  persist-credentials: false
-
-            - name: Map local hostnames
-              run: |
-                  echo "127.0.0.1 hive.org" | sudo tee -a /etc/hosts
-                  echo "127.0.0.3 peekaboo.dev" | sudo tee -a /etc/hosts
-
-            - name: Setup Python 3.11
-              uses: actions/setup-python@v6
-              with:
-                  python-version: "3.11"
-
-            - name: Resolve Hive commit
-              id: hive_sha
-              working-directory: hive
-              run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-            - name: Cache Hive prod images
-              id: hive_images_cache
-              uses: actions/cache@v6
-              with:
-                  path: /tmp/hive-images.tar
-                  key: hive-prod-images-v1-${{ steps.hive_sha.outputs.sha }}
-
-            - name: Load cached Hive images
-              if: steps.hive_images_cache.outputs.cache-hit == 'true'
-              run: docker load -i /tmp/hive-images.tar
-
-            # Same build/init sequence as Bluz's e2e.yml — Hive images are
-            # cache-shared across our repos, keyed on the checked-out commit.
-            - name: Build & Initialize Hive
-              working-directory: hive
-              env:
-                  HIVE_CACHE_HIT: ${{ steps.hive_images_cache.outputs.cache-hit }}
-              run: |
-                  cat > .env.override <<'EOF'
-                  HIVE_CORE_WORKERS=2
-                  HIVE_CORE_THREADS=2
-                  HIVE_NGINX_WORKERS=1
-                  EOF
-                  compose="docker compose -f docker-compose.yaml"
-
-                  if [ "$HIVE_CACHE_HIT" = "true" ]; then
-                    echo "Reusing cached Hive images — skipping build."
-                  else
-                    echo "No Hive image cache — building from source."
-                    python3 manage_hive.py build_deps
-                    $compose build
-                    docker builder prune -af
-                  fi
-
-                  $compose up -d
-                  $compose exec -T core python manage.py migrate
-                  $compose exec -T core python manage.py collectstatic --noinput
-                  $compose exec -T database sh /update.sh
-                  $compose exec -T core python manage.py service_accounts
-                  $compose exec -T core python manage.py load_tags
-                  $compose exec -T \
-                    -e DJANGO_SUPERUSER_USERNAME=admin \
-                    -e DJANGO_SUPERUSER_PASSWORD=Password1 \
-                    -e DJANGO_SUPERUSER_EMAIL=admin@hive.org \
-                    core python manage.py createsuperuser --noinput
-                  $compose exec -T core python manage.py load_programs
-
-                  if [ "$HIVE_CACHE_HIT" != "true" ]; then
-                    imgs=$(docker images 'hive/*' --format '{{.Repository}}:{{.Tag}}' | grep -v -- '-base' || true)
-                    if [ -n "$imgs" ]; then
-                      echo "Saving Hive images for cache:"; echo "$imgs"
-                      docker save -o /tmp/hive-images.tar $imgs
-                    fi
-                  fi
+                  hive-token: ${{ secrets.ACCESS_TOKEN }}
+                  extra-hosts: 127.0.0.3 peekaboo.dev
 
             # Peek-a-boo authenticates end users directly against Hive's
             # /api/core/token/ (no OAuth) with a fixed HIVE_API_USERNAME=api
-            # service account. `service_accounts` above creates that user
-            # with an unknown random password, so pin it here to a known
-            # value the rest of the job can rely on.
+            # service account. Hive's init creates that user with an unknown
+            # random password, so pin it here to a known value the rest of
+            # the job can rely on.
             - name: Set Hive 'api' service account password
               working-directory: hive
               run: |
@@ -159,20 +49,6 @@ jobs:
                   user.save()
                   print("api service account password set")
                   PY
-
-            - name: Wait for Hive
-              run: |
-                  for i in $(seq 1 90); do
-                    code=$(curl -ks -o /dev/null -w "%{http_code}" https://hive.org/ || true)
-                    if [ "$code" -ge 200 ] && [ "$code" -lt 500 ]; then
-                      echo "Hive is up (HTTP $code)"
-                      exit 0
-                    fi
-                    echo "Attempt $i/90 - Hive not ready yet (HTTP $code), waiting 5s..."
-                    sleep 5
-                  done
-                  echo "::error::Hive failed to become ready in time"
-                  exit 1
 
             - name: Install Python dependencies
               run: pip install -r scripts/requirements.txt
@@ -198,17 +74,8 @@ jobs:
             - name: Prepare websocket token file
               run: touch websock/websocket_token_source.txt
 
-            - name: Setup Node.js 24
-              uses: actions/setup-node@v6
-              with:
-                  node-version: "24"
-                  cache: "npm"
-
-            - name: Install Node dependencies
-              run: npm ci
-
-            - name: Install Playwright chromium browser
-              run: npx playwright install chromium --with-deps
+            - name: Set up Node + Playwright
+              uses: System-B15/.github/actions/setup-playwright@main
 
             - name: Verify Hive 'api' account and generate .env
               run: python scripts/ci_setup.py

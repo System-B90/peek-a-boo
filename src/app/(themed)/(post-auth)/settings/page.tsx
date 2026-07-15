@@ -50,10 +50,10 @@ export default function Page() {
                 <Typography variant="body2">
                     Want to help improve Peek-a-Boo?{" "}
                     <a
-                        href="https://github.com/System-B15/peek-a-boo#contributing"
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="underline"
+                        href="https://github.com/System-B15/peek-a-boo#contributing"
+                        rel="noopener noreferrer"
+                        target="_blank"
                     >
                         Learn how to contribute
                     </a>

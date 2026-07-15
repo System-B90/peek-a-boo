@@ -1,0 +1,31 @@
+# Dependency directories
+node_modules/
+**/node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# IDE and OS files
+.vscode/
+.idea/
+.git/
+.DS_Store
+*.log
+
+# Environment files (secrets — never bake into an image)
+.env
+.env.*
+
+# TLS material
+utils/certs/
+
+# Debugging
+npm-debug.log*
+playwright-report/
+**/playwright-report/playwright-report
+test-results/
+
+# Local Hive checkout (CI clones it into hive/; its db/ is root-owned)
+hive/
+container-logs/

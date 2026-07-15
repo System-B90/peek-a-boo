@@ -27,6 +27,9 @@ ARG PIP_CONF_PATH
 
 WORKDIR /app
 
+LABEL org.opencontainers.image.source="https://github.com/System-B15/peek-a-boo"
+LABEL org.opencontainers.image.description="Peek-a-Boo websockify relay. See README: https://github.com/System-B15/peek-a-boo#readme"
+
 # Copy built files from builder stage
 COPY --from=builder /app /app
 COPY --from=builder /usr/local/lib/python3.10 /usr/local/lib/python3.10

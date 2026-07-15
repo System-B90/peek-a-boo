@@ -24,7 +24,6 @@ export function StudentAvatar({
     return (
         <div
             className={`relative overflow-hidden ${className}`}
-            style={{ width, height }}
             {...props}
         >
             {/* Skeleton */}
@@ -34,7 +33,7 @@ export function StudentAvatar({
                 <Image
                     alt={alt}
                     blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mOcl3u9noEIwDiqkL4KAcRKF9W5T5ozAAAAAElFTkSuQmCC"
-                    className={`transition-opacity duration-300 ${showSkeleton ? "opacity-0" : "opacity-100"}`}
+                    className={`w-full h-full object-cover transition-opacity duration-300 ${showSkeleton ? "opacity-0" : "opacity-100"}`}
                     height={height}
                     onError={() => setErrorState(true)}
                     onLoad={() => setLoading(false)}

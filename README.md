@@ -63,3 +63,7 @@ ruff format --check .  # Python format check
 
 A Husky pre-commit hook runs `lint-staged` (ESLint on JS/TS, Prettier on JSON/CSS/MD).
 CI (`.github/workflows/ci.yml`) runs lint, unit tests, and a build check on every push and pull request.
+
+## Contributing
+
+Segel students are welcome to contribute! Browse [open issues](https://github.com/System-B15/peek-a-boo/issues), especially those labeled `NEWBIES WELCOME`, then fork the repo and open a pull request against `master`.

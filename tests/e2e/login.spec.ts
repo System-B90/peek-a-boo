@@ -21,7 +21,7 @@ test.describe("Login Page", () => {
         await page.locator("#password").fill("wrong-password");
         await page.getByRole("button", { name: "Login" }).click();
 
-        await expect(page.getByText(/\d{3}/)).toBeVisible({
+        await expect(page.getByText(/authentication failed/i)).toBeVisible({
             timeout: 15_000,
         });
         await expect(page).toHaveURL(/\/login/);

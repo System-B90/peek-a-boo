@@ -1,0 +1,14 @@
+services:
+  nextjs:
+    container_name: peekaboo-test-nextjs
+    extra_hosts:
+      - "hive.org:${HIVE_HOST_IP:-host-gateway}"
+
+  nginx:
+    container_name: peekaboo-test-nginx
+    ports: !override
+      - "127.0.0.3:443:443"
+      - "127.0.0.3:80:80"
+
+  websock:
+    container_name: peekaboo-test-websock

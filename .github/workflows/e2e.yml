@@ -1,0 +1,270 @@
+name: E2E Tests
+
+on:
+    workflow_dispatch:
+    pull_request:
+        branches: [master]
+    push:
+        branches: [master]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+env:
+    HIVE_REPO: hivelms/Hive
+    HIVE_REF: feature/sso
+    COMPOSE_PROJECT_NAME: peekaboo-test
+
+jobs:
+    e2e:
+        name: Full E2E Tests (with Hive)
+        runs-on: ubuntu-24.04
+        timeout-minutes: 45
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+
+            # ── Hive (identity provider + organizational data) ────────────────
+            - name: Verify Hive checkout token and SSO branch
+              env:
+                  HIVE_CHECKOUT_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+              run: |
+                  if [ -z "$HIVE_CHECKOUT_TOKEN" ]; then
+                    echo "::error::No Hive checkout token configured. Add ACCESS_TOKEN (PAT with read access to hivelms/Hive) under Settings → Secrets and variables → Actions."
+                    exit 1
+                  fi
+                  repo_code=$(curl -s -o /dev/null -w "%{http_code}" \
+                    -H "Authorization: token ${HIVE_CHECKOUT_TOKEN}" \
+                    "https://api.github.com/repos/${HIVE_REPO}")
+                  if [ "$repo_code" = "401" ]; then
+                    echo "::error::The Hive checkout token is invalid, expired, or revoked (HTTP 401). Generate a new PAT and update the secret."
+                    exit 1
+                  fi
+                  if [ "$repo_code" != "200" ]; then
+                    echo "::error::The token cannot read ${HIVE_REPO} (HTTP $repo_code). Check: classic PAT has the 'repo' scope; the hivelms org allows classic PATs (or SSO-authorize the token for the org); a fine-grained PAT must be approved by the hivelms org admins."
+                    exit 1
+                  fi
+                  branch_code=$(curl -s -o /dev/null -w "%{http_code}" \
+                    -H "Authorization: token ${HIVE_CHECKOUT_TOKEN}" \
+                    "https://api.github.com/repos/${HIVE_REPO}/branches/${HIVE_REF}")
+                  if [ "$branch_code" != "200" ]; then
+                    echo "::error::The token can read ${HIVE_REPO}, but branch '${HIVE_REF}' was not found (HTTP $branch_code)."
+                    exit 1
+                  fi
+                  echo "Hive token OK — repository and branch '${HIVE_REF}' are reachable."
+
+            - name: Checkout Hive (SSO branch)
+              uses: actions/checkout@v7
+              with:
+                  repository: ${{ env.HIVE_REPO }}
+                  ref: ${{ env.HIVE_REF }}
+                  token: ${{ secrets.ACCESS_TOKEN }}
+                  path: hive
+                  filter: blob:limit=50k
+                  persist-credentials: false
+
+            - name: Map local hostnames
+              run: |
+                  echo "127.0.0.1 hive.org" | sudo tee -a /etc/hosts
+                  echo "127.0.0.3 peekaboo.dev" | sudo tee -a /etc/hosts
+
+            - name: Setup Python 3.11
+              uses: actions/setup-python@v6
+              with:
+                  python-version: "3.11"
+
+            - name: Resolve Hive commit
+              id: hive_sha
+              working-directory: hive
+              run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+            - name: Cache Hive prod images
+              id: hive_images_cache
+              uses: actions/cache@v6
+              with:
+                  path: /tmp/hive-images.tar
+                  key: hive-prod-images-v1-${{ steps.hive_sha.outputs.sha }}
+
+            - name: Load cached Hive images
+              if: steps.hive_images_cache.outputs.cache-hit == 'true'
+              run: docker load -i /tmp/hive-images.tar
+
+            # Same build/init sequence as Bluz's e2e.yml — Hive images are
+            # cache-shared across our repos, keyed on the checked-out commit.
+            - name: Build & Initialize Hive
+              working-directory: hive
+              env:
+                  HIVE_CACHE_HIT: ${{ steps.hive_images_cache.outputs.cache-hit }}
+              run: |
+                  cat > .env.override <<'EOF'
+                  HIVE_CORE_WORKERS=2
+                  HIVE_CORE_THREADS=2
+                  HIVE_NGINX_WORKERS=1
+                  EOF
+                  compose="docker compose -f docker-compose.yaml"
+
+                  if [ "$HIVE_CACHE_HIT" = "true" ]; then
+                    echo "Reusing cached Hive images — skipping build."
+                  else
+                    echo "No Hive image cache — building from source."
+                    python3 manage_hive.py build_deps
+                    $compose build
+                  fi
+
+                  $compose up -d
+                  $compose exec -T core python manage.py migrate
+                  $compose exec -T core python manage.py collectstatic --noinput
+                  $compose exec -T database sh /update.sh
+                  $compose exec -T core python manage.py service_accounts
+                  $compose exec -T core python manage.py load_tags
+                  $compose exec -T \
+                    -e DJANGO_SUPERUSER_USERNAME=admin \
+                    -e DJANGO_SUPERUSER_PASSWORD=Password1 \
+                    -e DJANGO_SUPERUSER_EMAIL=admin@hive.org \
+                    core python manage.py createsuperuser --noinput
+                  $compose exec -T core python manage.py load_programs
+
+                  if [ "$HIVE_CACHE_HIT" != "true" ]; then
+                    imgs=$(docker images 'hive/*' --format '{{.Repository}}:{{.Tag}}' | grep -v -- '-base' || true)
+                    if [ -n "$imgs" ]; then
+                      echo "Saving Hive images for cache:"; echo "$imgs"
+                      docker save -o /tmp/hive-images.tar $imgs
+                    fi
+                  fi
+
+            # Peek-a-boo authenticates end users directly against Hive's
+            # /api/core/token/ (no OAuth) with a fixed HIVE_API_USERNAME=api
+            # service account. `service_accounts` above creates that user
+            # with an unknown random password, so pin it here to a known
+            # value the rest of the job can rely on.
+            - name: Set Hive 'api' service account password
+              working-directory: hive
+              run: |
+                  cat <<'PY' | docker compose -f docker-compose.yaml exec -T core python manage.py shell
+                  from django.contrib.auth import get_user_model
+
+                  User = get_user_model()
+                  user = User.objects.get(username="api")
+                  user.set_password("Password1")
+                  user.save()
+                  print("api service account password set")
+                  PY
+
+            - name: Wait for Hive
+              run: |
+                  for i in $(seq 1 90); do
+                    code=$(curl -ks -o /dev/null -w "%{http_code}" https://hive.org/ || true)
+                    if [ "$code" -ge 200 ] && [ "$code" -lt 500 ]; then
+                      echo "Hive is up (HTTP $code)"
+                      exit 0
+                    fi
+                    echo "Attempt $i/90 - Hive not ready yet (HTTP $code), waiting 5s..."
+                    sleep 5
+                  done
+                  echo "::error::Hive failed to become ready in time"
+                  exit 1
+
+            - name: Install Python dependencies
+              run: pip install -r scripts/requirements.txt
+
+            - name: Verify Hive admin login via pyhive
+              run: |
+                  python - <<'PY'
+                  from pyhive import HiveClient
+
+                  with HiveClient("admin", "Password1", "https://hive.org", verify=False, timeout=30) as client:
+                      print("Hive admin login OK. API version:", client.get_hive_version())
+                  PY
+
+            # ── Peek-a-boo environment & stack ─────────────────────────────────
+            - name: Generate self-signed SSL certificate
+              run: |
+                  mkdir -p utils/certs
+                  openssl req -x509 -newkey rsa:4096 -keyout utils/certs/star.key \
+                    -out utils/certs/star.crt -sha256 -days 30 -nodes \
+                    -subj "/CN=peekaboo.dev" \
+                    -addext "subjectAltName=DNS:peekaboo.dev,DNS:wss.peekaboo.dev,DNS:localhost"
+
+            - name: Prepare websocket token file
+              run: touch websock/websocket_token_source.txt
+
+            - name: Setup Node.js 24
+              uses: actions/setup-node@v6
+              with:
+                  node-version: "24"
+                  cache: "npm"
+
+            - name: Install Node dependencies
+              run: npm ci
+
+            - name: Install Playwright chromium browser
+              run: npx playwright install chromium --with-deps
+
+            - name: Verify Hive 'api' account and generate .env
+              run: python scripts/ci_setup.py
+
+            - name: Build & start Peek-a-boo
+              run: |
+                  docker compose -f docker-compose.yml -f docker-compose.test.yml build
+                  docker compose -f docker-compose.yml -f docker-compose.test.yml up -d
+
+            - name: Wait for Peek-a-boo to be ready
+              run: |
+                  for i in $(seq 1 90); do
+                    code=$(curl -ks -o /dev/null -w "%{http_code}" https://peekaboo.dev/login || true)
+                    if [ "$code" -ge 200 ] && [ "$code" -lt 500 ]; then
+                      echo "Peek-a-boo is up (HTTP $code)"
+                      exit 0
+                    fi
+                    echo "Attempt $i/90 - Peek-a-boo not ready yet (HTTP $code), waiting 5s..."
+                    sleep 5
+                  done
+                  echo "::error::Peek-a-boo failed to become ready in time"
+                  exit 1
+
+            # ── Run Playwright tests ────────────────────────────────────────────
+            - name: Run E2E Tests
+              run: npm run test:e2e
+              env:
+                  CI: true
+                  BASE_URL: https://peekaboo.dev
+
+            # ── Artifacts ────────────────────────────────────────────────────────
+            - name: Upload Playwright Report
+              uses: actions/upload-artifact@v6
+              if: ${{ !cancelled() }}
+              with:
+                  name: playwright-report
+                  path: playwright-report/
+                  retention-days: 14
+
+            - name: Upload Test Results
+              uses: actions/upload-artifact@v6
+              if: ${{ !cancelled() }}
+              with:
+                  name: test-results
+                  path: test-results/
+                  retention-days: 7
+
+            - name: Dump Container Logs
+              if: failure()
+              run: |
+                  mkdir -p container-logs
+                  docker ps -a
+                  for c in $(docker ps -aq); do
+                    name=$(docker inspect --format '{{.Name}}' "$c" | tr -d '/')
+                    docker logs "$c" > "container-logs/$name.log" 2>&1 || true
+                  done
+                  echo "::group::Peek-a-boo nextjs container log (tail)"
+                  docker logs --tail 400 peekaboo-test-nextjs 2>&1 || true
+                  echo "::endgroup::"
+
+            - name: Upload Container Logs
+              uses: actions/upload-artifact@v6
+              if: failure()
+              with:
+                  name: container-logs
+                  path: container-logs/
+                  retention-days: 7

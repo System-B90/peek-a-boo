@@ -14,7 +14,6 @@ concurrency:
 env:
     HIVE_REPO: hivelms/Hive
     HIVE_REF: feature/sso
-    COMPOSE_PROJECT_NAME: peekaboo-test
 
 jobs:
     e2e:
@@ -214,7 +213,13 @@ jobs:
             - name: Verify Hive 'api' account and generate .env
               run: python scripts/ci_setup.py
 
+            # Scoped to this step only — Hive's own docker compose invocation
+            # (working-directory: hive) must not share this project name, or
+            # Compose conflates its "nginx" service with ours and recreates
+            # Hive's nginx container using our service definition.
             - name: Build & start Peek-a-boo
+              env:
+                  COMPOSE_PROJECT_NAME: peekaboo-test
               run: |
                   docker compose -f docker-compose.yml -f docker-compose.test.yml build
                   docker compose -f docker-compose.yml -f docker-compose.test.yml up -d

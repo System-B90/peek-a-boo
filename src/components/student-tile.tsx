@@ -33,7 +33,7 @@ export function StudentTile({
 
     return (
         <div
-            className={`h-[70px] flex-grow flex bg-[#bb86fc] overflow-clip relative cursor-pointer ${
+            className={`min-h-[70px] flex-grow flex bg-[#bb86fc] overflow-clip relative cursor-pointer ${
                 isInSearch ? "opacity-100" : "opacity-50"
             }`}
             dir="rtl"
@@ -63,7 +63,7 @@ export function StudentTile({
             </div>
             <StudentAvatar
                 alt=""
-                className="rounded-l-2xl h-[70px] aspect-square"
+                className="rounded-l-2xl h-full aspect-square"
                 height={70}
                 src={`/api/avatar/${student.hiveId}`}
                 width={70}

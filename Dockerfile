@@ -55,6 +55,9 @@ ARG LDAP_URL
 ARG LDAP_DC
 ENV LDAP_URL=$LDAP_URL LDAP_DC=$LDAP_DC
 
+LABEL org.opencontainers.image.source="https://github.com/System-B15/peek-a-boo"
+LABEL org.opencontainers.image.description="Peek-a-Boo Next.js app. See README: https://github.com/System-B15/peek-a-boo#readme"
+
 WORKDIR /app
 
 # Copy built files from builder stage

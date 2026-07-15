@@ -1,26 +1,23 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
+ 
+import postgres, { Sql } from "postgres";
+
 import { hiveErrorHandler } from "@/server-api/hive";
 import { getSetting } from "@/server-api/settings";
-import postgres, { Sql } from "postgres";
 
 let pg: Sql<{}> | undefined;
 
-async function getPostgres(): Promise<Sql<{}>>
-{
-    try
-    {
-        if (!pg)
-        {
+async function getPostgres(): Promise<Sql<{}>> {
+    try {
+        if (!pg) {
             pg = postgres({
-                username: await getSetting('HIVE_POSTGRES_USERNAME'),
-                password: await getSetting('HIVE_PASSWORD'),
+                username: await getSetting("HIVE_POSTGRES_USERNAME"),
+                password: await getSetting("HIVE_PASSWORD"),
                 database: "core",
-                host: await getSetting('HIVE_HOSTNAME'),
+                host: await getSetting("HIVE_HOSTNAME"),
             });
         }
         return pg;
-    } catch (error: unknown)
-    {
+    } catch (error: unknown) {
         throw await hiveErrorHandler(error);
     }
 }
@@ -54,20 +51,20 @@ const baseQuery = `SELECT
     WHERE mentee.clearance = 1
 `;
 
-export async function queryPostgres(studentUsername?: string): Promise<unknown>
-{
-    try
-    {
+export async function queryPostgres(
+    studentUsername?: string,
+): Promise<unknown> {
+    try {
         const sql = await getPostgres();
 
-        if (studentUsername)
-        {
-            return await sql.unsafe(`${baseQuery} AND mentee.username = '${studentUsername}'`);
+        if (studentUsername) {
+            return await sql.unsafe(
+                `${baseQuery} AND mentee.username = '${studentUsername}'`,
+            );
         }
 
         return await sql.unsafe(baseQuery);
-    } catch (error: unknown)
-    {
+    } catch (error: unknown) {
         throw await hiveErrorHandler(error);
     }
 }

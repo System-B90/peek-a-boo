@@ -1,7 +1,6 @@
 "use client";
 
-import
-{
+import {
     createContext,
     useCallback,
     useContext,
@@ -9,15 +8,16 @@ import
     useMemo,
     useState,
 } from "react";
+
 import { queryAllStudentInfo, queryStudentInfo } from "@/client-api/students";
 import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
-import { StudentInfo } from "./student-info-provider";
+import { StudentInfo } from "@/shared-api/types";
 
 export type AllStudentInfoContext = {
     default: boolean;
     getStudentInfo: (
         username: string,
-        forceRefetch?: boolean
+        forceRefetch?: boolean,
     ) => Promise<StudentInfo>;
     studentInfoDict: Record<string, StudentInfo>;
     studentInfoList: Array<StudentInfo>;
@@ -27,9 +27,8 @@ export type AllStudentInfoContext = {
 
 const AllStudentInfoContextProvider = createContext<AllStudentInfoContext>({
     default: true,
-    /* eslint-disable @typescript-eslint/no-unused-vars */
-    getStudentInfo: async (_username: string) =>
-    {
+     
+    getStudentInfo: async (_username: string) => {
         return {
             studentNumber: 0,
             studentUsername: "",
@@ -44,19 +43,18 @@ const AllStudentInfoContextProvider = createContext<AllStudentInfoContext>({
             mentorFirstName: "",
             mentorLastName: "",
             currentExerciseId: 0,
-            currentExerciseName: '',
+            currentExerciseName: "",
             currentExerciseParentModuleId: 0,
             currentExerciseParentModuleParentSubjectId: 0,
-            currentExerciseUrl: '',
+            currentExerciseUrl: "",
             programName: "",
             hiveId: 0,
-            hostname: '',
+            hostname: "",
         };
     },
     studentInfoDict: {},
     studentInfoList: [],
-    getStudentInfoByHiveId: () =>
-    {
+    getStudentInfoByHiveId: () => {
         return {
             studentNumber: 0,
             studentUsername: "",
@@ -72,103 +70,109 @@ const AllStudentInfoContextProvider = createContext<AllStudentInfoContext>({
             mentorLastName: "",
             programName: "",
             currentExerciseId: 0,
-            currentExerciseName: '',
+            currentExerciseName: "",
             currentExerciseParentModuleId: 0,
             currentExerciseParentModuleParentSubjectId: 0,
-            currentExerciseUrl: '',
+            currentExerciseUrl: "",
             hiveId: 0,
-            hostname: '',
+            hostname: "",
         };
     },
-    refetchAllStudentInfo: async () => { },
+    refetchAllStudentInfo: async () => {},
 });
 
 export const AllStudentInfoProvider = ({
     children,
 }: {
     children: React.ReactNode;
-}) =>
-{
-    const [ studentInfo, setStudentInfo ] = useState<Record<string, StudentInfo>>({});
-    const studentInfoList = useMemo(() => Object.values(studentInfo), [ studentInfo ]);
-
-    const getStudentInfo = useCallback(
-        async (studentUsername: string, forceRefetch?: boolean) =>
-        {
-            if (!studentUsername) { throw new Error('Invalid student username!'); }
-
-            if (forceRefetch)
-            {
-                const newStudentInfo = { ...studentInfo };
-                const queriedStudentInfo = await queryStudentInfo(
-                    studentUsername
-                );
-                newStudentInfo[ studentUsername ] = queriedStudentInfo;
-                setStudentInfo(newStudentInfo);
-            }
-            return studentInfo[ studentUsername ];
-        },
-        [ studentInfo, setStudentInfo ]
+}) => {
+    const [studentInfo, setStudentInfo] = useState<Record<string, StudentInfo>>(
+        {},
+    );
+    const studentInfoList = useMemo(
+        () => Object.values(studentInfo),
+        [studentInfo],
     );
 
+    const getStudentInfo = useCallback(
+        async (studentUsername: string, forceRefetch?: boolean) => {
+            if (!studentUsername) {
+                throw new Error("Invalid student username!");
+            }
 
-    const getStudentInfoByHiveId = useCallback((hiveId: number) =>
-    {
-        return Object.values(studentInfo).filter((info) => info.hiveId === hiveId)[ 0 ];
-    }, [ studentInfo ]);
+            if (forceRefetch) {
+                const newStudentInfo = { ...studentInfo };
+                const queriedStudentInfo =
+                    await queryStudentInfo(studentUsername);
+                newStudentInfo[studentUsername] = queriedStudentInfo;
+                setStudentInfo(newStudentInfo);
+            }
+            return studentInfo[studentUsername];
+        },
+        [studentInfo, setStudentInfo],
+    );
 
-    const refetchAllStudentInfo = useCallback(async () =>
-    {
-        return queryAllStudentInfo()
-            .then((data) =>
-            {
+    const getStudentInfoByHiveId = useCallback(
+        (hiveId: number) => {
+            return Object.values(studentInfo).filter(
+                (info) => info.hiveId === hiveId,
+            )[0];
+        },
+        [studentInfo],
+    );
+
+    const refetchAllStudentInfo = useCallback(async () => {
+        return await queryAllStudentInfo()
+            .then((data) => {
                 setStudentInfo(
-                    data.filter((item) => item.studentNumber !== undefined)
-                        .reduce((acc, item) =>
-                        {
-                            acc[ item.studentUsername ] = {
-                                ...item,
-                                studentNumber: item.studentNumber,
-                                studentName: `${item.studentFirstName} ${item.studentLastName}`,
-                            };
-                            return acc;
-                        }, {} as Record<string, StudentInfo>)
+                    data
+                        .filter((item) => item.studentNumber !== undefined)
+                        .reduce(
+                            (acc, item) => {
+                                acc[item.studentUsername] = {
+                                    ...item,
+                                    studentNumber: item.studentNumber,
+                                    studentName: `${item.studentFirstName} ${item.studentLastName}`,
+                                };
+                                return acc;
+                            },
+                            {} as Record<string, StudentInfo>,
+                        ),
                 );
             })
-            .catch((error) =>
-            {
-                enqueueApiErrorSnackbar("Failed to fetch all student's info", error);
+            .catch((error) => {
+                enqueueApiErrorSnackbar(
+                    "Failed to fetch all student's info",
+                    error,
+                );
             });
-    }, [ setStudentInfo ]);
+    }, [setStudentInfo]);
 
-    useEffect(() =>
-    {
-        refetchAllStudentInfo();
-    }, [ refetchAllStudentInfo ]);
+    useEffect(() => {
+        void refetchAllStudentInfo();
+    }, [refetchAllStudentInfo]);
 
     return (
         <AllStudentInfoContextProvider.Provider
-            value={ {
+            value={{
                 default: false,
                 getStudentInfo,
                 studentInfoDict: studentInfo,
                 studentInfoList,
                 getStudentInfoByHiveId,
                 refetchAllStudentInfo,
-            } }
+            }}
         >
-            { children }
+            {children}
         </AllStudentInfoContextProvider.Provider>
     );
 };
 
-export function useAllStudentInfo()
-{
+export function useAllStudentInfo() {
     const context = useContext(AllStudentInfoContextProvider);
-    if (context.default)
-    {
+    if (context.default) {
         throw Error(
-            "useAllStudentInfo must be used inside AllStudentInfoProvider!"
+            "useAllStudentInfo must be used inside AllStudentInfoProvider!",
         );
     }
     return context;

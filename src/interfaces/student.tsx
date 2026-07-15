@@ -1,7 +1,6 @@
-import { StudentInfo } from "@/components/student-info-provider";
+import { StudentInfo } from "@/shared-api/types";
 
-
-export interface StudentTileInfo {
-    student: StudentInfo,
-    isActive: boolean
+export type StudentTileInfo = {
+    student: StudentInfo;
+    isActive: boolean;
 }

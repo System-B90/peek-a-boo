@@ -1,32 +1,42 @@
-
-/* eslint-disable @typescript-eslint/no-namespace */
-namespace Api
-{
-    export namespace Request
-    {
+ 
+export namespace Api {
+    export namespace Request {
         export type LoginData = {
             username: string;
             password: string;
         };
     }
-    export namespace Response
-    {
-
-    }
+    export namespace Response {}
 }
 
-export default Api;
-
-export interface ApiResponseJson
-{
+export type ApiResponseJson = {
     status: number;
     data?: unknown;
     error?: unknown;
 }
 
+export type StudentInfo = {
+    studentNumber: number;
+    studentUsername: string;
+    studentName: string;
+    studentFirstName: string;
+    studentLastName: string;
+    studentStatus: string;
+    currentExerciseName: string;
+    currentExerciseUrl: string;
+    currentExerciseId: number;
+    currentExerciseParentModuleId: number;
+    currentExerciseParentModuleParentSubjectId: number;
+    checkersBrief: string;
+    mentorFirstName: string;
+    mentorLastName: string;
+    mentorUsername: string;
+    programName: string;
+    hiveId: number;
+    hostname: string;
+}
 
-export interface RawHiveClass
-{
+export type RawHiveClass = {
     id: number;
     name: string;
     display_name: string;
@@ -38,41 +48,35 @@ export interface RawHiveClass
     description: string;
 }
 
-export interface HiveClass
-{
+export type HiveClass = {
     id: number;
     name: string;
     displayName: string;
     program: number;
     users: Array<string>; // Student usernames
     email: string;
-    type: 'Room' | 'Student Group' | 'Level';
+    type: "Level" | "Room" | "Student Group";
     programName: string;
     description: string;
 }
 
-
-export enum TagType
-{
+export enum TagType {
     Unknown = 0,
-    Mentor = 'mentor',
-    Classroom = 'classroom',
-    StudentGroup = 'group',
-    Level = 'level',
-    StudentName = 'name',
-    StudentNumber = 'number',
-};
+    Mentor = "mentor",
+    Classroom = "classroom",
+    StudentGroup = "group",
+    Level = "level",
+    StudentName = "name",
+    StudentNumber = "number",
+}
 
-export interface Tag
-{
+export type Tag = {
     name: string;
     type: TagType;
     students: Array<string>; // Student usernames
 }
 
-
-export enum AuthSystem
-{
+export enum AuthSystem {
     LDAP = "ldap",
     HIVE = "hive",
 }

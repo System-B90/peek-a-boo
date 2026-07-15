@@ -1,7 +1,8 @@
-'use client';
+"use client";
+
+import { createContext, useContext, useMemo } from "react";
 
 import { useAuth } from "@/components/auth-provider";
-import { createContext, useContext, useMemo, useState } from "react";
 
 export type SettingsContext = {
     default: boolean;
@@ -9,43 +10,43 @@ export type SettingsContext = {
     hostname: string;
 };
 
-
 const SettingsContextProvider = createContext<SettingsContext>({
     default: true,
-    wsProxyUrl: '',
-    hostname: '',
+    wsProxyUrl: "",
+    hostname: "",
 });
 
 export const SettingsProvider = ({
     children,
     hostname,
-}: { children: React.ReactNode; hostname: string; }) =>
-{
+}: {
+    children: React.ReactNode;
+    hostname: string;
+}) => {
     const { clientEnvConfig } = useAuth();
-    const [ wsProxyUrl, setWsProxyUrl ] = useState<string>('');
-
-    useMemo(() =>
-    {
-        setWsProxyUrl(`${clientEnvConfig.WEBSOCKET_PROTOCOL_PREFIX}://${clientEnvConfig.WEBSOCKET_SERVER_HOSTNAME}:${clientEnvConfig.WEBSOCKET_PORT}?token=${hostname}`);
-    }, [ setWsProxyUrl, hostname, clientEnvConfig ]);
+    const wsProxyUrl = useMemo(
+        () =>
+            `${clientEnvConfig.WEBSOCKET_PROTOCOL_PREFIX}://${clientEnvConfig.WEBSOCKET_SERVER_HOSTNAME}:${clientEnvConfig.WEBSOCKET_PORT}?token=${hostname}`,
+        [hostname, clientEnvConfig],
+    );
 
     return (
-        <SettingsContextProvider.Provider value={ {
-            default: false,
-            wsProxyUrl,
-            hostname
-        } } >
-            { children }
+        <SettingsContextProvider.Provider
+            value={{
+                default: false,
+                wsProxyUrl,
+                hostname,
+            }}
+        >
+            {children}
         </SettingsContextProvider.Provider>
     );
 };
 
-export function useSettings()
-{
+export function useSettings() {
     const context = useContext(SettingsContextProvider);
-    if (context.default)
-    {
-        throw Error('useSettings must be used inside SettingsProvider!');
+    if (context.default) {
+        throw Error("useSettings must be used inside SettingsProvider!");
     }
     return context;
 }

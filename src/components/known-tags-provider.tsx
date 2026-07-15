@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useContext, createContext, useMemo, useCallback } from "react";
+import { useContext, createContext, useMemo, useCallback } from "react";
+
 import { useAllStudentInfo } from "@/components/all-student-info-provider";
-import { useClasses } from "./classes-provider";
+import { useClasses } from "@/components/classes-provider";
 import { Tag, TagType } from "@/shared-api/types";
 
 export type KnownTagsContext = {
@@ -23,99 +24,108 @@ export const KnownTagsProvider = ({
     children,
 }: {
     children: React.ReactNode;
-}) =>
-{
+}) => {
     const { studentInfoList } = useAllStudentInfo();
     const { classes } = useClasses();
-    const [ tags, setTags ] = useState<Array<Tag>>([]);
 
-    useMemo(() =>
-    {
+    const tags = useMemo(() => {
         const studentNameTags: Array<Tag> = studentInfoList
             .filter((s) => !!s.studentName)
-            .map((s) =>
-            {
+            .map((s) => {
                 return {
                     name: s.studentName,
-                    students: [ s.studentUsername ],
+                    students: [s.studentUsername],
                     type: TagType.StudentName,
                 };
             });
         const studentNumberTags: Array<Tag> = studentInfoList
-            .filter((s) => typeof s.studentNumber === 'number')
-            .map((s) =>
-            {
+            .filter((s) => typeof s.studentNumber === "number")
+            .map((s) => {
                 return {
                     name: s.studentNumber.toString(),
-                    students: [ s.studentUsername ],
+                    students: [s.studentUsername],
                     type: TagType.StudentNumber,
                 };
             });
 
         const classTags: Array<Tag> = classes
-            .filter((hiveClass) => typeof hiveClass.name === 'string')
-            .map((hiveClass) =>
-            {
+            .filter((hiveClass) => typeof hiveClass.name === "string")
+            .map((hiveClass) => {
                 return {
                     name: hiveClass.name,
                     students: hiveClass.users,
-                    type: (hiveClass.type === 'Room') ? TagType.Classroom : (hiveClass.type === 'Student Group' ? TagType.StudentGroup : TagType.Level),
+                    type:
+                        hiveClass.type === "Room"
+                            ? TagType.Classroom
+                            : hiveClass.type === "Student Group"
+                                ? TagType.StudentGroup
+                                : TagType.Level,
                 };
             });
 
         const mentors: Record<string, Tag> = {};
         studentInfoList
-            .filter((s) => typeof s.mentorUsername === 'string')
-            .forEach((s) =>
-            {
-                if (!mentors[ s.mentorUsername ])
-                {
-                    mentors[ s.mentorUsername ] = {
+            .filter((s) => typeof s.mentorUsername === "string")
+            .forEach((s) => {
+                if (!mentors[s.mentorUsername]) {
+                    mentors[s.mentorUsername] = {
                         name: s.mentorUsername,
                         students: [],
                         type: TagType.Mentor,
                     };
                 }
-                mentors[ s.mentorUsername ].students.push(s.studentUsername);
+                mentors[s.mentorUsername].students.push(s.studentUsername);
             });
 
-        setTags([ ...Object.values(mentors), ...studentNameTags, ...studentNumberTags, ...classTags ]);
-    }, [ studentInfoList, classes, setTags ]);
+        return [
+            ...Object.values(mentors),
+            ...studentNameTags,
+            ...studentNumberTags,
+            ...classTags,
+        ];
+    }, [studentInfoList, classes]);
 
-    const doesTagExists = useCallback((tagName: string) =>
-    {
-        return tags.some(tag => tag.name.toLowerCase() === tagName.toLowerCase());
-    }, [ tags ]);
+    const doesTagExists = useCallback(
+        (tagName: string) => {
+            return tags.some(
+                (tag) => tag.name.toLowerCase() === tagName.toLowerCase(),
+            );
+        },
+        [tags],
+    );
 
-    const resolveTag = useCallback((tagName: string) =>
-    {
-        const filteredKnownTags = tags.filter((t) => t.name.toLowerCase() === tagName.toLowerCase());
-        if (filteredKnownTags.length !== 1) { console.error(`Tag ${tagName} not uniquely found!`); return undefined; }
-        return filteredKnownTags[ 0 ];
-    }, [ tags ]);
+    const resolveTag = useCallback(
+        (tagName: string) => {
+            const filteredKnownTags = tags.filter(
+                (t) => t.name.toLowerCase() === tagName.toLowerCase(),
+            );
+            if (filteredKnownTags.length !== 1) {
+                console.error(`Tag ${tagName} not uniquely found!`);
+                return undefined;
+            }
+            return filteredKnownTags[0];
+        },
+        [tags],
+    );
 
     return (
         <KnownTagsContextProvider.Provider
-            value={ {
+            value={{
                 default: false,
                 knownTags: tags,
                 doesTagExists,
                 resolveTag,
-            } }
+            }}
         >
-            { children }
+            {children}
         </KnownTagsContextProvider.Provider>
     );
 };
 
-export function useKnownTags()
-{
+export function useKnownTags() {
     const context = useContext(KnownTagsContextProvider);
-    if (context.default)
-    {
-        throw Error(
-            "useKnownTags must be used inside KnownTagsProvider!"
-        );
+    if (context.default) {
+        throw Error("useKnownTags must be used inside KnownTagsProvider!");
     }
     return context;
 }

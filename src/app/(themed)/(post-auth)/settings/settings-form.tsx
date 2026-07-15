@@ -1,7 +1,24 @@
 "use client";
 
-import
-{
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
+import RestartAlt from "@mui/icons-material/RestartAlt";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Collapse from "@mui/material/Collapse";
+import Divider from "@mui/material/Divider";
+import FormGroup from "@mui/material/FormGroup";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import { enqueueSnackbar } from "notistack";
+import {
     InputHTMLAttributes,
     useCallback,
     useEffect,
@@ -9,63 +26,42 @@ import
     useState,
 } from "react";
 
-import
-{
-    FormGroup,
-    TextField,
-    Paper,
-    Button,
-    Typography,
-    Stack,
-    Box,
-    CircularProgress,
-    IconButton,
-    InputAdornment,
-    Divider,
-    Collapse,
-} from "@mui/material";
-
-import
-{
-    Visibility,
-    VisibilityOff,
-    RestartAlt,
-    ExpandMore,
-    ExpandLess,
-} from "@mui/icons-material";
-
 import { safeApiFetcher } from "@/client-api/common-utils";
 import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
-import { enqueueSnackbar } from "notistack";
 import { UserControlledSettings } from "@/server-api/settings";
 
-function Section({ title, children }: { title: string; children: React.ReactNode; })
-{
-    const [ expanded, setExpanded ] = useState<boolean>(true);
+function Section({
+    title,
+    children,
+}: {
+    title: string;
+    children: React.ReactNode;
+}) {
+    const [expanded, setExpanded] = useState<boolean>(true);
     const toggleSection = useCallback(() => setExpanded((v) => !v), []);
 
     return (
         <Box>
             <Stack
-                direction="row"
                 alignItems="center"
+                direction="row"
                 justifyContent="space-between"
-                onClick={ toggleSection }
-                sx={ { cursor: "pointer" } }
+                onClick={toggleSection}
+                sx={{ cursor: "pointer" }}
             >
-                <Typography variant="subtitle1" fontWeight={ 600 }>
-                    { title }
+                <Typography fontWeight={600} variant="subtitle1">
+                    {title}
                 </Typography>
                 <IconButton size="small">
-                    { expanded ? <ExpandLess /> : <ExpandMore /> }
+                    {expanded ? <ExpandLess /> : <ExpandMore />}
                 </IconButton>
             </Stack>
-            <Collapse in={ expanded }>
-                <Stack spacing={ 2 } mt={ 1 }>
-                    { children }
+            <Collapse in={expanded}>
+                <Stack mt={1} spacing={2}>
+                    {children}
                 </Stack>
             </Collapse>
-            <Divider sx={ { mt: 2, mb: 2 } } />
+            <Divider sx={{ mt: 2, mb: 2 }} />
         </Box>
     );
 }
@@ -79,90 +75,91 @@ function PasswordField({
     label: string;
     handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     value: string;
-} & InputHTMLAttributes<HTMLInputElement>)
-{
-    const [ censored, setCensored ] = useState<boolean>(true);
+} & InputHTMLAttributes<HTMLInputElement>) {
+    const [censored, setCensored] = useState<boolean>(true);
 
     return (
         <TextField
-            label={ label }
             fullWidth
-            type={ censored ? "password" : "text" }
-            value={ value }
-            onChange={ handleChange }
-            InputProps={ {
+            InputProps={{
                 endAdornment: (
                     <InputAdornment position="end">
-                        <IconButton onClick={ () => setCensored((v) => !v) }>
-                            { censored ? <Visibility /> : <VisibilityOff /> }
+                        <IconButton onClick={() => setCensored((v) => !v)}>
+                            {censored ? <Visibility /> : <VisibilityOff />}
                         </IconButton>
                     </InputAdornment>
                 ),
-            } }
-            slotProps={ { htmlInput: { ...props } } }
+            }}
+            label={label}
+            onChange={handleChange}
+            slotProps={{ htmlInput: { ...props } }}
+            type={censored ? "password" : "text"}
+            value={value}
         />
     );
 }
 
-export default function SettingsForm()
-{
-    const [ values, setValues ] = useState<UserControlledSettings | null>(null);
-    const [ saving, setSaving ] = useState(false);
+export function SettingsForm() {
+    const [values, setValues] = useState<null | UserControlledSettings>(null);
+    const [saving, setSaving] = useState(false);
 
     const defaultSettings = useMemo(
-        () => safeApiFetcher("/api/settings/default") as Promise<UserControlledSettings>,
-        []
+        () =>
+            safeApiFetcher(
+                "/api/settings/default",
+            ) as Promise<UserControlledSettings>,
+        [],
     );
 
-    useEffect(() =>
-    {
+    useEffect(() => {
         safeApiFetcher("/api/settings")
             .then(setValues)
             .catch((error) =>
-                enqueueApiErrorSnackbar("Failed to fetch settings!", error)
+                enqueueApiErrorSnackbar("Failed to fetch settings!", error),
             );
     }, []);
 
     const handleChange = useCallback(
         (key: keyof UserControlledSettings) =>
-            (e: React.ChangeEvent<HTMLInputElement>) =>
-            {
+            (e: React.ChangeEvent<HTMLInputElement>) => {
                 if (!values) return;
-                setValues({ ...values, [ key ]: e.target.value });
+                setValues({ ...values, [key]: e.target.value });
             },
-        [ values ]
+        [values],
     );
 
-    const handleSave = useCallback(async () =>
-    {
+    const handleSave = useCallback(async () => {
         if (!values) return;
         setSaving(true);
         safeApiFetcher("/api/settings", {
             method: "POST",
             body: JSON.stringify(values),
         })
-            .then(() =>
-            {
+            .then(() => {
                 setSaving(false);
                 enqueueSnackbar("Settings saved!", { variant: "success" });
             })
-            .catch((error) =>
-            {
+            .catch((error) => {
                 setSaving(false);
                 enqueueApiErrorSnackbar("Failed to save settings!", error);
             });
-    }, [ values ]);
+    }, [values]);
 
-    const handleReset = useCallback(() =>
-    {
-        defaultSettings.then((defaults) => setValues({ ...defaults }));
-    }, [ defaultSettings ]);
+    const handleReset = useCallback(() => {
+        defaultSettings
+            .then((defaults) => setValues({ ...defaults }))
+            .catch((error: unknown) => {
+                enqueueApiErrorSnackbar("Failed to load default settings!", error);
+            });
+    }, [defaultSettings]);
 
-    if (!values)
-    {
+    if (!values) {
         return (
             <div className="w-full h-full flex justify-center p-8">
-                <Paper className="w-full max-w-2xl p-6 flex justify-center" elevation={ 3 }>
+                <Paper
+                    className="w-full max-w-2xl p-6 flex justify-center"
+                    elevation={3}
+                >
                     <CircularProgress />
                 </Paper>
             </div>
@@ -171,93 +168,97 @@ export default function SettingsForm()
 
     return (
         <FormGroup>
-            <Stack spacing={ 3 }>
-                {/* VNC */ }
+            <Stack spacing={3}>
+                {/* VNC */}
                 <Section title="VNC Settings">
                     <PasswordField
+                        handleChange={handleChange("VNC_MASTER_PASSWORD")}
                         label="VNC Master Password"
-                        handleChange={ handleChange("VNC_MASTER_PASSWORD") }
-                        value={ values[ "VNC_MASTER_PASSWORD" ] }
-                        maxLength={ 6 }
+                        maxLength={6}
+                        value={values["VNC_MASTER_PASSWORD"]}
                     />
                     <PasswordField
+                        handleChange={handleChange("VNC_CLIENT_PASSWORD")}
                         label="VNC Client Password"
-                        handleChange={ handleChange("VNC_CLIENT_PASSWORD") }
-                        value={ values[ "VNC_CLIENT_PASSWORD" ] }
-                        maxLength={ 6 }
+                        maxLength={6}
+                        value={values["VNC_CLIENT_PASSWORD"]}
                     />
                 </Section>
 
-                {/* Hive */ }
+                {/* Hive */}
                 <Section title="Hive Settings">
                     <TextField
+                        fullWidth
                         label="Hive Hostname"
-                        fullWidth
-                        value={ values.HIVE_HOSTNAME }
-                        onChange={ handleChange("HIVE_HOSTNAME") }
+                        onChange={handleChange("HIVE_HOSTNAME")}
+                        value={values.HIVE_HOSTNAME}
                     />
                     <PasswordField
+                        handleChange={handleChange("HIVE_PASSWORD")}
                         label="Hive Password"
-                        handleChange={ handleChange("HIVE_PASSWORD") }
-                        value={ values[ "HIVE_PASSWORD" ] }
+                        value={values["HIVE_PASSWORD"]}
                     />
                     <TextField
-                        label="Hive API Username"
                         fullWidth
-                        value={ values.HIVE_API_USERNAME }
-                        onChange={ handleChange("HIVE_API_USERNAME") }
+                        label="Hive API Username"
+                        onChange={handleChange("HIVE_API_USERNAME")}
+                        value={values.HIVE_API_USERNAME}
                     />
                     <PasswordField
+                        handleChange={handleChange("HIVE_API_PASSWORD")}
                         label="Hive API Password"
-                        handleChange={ handleChange("HIVE_API_PASSWORD") }
-                        value={ values[ "HIVE_API_PASSWORD" ] }
+                        value={values["HIVE_API_PASSWORD"]}
                     />
                     <TextField
-                        label="Hive Postgres Username"
                         fullWidth
-                        value={ values.HIVE_POSTGRES_USERNAME }
-                        onChange={ handleChange("HIVE_POSTGRES_USERNAME") }
+                        label="Hive Postgres Username"
+                        onChange={handleChange("HIVE_POSTGRES_USERNAME")}
+                        value={values.HIVE_POSTGRES_USERNAME}
                     />
                 </Section>
 
-                {/* Mattermost */ }
+                {/* Mattermost */}
                 <Section title="Mattermost Settings">
                     <TextField
-                        label="Mattermost URL"
                         fullWidth
-                        value={ values.MATTERMOST_URL }
-                        onChange={ handleChange("MATTERMOST_URL") }
+                        label="Mattermost URL"
+                        onChange={handleChange("MATTERMOST_URL")}
+                        value={values.MATTERMOST_URL}
                     />
                     <PasswordField
+                        handleChange={handleChange("MATTERMOST_ACCESS_TOKEN")}
                         label="Mattermost Access Token"
-                        handleChange={ handleChange("MATTERMOST_ACCESS_TOKEN") }
-                        value={ values[ "MATTERMOST_ACCESS_TOKEN" ] }
+                        value={values["MATTERMOST_ACCESS_TOKEN"]}
                     />
                     <TextField
-                        label="Tweet Channel ID"
                         fullWidth
-                        value={ values.TWEET_CHANNEL_ID }
-                        onChange={ handleChange("TWEET_CHANNEL_ID") }
+                        label="Tweet Channel ID"
+                        onChange={handleChange("TWEET_CHANNEL_ID")}
+                        value={values.TWEET_CHANNEL_ID}
                     />
                 </Section>
 
-                {/* Actions */ }
-                <Stack direction="row" spacing={ 2 } sx={ { mt: 1 } }>
+                {/* Actions */}
+                <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
                     <Button
-                        variant="contained"
+                        disabled={saving}
+                        onClick={handleSave}
                         size="large"
-                        disabled={ saving }
-                        onClick={ handleSave }
+                        variant="contained"
                     >
-                        { saving ? <CircularProgress size={ 20 } /> : "Save Settings" }
+                        {saving ? (
+                            <CircularProgress size={20} />
+                        ) : (
+                            "Save Settings"
+                        )}
                     </Button>
 
                     <Button
-                        variant="outlined"
                         color="primary"
-                        startIcon={ <RestartAlt /> }
-                        onClick={ handleReset }
-                        disabled={ saving }
+                        disabled={saving}
+                        onClick={handleReset}
+                        startIcon={<RestartAlt />}
+                        variant="outlined"
                     >
                         Reset to Defaults
                     </Button>

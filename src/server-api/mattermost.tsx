@@ -1,75 +1,103 @@
 import { getSetting } from "@/server-api/settings";
-import { ClientApiError, MattermostApiError, MattermostConnectionError, parseNetworkHostNotFoundError } from "@/shared-api/errors";
+import {
+    ClientApiError,
+    MattermostApiError,
+    MattermostConnectionError,
+    parseNetworkHostNotFoundError,
+} from "@/shared-api/errors";
 
-
-export async function sendMessage({ botToken, channelId, message, image, }: { botToken: string, channelId: string, message: string, image?: string, })
-{
-    const MATTERMOST_URL = await getSetting('MATTERMOST_URL');
-    try
-    {
+export async function sendMessage({
+    botToken,
+    channelId,
+    message,
+    image,
+}: {
+    botToken: string;
+    channelId: string;
+    message: string;
+    image?: string;
+}) {
+    const MATTERMOST_URL = await getSetting("MATTERMOST_URL");
+    try {
         const fileIds: Array<string> = [];
-        if (image)
-        {
+        if (image) {
             const matches = image.match(/^data:(.+);base64,(.+)$/);
-            if (!matches) { throw new ClientApiError('Mattermost sendMessage API accepts Base64 encoded images only!'); }
-            const contentType = matches[ 1 ];
-            const imageData64 = matches[ 2 ];
-            const imageBuffer = Buffer.from(imageData64, 'base64');
+            if (!matches) {
+                throw new ClientApiError(
+                    "Mattermost sendMessage API accepts Base64 encoded images only!",
+                );
+            }
+            const contentType = matches[1];
+            const imageData64 = matches[2];
+            const imageBuffer = Buffer.from(imageData64, "base64");
 
             const form = new FormData();
-            form.append('files', new Blob([ imageBuffer ], { type: contentType }), 'image.png');
-            form.append('channel_id', channelId);
+            form.append(
+                "files",
+                new Blob([imageBuffer], { type: contentType }),
+                "image.png",
+            );
+            form.append("channel_id", channelId);
 
             const uploadRes = await fetch(`${MATTERMOST_URL}/api/v4/files`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Authorization': `Bearer ${botToken}`,
+                    Authorization: `Bearer ${botToken}`,
                 },
                 body: form,
             });
-            if (!uploadRes.ok)
-            {
-                throw new MattermostApiError(`Failed to upload image to mattermost! ${await uploadRes.text()}`);
+            if (!uploadRes.ok) {
+                throw new MattermostApiError(
+                    `Failed to upload image to mattermost! ${await uploadRes.text()}`,
+                );
             }
 
-            fileIds.push((await uploadRes.json()).file_infos[ 0 ].id);
+            fileIds.push((await uploadRes.json()).file_infos[0].id);
         }
 
-
         const response = await fetch(`${MATTERMOST_URL}/api/v4/posts`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Authorization': `Bearer ${botToken}`,
-                'Content-Type': 'application/json',
+                Authorization: `Bearer ${botToken}`,
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({
                 channel_id: channelId,
                 message,
                 file_ids: fileIds,
-            }
-            )
+            }),
         });
-        if (!response.ok)
-        {
-            throw new MattermostApiError(`Failed to send mattermost message! ${await response.text()}`);
+        if (!response.ok) {
+            throw new MattermostApiError(
+                `Failed to send mattermost message! ${await response.text()}`,
+            );
         }
         return await response.text();
-    } catch (error: unknown)
-    {
-        if (!(error instanceof Error)) { throw error; }
+    } catch (error: unknown) {
+        if (!(error instanceof Error)) {
+            throw error;
+        }
         const networkHostError = parseNetworkHostNotFoundError(error);
-        if (networkHostError)
-        {
-            throw new MattermostConnectionError(`${networkHostError.hostname} is unreachable! Please check MATTERMOST_URL in settings or environment variables.`);
+        if (networkHostError) {
+            throw new MattermostConnectionError(
+                `${networkHostError.hostname} is unreachable! Please check MATTERMOST_URL in settings or environment variables.`,
+            );
         }
         throw error;
     }
 }
 
-export async function sendBotMessage({ channelId, message, image, }: { channelId: string, message: string, image?: string, })
-{
+export async function sendBotMessage({
+    channelId,
+    message,
+    image,
+}: {
+    channelId: string;
+    message: string;
+    image?: string;
+}) {
     const botToken = await getSetting("MATTERMOST_ACCESS_TOKEN");
-    return sendMessage({
+    return await sendMessage({
         message,
         image: image,
         botToken,
@@ -77,30 +105,47 @@ export async function sendBotMessage({ channelId, message, image, }: { channelId
     });
 }
 
-export async function sendTweet({ message, image }: { message: string; image?: string; })
-{
+export async function sendTweet({
+    message,
+    image,
+}: {
+    message: string;
+    image?: string;
+}) {
     const channelId = await getSetting("TWEET_CHANNEL_ID");
-    return sendBotMessage({
+    return await sendBotMessage({
         message,
         image: image,
         channelId,
     });
 }
 
-export async function sendDirecMessage({ message, reciever, image }: { message: string; reciever: string; image?: string; })
-{
-    return sendBotMessage({
+export async function sendDirecMessage({
+    message,
+    reciever,
+    image,
+}: {
+    message: string;
+    reciever: string;
+    image?: string;
+}) {
+    return await sendBotMessage({
         message,
         image: image,
         channelId: reciever,
     });
 }
 
-export async function sendAdminMessage({ message, image }: { message: string; image?: string; })
-{
-    return sendBotMessage({
+export async function sendAdminMessage({
+    message,
+    image,
+}: {
+    message: string;
+    image?: string;
+}) {
+    return await sendBotMessage({
         message,
         image: image,
-        channelId: 'bu4mwukaktngjg3hybsriojira',
+        channelId: "bu4mwukaktngjg3hybsriojira",
     });
 }

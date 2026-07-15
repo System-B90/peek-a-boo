@@ -1,28 +1,26 @@
 "use client";
 
 import { StudentInfoProvider } from "@/components/student-info-provider";
-import VncCardInner from "@/components/vnc-card-inner";
+import { VncCardInner } from "@/components/vnc-card-inner";
 import { VncCardProps } from "@/components/vnc-card-inner-utils";
 
-export default function VncCard({
+export function VncCard({
     studentUsername,
     onClose,
     ...props
-}: VncCardProps)
-{
+}: VncCardProps) {
     return (
-        <StudentInfoProvider studentUsername={ studentUsername }>
+        <StudentInfoProvider studentUsername={studentUsername}>
             <VncCardInner
-                studentUsername={ studentUsername }
-                onClose={ onClose }
-                { ...props }
+                onClose={onClose}
+                studentUsername={studentUsername}
+                {...props}
             />
         </StudentInfoProvider>
     );
 }
 
-export function VncCardSkeleton()
-{
+export function VncCardSkeleton() {
     const isFullscreen = false;
     const scaleFactor = 0.2;
     const width = 1920 * scaleFactor;
@@ -31,15 +29,16 @@ export function VncCardSkeleton()
     return (
         <div>
             <div
-                className={ `${isFullscreen ? "m-0" : "m-4"
-                    } pt-2 bg-secondary-dark rounded-xl shadow-2xl transition-all vnc-card` }
-                style={ { width } }
-                data-is-expanded={ false }
+                className={`${
+                    isFullscreen ? "m-0" : "m-4"
+                } pt-2 bg-secondary-dark rounded-xl shadow-2xl transition-all vnc-card`}
+                data-is-expanded={false}
+                style={{ width }}
             >
                 {
                     <div className="relative">
                         <div
-                            className={ `
+                            className={`
                                        absolute
                                        rounded-full 
                                        bg-[#cd6679] 
@@ -67,16 +66,16 @@ export function VncCardSkeleton()
                         </div>
                     </div>
                     <div
-                        className={ `
+                        className={`
                                 bg-black 
                                 mx-auto 
                                 rounded-b-xl 
                                 shadow-inner 
                                 `}
-                        style={ {
+                        style={{
                             width,
                             height,
-                        } }
+                        }}
                     >
                         <div className="animate-pulse bg-gray-700 h-full w-full rounded-b-xl" />
                     </div>

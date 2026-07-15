@@ -7,5 +7,5 @@ export default function PreAuthLayout({
         <div className="w-full h-full flex flex-row items-center content-center justify-center">
             {children}
         </div>
-    )
+    );
 }

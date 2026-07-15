@@ -1,0 +1,1 @@
+extend-exclude = ["venv", "websock/venv", "utils/certs", "scripts/cnet"]

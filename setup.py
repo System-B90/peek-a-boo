@@ -21,7 +21,7 @@ def handle_import_error(module_name: str):
 
 try:
     from cryptography import x509
-    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import rsa
     from cryptography.hazmat.primitives.serialization import (
         Encoding,
@@ -306,7 +306,7 @@ def handle_certs(values: dict[str, Any]):
         key_path=KEY_PATH,
         common_name=values["HOSTNAME"],
         alt_names=[
-            f'wss.{values["HOSTNAME"]}',
+            f"wss.{values['HOSTNAME']}",
             values["WEBSOCKET_SERVER_HOSTNAME"],
             "localhost",
         ],
@@ -350,7 +350,7 @@ def collect_vars() -> Dict[str, str]:
 
         values[var] = val
 
-    existing_values["WEBSOCKET_SERVER_HOSTNAME"] = f'wss.{values["HOSTNAME"]}'
+    existing_values["WEBSOCKET_SERVER_HOSTNAME"] = f"wss.{values['HOSTNAME']}"
 
     return values
 

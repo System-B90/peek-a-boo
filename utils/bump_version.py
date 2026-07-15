@@ -62,8 +62,8 @@ def main():
 
     save_new_version(new_version)
 
-    os.system(f'git tag v{new_version}')
-    os.system(f'git push origin v{new_version}')
+    os.system(f"git tag v{new_version}")
+    os.system(f"git push origin v{new_version}")
 
     print(f"Bumped from {current_version} to {new_version}")
 

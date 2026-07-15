@@ -26,6 +26,14 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v7
 
+            # Preinstalled SDKs (dotnet/android/ghc) eat ~30GB the job never
+            # uses. Building + saving ~13 Hive images later fills the root
+            # partition without this ("no space left on device" on docker save).
+            - name: Free disk space
+              run: |
+                  sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup
+                  df -h /
+
             # ── Hive (identity provider + organizational data) ────────────────
             - name: Verify Hive checkout token and SSO branch
               env:
@@ -111,6 +119,7 @@ jobs:
                     echo "No Hive image cache — building from source."
                     python3 manage_hive.py build_deps
                     $compose build
+                    docker builder prune -af
                   fi
 
                   $compose up -d

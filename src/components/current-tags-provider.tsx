@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useContext, createContext, useCallback } from "react";
+import { useMemo, useContext, createContext, useCallback } from "react";
+
 import { useKnownTags } from "@/components/known-tags-provider";
 import { useQueryParams } from "@/components/query-params-provider";
 import { Tag } from "@/shared-api/types";
@@ -16,66 +17,65 @@ export type KnownTagsContext = {
 const CurrentTagsContextProvider = createContext<KnownTagsContext>({
     default: true,
     currentTags: [],
-    addTag: () => { },
-    removeTag: () => { },
-    removeLastTag: () => { },
+    addTag: () => {},
+    removeTag: () => {},
+    removeLastTag: () => {},
 });
 
 export const CurrentTagsProvider = ({
     children,
 }: {
     children: React.ReactNode;
-}) =>
-{
-    const [ tags, setTags ] = useState<Array<Tag>>([]);
+}) => {
     const { doesTagExists, resolveTag } = useKnownTags();
     const { filters, addFilter, removeFilter } = useQueryParams();
 
-    useEffect(() =>
-    {
-        setTags(filters
-            .filter(doesTagExists)
-            .map((v) => resolveTag(v) as Tag));
-    }, [ filters, doesTagExists, resolveTag, setTags ]);
+    const tags = useMemo(
+        () => filters.filter(doesTagExists).map((v) => resolveTag(v) as Tag),
+        [filters, doesTagExists, resolveTag],
+    );
 
-    const addTag = useCallback((newTagName: string) =>
-    {
-        newTagName = newTagName.trim();
-        if (!doesTagExists(newTagName))
-        {
-            throw Error(`Tag ${newTagName} is not recognized!`);
+    const addTag = useCallback(
+        (newTagName: string) => {
+            newTagName = newTagName.trim();
+            if (!doesTagExists(newTagName)) {
+                throw Error(`Tag ${newTagName} is not recognized!`);
+            }
+            addFilter(newTagName.toLowerCase());
+        },
+        [doesTagExists, addFilter],
+    );
+
+    const removeTag = useCallback(
+        (oldTagName: string) => removeFilter(oldTagName.toLowerCase()),
+        [removeFilter],
+    );
+    const removeLastTag = useCallback(() => {
+        if (filters.length === 0) {
+            return;
         }
-        addFilter(newTagName.toLowerCase());
-    }, [ doesTagExists, addFilter ]);
-
-    const removeTag = useCallback((oldTagName: string) => removeFilter(oldTagName.toLowerCase()), [ removeFilter ]);
-    const removeLastTag = useCallback(() =>
-    {
-        if (filters.length === 0) { return; }
-        removeTag(filters[ filters.length - 1 ].toLowerCase());
-    }, [ filters, removeTag ]);
+        removeTag(filters[filters.length - 1].toLowerCase());
+    }, [filters, removeTag]);
 
     return (
         <CurrentTagsContextProvider.Provider
-            value={ {
+            value={{
                 default: false,
                 currentTags: tags,
-                addTag, removeTag, removeLastTag,
-            } }
+                addTag,
+                removeTag,
+                removeLastTag,
+            }}
         >
-            { children }
+            {children}
         </CurrentTagsContextProvider.Provider>
     );
 };
 
-export function useCurrentTags()
-{
+export function useCurrentTags() {
     const context = useContext(CurrentTagsContextProvider);
-    if (context.default)
-    {
-        throw Error(
-            "useCurrentTags must be used inside CurrentTagsProvider!"
-        );
+    if (context.default) {
+        throw Error("useCurrentTags must be used inside CurrentTagsProvider!");
     }
     return context;
 }

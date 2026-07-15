@@ -1,159 +1,129 @@
 "use client";
 import { useState, useCallback, useEffect, useRef } from "react";
-import ClientVNC, {
+import { VncScreenHandle } from "react-vnc";
+
+import {
+    ClientVNC,
     VncDesktopNameEvent,
     VncCapabilitiesEvent,
-} from "./client-vnc";
-import { SettingsProvider } from "./settings-provider";
-import
-{
+} from "@/components/client-vnc";
+import { SettingsProvider } from "@/components/settings-provider";
+import { useStudentInfo } from "@/components/student-info-provider";
+import {
     VncCardProps,
     VncCardLeftModule,
     VncCardCenterModule,
     VncRightModule,
-} from "./vnc-card-inner-utils";
-import { VncScreenHandle } from "react-vnc";
-import { useStudentInfo } from "./student-info-provider";
+    VncCardDisplayState,
+    displayIncludesCenterModule,
+} from "@/components/vnc-card-inner-utils";
 
-export enum VncCardDisplayState
-{
-    Undefined,
-    Default,
-    Expanded,
-    Collapsed,
-    Hidden,
-    Fullscreen,
-}
-
-export function displayIncludesCenterModule(displayState: VncCardDisplayState)
-{
-    switch (displayState)
-    {
-        case VncCardDisplayState.Expanded:
-        case VncCardDisplayState.Fullscreen:
-            return true;
-        case VncCardDisplayState.Default:
-        case VncCardDisplayState.Collapsed:
-        case VncCardDisplayState.Hidden:
-        case VncCardDisplayState.Undefined:
-            return false;
-    }
-}
-
-export default function VncCardInner({
+export function VncCardInner({
     studentUsername,
     isFullscreen,
     onClose,
-}: VncCardProps)
-{
+}: VncCardProps) {
     const { studentName, hostname: studentHostname } = useStudentInfo();
-    const [ connected, setConnected ] = useState<boolean>(false);
-    const [ displayState, setDisplayState ] = useState<VncCardDisplayState>(
-        isFullscreen ? VncCardDisplayState.Fullscreen : VncCardDisplayState.Default
+    const [connected, setConnected] = useState<boolean>(false);
+    const [displayState, setDisplayState] = useState<VncCardDisplayState>(
+        isFullscreen
+            ? VncCardDisplayState.Fullscreen
+            : VncCardDisplayState.Default,
     );
-    const [ isViewOnly, setIsViewOnly ] = useState<boolean>(true);
-    const [ hasSecurityError, setHasSecurityError ] = useState<boolean>(false);
+    const [isViewOnly, setIsViewOnly] = useState<boolean>(true);
+    const [hasSecurityError, setHasSecurityError] = useState<boolean>(false);
     const FULLSCREEN_SCALE_FACTOR = 0.9;
     const SMALL_SCALE_FACTOR = 0.2;
-    const [ scaleFactor, setScaleFactor ] = useState<number>(
-        isFullscreen ? FULLSCREEN_SCALE_FACTOR : SMALL_SCALE_FACTOR
+    const [scaleFactor, setScaleFactor] = useState<number>(
+        isFullscreen ? FULLSCREEN_SCALE_FACTOR : SMALL_SCALE_FACTOR,
     );
 
-    const [ width, setWidth ] = useState<number>(1920 * scaleFactor);
-    const [ height, setHeight ] = useState<number>(1200 * scaleFactor);
-    const [ , setDesktopName ] = useState<string>(studentHostname);
+    const [width, setWidth] = useState<number>(1920 * scaleFactor);
+    const [height, setHeight] = useState<number>(1200 * scaleFactor);
+    const [, setDesktopName] = useState<string>(studentHostname);
 
     const vncRef = useRef<VncScreenHandle>(null);
 
-    useEffect(() =>
-    {
-        if (!isFullscreen)
-        {
+    useEffect(() => {
+        if (!isFullscreen) {
             return;
         }
         document.title = `${studentName} | Peek-a-Boo`;
-    }, [ isFullscreen, studentName ]);
+    }, [isFullscreen, studentName]);
 
-    const connectHandler = useCallback(() =>
-    {
+    const connectHandler = useCallback(() => {
         setConnected(true);
-    }, [ setConnected ]);
+    }, [setConnected]);
 
-    const disconnectHandler = useCallback(() =>
-    {
+    const disconnectHandler = useCallback(() => {
         setConnected(false);
-    }, [ setConnected ]);
+    }, [setConnected]);
 
-    const credentialRequiredHandler = useCallback(() =>
-    {
+    const credentialRequiredHandler = useCallback(() => {
         setHasSecurityError(true);
     }, []);
 
-    const securityFailureHandler = useCallback(() =>
-    {
+    const securityFailureHandler = useCallback(() => {
         setHasSecurityError(true);
-    }, [ setHasSecurityError ]);
+    }, [setHasSecurityError]);
 
     const desktopNameHandler = useCallback(
-        (event: VncDesktopNameEvent) =>
-        {
+        (event: VncDesktopNameEvent) => {
             console.log(event.detail.name);
             setDesktopName(event.detail.name);
         },
-        [ setDesktopName ]
+        [setDesktopName],
     );
 
-    const capabilitiesHandler = useCallback((event: VncCapabilitiesEvent) =>
-    {
+    const capabilitiesHandler = useCallback((event: VncCapabilitiesEvent) => {
         console.log("Capabilities", event);
     }, []);
 
-    useEffect(() =>
-    {
-        switch (displayState)
-        {
-            case VncCardDisplayState.Default:
-                setScaleFactor(SMALL_SCALE_FACTOR);
-                break;
-            case VncCardDisplayState.Expanded:
-                setScaleFactor(SMALL_SCALE_FACTOR * 2);
-                break;
-            case VncCardDisplayState.Collapsed:
-                setScaleFactor(0);
-                break;
-            case VncCardDisplayState.Hidden:
-                break;
-            case VncCardDisplayState.Fullscreen:
-                setScaleFactor(FULLSCREEN_SCALE_FACTOR);
-                break;
-            case VncCardDisplayState.Undefined:
-                break;
+    useEffect(() => {
+        /* eslint-disable react-hooks/set-state-in-effect -- Hidden intentionally keeps the previous scaleFactor (sticky), so this can't be a pure derivation of displayState */
+        switch (displayState) {
+        case VncCardDisplayState.Default:
+            setScaleFactor(SMALL_SCALE_FACTOR);
+            break;
+        case VncCardDisplayState.Expanded:
+            setScaleFactor(SMALL_SCALE_FACTOR * 2);
+            break;
+        case VncCardDisplayState.Collapsed:
+            setScaleFactor(0);
+            break;
+        case VncCardDisplayState.Hidden:
+            break;
+        case VncCardDisplayState.Fullscreen:
+            setScaleFactor(FULLSCREEN_SCALE_FACTOR);
+            break;
+        case VncCardDisplayState.Undefined:
+            break;
         }
-    }, [ displayState, setScaleFactor ]);
+        /* eslint-enable react-hooks/set-state-in-effect */
+    }, [displayState, setScaleFactor]);
 
-    useEffect(() =>
-    {
+    useEffect(() => {
+        /* eslint-disable react-hooks/set-state-in-effect -- width/height intentionally lag scaleFactor by one render for a smooth CSS transition */
         setWidth(1920 * scaleFactor);
         setHeight(1080 * scaleFactor);
-    }, [ scaleFactor, setWidth, setHeight ]);
+        /* eslint-enable react-hooks/set-state-in-effect */
+    }, [scaleFactor, setWidth, setHeight]);
 
     const sideButtonClassnames = "w-6 h-6 m-1";
 
     return (
         <div>
             <div
-                className={ `${isFullscreen ? "m-0" : "m-4"} bg-secondary-dark pt-2 rounded-xl shadow-2xl transition-all vnc-card` }
-                style={ { width } }
+                className={`${isFullscreen ? "m-0" : "m-4"} bg-secondary-dark pt-2 rounded-xl shadow-2xl transition-all vnc-card`}
                 data-is-expanded={
                     displayState === VncCardDisplayState.Expanded ||
                     displayState === VncCardDisplayState.Fullscreen
                 }
+                style={{ width }}
             >
-                {
-                    onClose && <div className="relative">
-                        <div
-                            onClick={ () => onClose(studentUsername) }
-                            className={ `
+                {onClose ? <div className="relative">
+                    <div
+                        className={`
                                 absolute
                                 rounded-full 
                                 bg-[#cd6679] 
@@ -166,45 +136,49 @@ export default function VncCardInner({
                                 items-center 
                                 cursor-pointer
                                 `}
-                        >
+                        onClick={() => onClose(studentUsername)}
+                    >
                             X
-                        </div>
                     </div>
-                }
-                <SettingsProvider hostname={ studentHostname }>
+                </div> : null}
+                <SettingsProvider hostname={studentHostname}>
                     <div className="p-4 flex flex-row justify-between">
-                        <VncCardLeftModule key={ `vnc-card-left-${studentUsername}` } />
-                        { displayIncludesCenterModule(displayState) && (
-                            <VncCardCenterModule key={ `vnc-card-center-${studentUsername}` } />
-                        ) }
+                        <VncCardLeftModule
+                            key={`vnc-card-left-${studentUsername}`}
+                        />
+                        {displayIncludesCenterModule(displayState) && (
+                            <VncCardCenterModule
+                                key={`vnc-card-center-${studentUsername}`}
+                            />
+                        )}
                         <VncRightModule
-                            key={ `vnc-card-right-${studentUsername}` }
-                            displayState={ displayState }
-                            hasSecurityError={ hasSecurityError }
-                            connected={ connected }
-                            desktopName={ studentHostname }
-                            isViewOnly={ isViewOnly }
-                            setIsViewOnly={ setIsViewOnly }
-                            sideButtonClassnames={ sideButtonClassnames }
-                            setDisplayState={ setDisplayState }
-                            studentUsername={ studentUsername }
-                            vncRef={ vncRef }
+                            connected={connected}
+                            desktopName={studentHostname}
+                            displayState={displayState}
+                            hasSecurityError={hasSecurityError}
+                            isViewOnly={isViewOnly}
+                            key={`vnc-card-right-${studentUsername}`}
+                            setDisplayState={setDisplayState}
+                            setIsViewOnly={setIsViewOnly}
+                            sideButtonClassnames={sideButtonClassnames}
+                            studentUsername={studentUsername}
+                            vncRef={vncRef}
                         />
                     </div>
-                    { displayState !== VncCardDisplayState.Hidden && (
+                    {displayState !== VncCardDisplayState.Hidden && (
                         <ClientVNC
-                            onConnect={ connectHandler }
-                            onDisconnect={ disconnectHandler }
-                            onDesktopName={ desktopNameHandler }
-                            onSecurityFailure={ securityFailureHandler }
-                            onCredentialsRequired={ credentialRequiredHandler }
-                            onCapabilities={ capabilitiesHandler }
-                            viewOnly={ isViewOnly || true }
-                            vncRef={ vncRef }
-                            width={ width }
-                            height={ height }
+                            height={height}
+                            onCapabilities={capabilitiesHandler}
+                            onConnect={connectHandler}
+                            onCredentialsRequired={credentialRequiredHandler}
+                            onDesktopName={desktopNameHandler}
+                            onDisconnect={disconnectHandler}
+                            onSecurityFailure={securityFailureHandler}
+                            viewOnly={isViewOnly || true}
+                            vncRef={vncRef}
+                            width={width}
                         />
-                    ) }
+                    )}
                 </SettingsProvider>
             </div>
         </div>

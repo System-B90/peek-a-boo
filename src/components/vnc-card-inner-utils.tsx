@@ -1,41 +1,60 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 "use client";
 
-import "./vnc.css";
+import "@/components/vnc.css";
 
-import { Box, TooltipProps, Typography } from "@mui/material";
-import
-{
+import Box from "@mui/material/Box";
+import { TooltipProps } from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import Link from "next/link";
+import {
     Dispatch,
     RefObject,
     SetStateAction,
     useCallback,
     useState,
 } from "react";
-import ExpandGlyph from "@/glyphs/Expand";
-import CollapseGlyph from "@/glyphs/Collapse";
-import ExternalLinkGlyph from "@/glyphs/ExternalLink";
-import Link from "next/link";
-import OnlineGlyph from "@/glyphs/Online";
-import OfflineGlyph from "@/glyphs/Offline";
-import WarningShieldGlyph from "@/glyphs/WarningShield";
-import NaturalUserInterface2Glyph from "@/glyphs/NaturalUserInterface2";
-import WallMountCameraGlyph from "@/glyphs/WallMountCamera";
-import Grid from "@/glyphs/Grid";
-import { useStudentInfo } from "./student-info-provider";
-import TweetButton from "@/components/tweet-bot";
 import { VncScreenHandle } from "react-vnc";
-import
-{
-    displayIncludesCenterModule,
-    VncCardDisplayState,
-} from "./vnc-card-inner";
-import RefreshGlyph from "@/glyphs/refresh";
-import { useAllStudentInfo } from "./all-student-info-provider";
-import RecurringAppointmentExceptionGlyph from "@/glyphs/RecurringAppointmentException";
-import { enqueueApiErrorSnackbar } from "./snackbar-utils";
-import PcOnDeskGlyph from "@/glyphs/pc-on-desk";
+
+import { useAllStudentInfo } from "@/components/all-student-info-provider";
 import { useAuth } from "@/components/auth-provider";
+import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
+import { useStudentInfo } from "@/components/student-info-provider";
+import { TweetButton } from "@/components/tweet-bot";
+import { CollapseGlyph } from "@/glyphs/Collapse";
+import { ExpandGlyph } from "@/glyphs/Expand";
+import { ExternalLinkGlyph } from "@/glyphs/ExternalLink";
+import { Grid } from "@/glyphs/Grid";
+import { NaturalUserInterface2Glyph } from "@/glyphs/NaturalUserInterface2";
+import { OfflineGlyph } from "@/glyphs/Offline";
+import { OnlineGlyph } from "@/glyphs/Online";
+import { PcOnDeskGlyph } from "@/glyphs/pc-on-desk";
+import { RecurringAppointmentExceptionGlyph } from "@/glyphs/RecurringAppointmentException";
+import { RefreshGlyph } from "@/glyphs/refresh";
+import { WallMountCameraGlyph } from "@/glyphs/WallMountCamera";
+import { WarningShieldGlyph } from "@/glyphs/WarningShield";
+
+export enum VncCardDisplayState {
+    Undefined,
+    Default,
+    Expanded,
+    Collapsed,
+    Hidden,
+    Fullscreen,
+}
+
+export function displayIncludesCenterModule(displayState: VncCardDisplayState) {
+    switch (displayState) {
+    case VncCardDisplayState.Expanded:
+    case VncCardDisplayState.Fullscreen:
+        return true;
+    case VncCardDisplayState.Default:
+    case VncCardDisplayState.Collapsed:
+    case VncCardDisplayState.Hidden:
+    case VncCardDisplayState.Undefined:
+        return false;
+    }
+}
 
 export type VncCardProps = {
     studentUsername: string;
@@ -62,17 +81,15 @@ function Toggler({
     offGlyph: TogglerGlyph;
     onGlyphCaption: string;
     offGlyphCaption: string;
-    placement?: TooltipProps[ "placement" ];
-} & React.HTMLAttributes<HTMLDivElement>)
-{
-    const toggleExpansion = useCallback(() =>
-    {
+    placement?: TooltipProps["placement"];
+} & React.HTMLAttributes<HTMLDivElement>) {
+    const toggleExpansion = useCallback(() => {
         setValue((v) => !v);
-    }, [ setValue ]);
+    }, [setValue]);
 
     return (
         <>
-            { value
+            {value
                 ? onGlyph({
                     glyphTitle: onGlyphCaption,
                     className,
@@ -84,7 +101,7 @@ function Toggler({
                     className,
                     onClick: toggleExpansion,
                     ...props,
-                }) }
+                })}
         </>
     );
 }
@@ -98,33 +115,31 @@ function Expander({
     isExpanded: boolean;
     setIsExpanded: Dispatch<SetStateAction<boolean>>;
     className: string;
-} & React.HTMLAttributes<HTMLDivElement>)
-{
+} & React.HTMLAttributes<HTMLDivElement>) {
     return (
         <Toggler
-            value={ isExpanded }
-            setValue={ setIsExpanded }
-            className={ className }
-            onGlyph={ CollapseGlyph }
-            offGlyph={ ExpandGlyph }
-            onGlyphCaption={ "Collapse" }
-            offGlyphCaption={ "Expand" }
-            { ...props }
+            className={className}
+            offGlyph={ExpandGlyph}
+            offGlyphCaption={"Expand"}
+            onGlyph={CollapseGlyph}
+            onGlyphCaption={"Collapse"}
+            setValue={setIsExpanded}
+            value={isExpanded}
+            {...props}
         />
     );
 }
 
-export function VncCardCenterModule()
-{
+export function VncCardCenterModule() {
     const { checkersBrief, mentorName, mentorUsername } = useStudentInfo();
 
     const placeholder = (
         <span
-            style={ {
+            style={{
                 direction: "rtl",
                 opacity: 0.5,
                 fontStyle: "italic",
-            } }
+            }}
         >
             מכוון בודק
         </span>
@@ -132,31 +147,33 @@ export function VncCardCenterModule()
 
     return (
         <div className="px-4">
-            <div id="checkers-brief" className="rtl flex flex-row" dir="rtl">
+            <div className="rtl flex flex-row" dir="rtl" id="checkers-brief">
                 <div className="text-center flex flex-row-reverse" dir="rtl">
                     {
                         /* Mentor error message */
-                        (!mentorName || !mentorUsername) && (
-                            <Typography color="error" style={ { direction: "rtl" } }>
+                        ((!mentorName || !mentorUsername) && (
+                            <Typography
+                                color="error"
+                                style={{ direction: "rtl" }}
+                            >
                                 אין לחניך מפקד!
                             </Typography>
-                        ) ||
-                        /* Mentor name and link */
-                        (
+                        )) || (
+                            /* Mentor name and link */
                             <Link
-                                href={ `https://mattermost/eshel/messages/@${mentorUsername}` }
-                                target="_blank"
                                 className="hover:underline transition-all"
+                                href={`https://mattermost/eshel/messages/@${mentorUsername}`}
+                                target="_blank"
                             >
-                                { mentorName }
+                                {mentorName}
                             </Link>
                         )
                     }
-                    <Box sx={ { width: "0.3rem" } } />
-                    {/* Checkers brief with inline placeholder */ }
+                    <Box sx={{ width: "0.3rem" }} />
+                    {/* Checkers brief with inline placeholder */}
                     <Typography>
                         &quot;
-                        { checkersBrief ? checkersBrief : placeholder }
+                        {checkersBrief ? checkersBrief : placeholder}
                         &quot; -
                     </Typography>
                 </div>
@@ -165,28 +182,36 @@ export function VncCardCenterModule()
     );
 }
 
-
-export function VncCardLeftModule()
-{
+export function VncCardLeftModule() {
     const { clientEnvConfig } = useAuth();
-    const { studentNumber, studentName, currentExerciseUrl, currentExerciseName, hiveId } = useStudentInfo();
+    const {
+        studentNumber,
+        studentName,
+        currentExerciseUrl,
+        currentExerciseName,
+        hiveId,
+    } = useStudentInfo();
 
     return (
         <div className="flex flex-col min-w-[30%] -mt-2">
-            <Link href={ `https://${clientEnvConfig.HIVE_HOSTNAME}/mentor/students?id=${hiveId}` }>
+            <Link
+                href={`https://${clientEnvConfig.HIVE_HOSTNAME}/mentor/students?id=${hiveId}`}
+            >
                 <div className="flex flex-row items-center">
                     <div className="p-2 bg-secondary-light rounded-full w-8 h-8 flex flex-row items-center content-center justify-center text-center">
-                        <Typography>{ studentNumber }</Typography>
+                        <Typography>{studentNumber}</Typography>
                     </div>
-                    <Box sx={ { width: "0.3rem" } } />
-                    <Typography fontSize={ "1.2rem" } fontWeight={ 600 }>
-                        { studentName }
+                    <Box sx={{ width: "0.3rem" }} />
+                    <Typography fontSize={"1.2rem"} fontWeight={600}>
+                        {studentName}
                     </Typography>
                 </div>
             </Link>
             <div className="ml-9">
-                <Link href={ currentExerciseUrl }>
-                    <Typography fontSize={ "0.8rem" }>{ currentExerciseName }</Typography>
+                <Link href={currentExerciseUrl}>
+                    <Typography fontSize={"0.8rem"}>
+                        {currentExerciseName}
+                    </Typography>
                 </Link>
             </div>
         </div>
@@ -196,57 +221,52 @@ export function VncCardLeftModule()
 function RefreshData({
     className,
     ...props
-}: React.HTMLAttributes<HTMLDivElement>)
-{
+}: React.HTMLAttributes<HTMLDivElement>) {
     const { getStudentInfo } = useAllStudentInfo();
     const { studentUsername } = useStudentInfo();
 
-    const [ isAnimating, setIsAnimating ] = useState<boolean>(false);
-    const [ hasError, setHasError ] = useState<boolean>(false);
+    const [isAnimating, setIsAnimating] = useState<boolean>(false);
+    const [hasError, setHasError] = useState<boolean>(false);
 
-    const clickHandler = useCallback(() =>
-    {
+    const clickHandler = useCallback(() => {
         setIsAnimating(true);
         setHasError(false);
 
         getStudentInfo(studentUsername, true)
-            .then(() =>
-            {
-                setTimeout(() =>
-                {
+            .then(() => {
+                setTimeout(() => {
                     setIsAnimating(false);
                 }, 750);
             })
-            .catch((error) =>
-            {
+            .catch((error) => {
                 setIsAnimating(false);
-                enqueueApiErrorSnackbar('Failed to fetch!', error);
+                enqueueApiErrorSnackbar("Failed to fetch!", error);
                 setHasError(true);
             });
-    }, [ studentUsername, setIsAnimating, setHasError, getStudentInfo ]);
+    }, [studentUsername, setIsAnimating, setHasError, getStudentInfo]);
 
     return (
         <>
-            { hasError ? (
+            {hasError ? (
                 <RecurringAppointmentExceptionGlyph
-                    glyphTitle={ "Failed to fetch!" }
-                    onClick={ clickHandler }
-                    className={ `${className} text-red-500` }
-                    data-vnc-refresh-data={ true }
-                    data-animating={ isAnimating }
-                    { ...props }
+                    className={`${className} text-red-500`}
+                    data-animating={isAnimating}
+                    data-vnc-refresh-data={true}
+                    glyphTitle={"Failed to fetch!"}
+                    onClick={clickHandler}
+                    {...props}
                 />
             ) : (
                 <RefreshGlyph
+                    className={className}
+                    data-animating={isAnimating}
+                    data-vnc-refresh-data={true}
+                    glyphTitle={"Refresh data"}
+                    onClick={clickHandler}
                     placement="right"
-                    onClick={ clickHandler }
-                    className={ className }
-                    glyphTitle={ "Refresh data" }
-                    data-vnc-refresh-data={ true }
-                    data-animating={ isAnimating }
-                    { ...props }
+                    {...props}
                 />
-            ) }
+            )}
         </>
     );
 }
@@ -272,125 +292,110 @@ export function VncRightModule({
     sideButtonClassnames: string;
     setDisplayState: Dispatch<SetStateAction<VncCardDisplayState>>;
     studentUsername: string;
-    vncRef: RefObject<VncScreenHandle | null>;
-})
-{
-    const setIsVisible: Dispatch<SetStateAction<boolean>> = useCallback(
-        (v) =>
-        {
-            setDisplayState((x) =>
-            {
-                if (x === VncCardDisplayState.Hidden)
-                {
-                    return VncCardDisplayState.Default;
-                } else
-                {
-                    return VncCardDisplayState.Hidden;
-                }
-            });
-        },
-        [ setDisplayState ]
-    );
-
+    vncRef: RefObject<null | VncScreenHandle>;
+}) {
     const setIsExpanded: Dispatch<SetStateAction<boolean>> = useCallback(
-        (v) =>
-        {
-            setDisplayState((x) =>
-            {
-                switch (x)
-                {
-                    case VncCardDisplayState.Expanded:
-                        return VncCardDisplayState.Default;
-                    case VncCardDisplayState.Collapsed:
-                    case VncCardDisplayState.Default:
-                        return VncCardDisplayState.Expanded;
-                    case VncCardDisplayState.Hidden:
-                        return VncCardDisplayState.Hidden;
-                    case VncCardDisplayState.Fullscreen:
-                        return VncCardDisplayState.Fullscreen;
-                    case VncCardDisplayState.Undefined:
-                        return VncCardDisplayState.Undefined;
+        (_v) => {
+            setDisplayState((x) => {
+                switch (x) {
+                case VncCardDisplayState.Expanded:
+                    return VncCardDisplayState.Default;
+                case VncCardDisplayState.Collapsed:
+                case VncCardDisplayState.Default:
+                    return VncCardDisplayState.Expanded;
+                case VncCardDisplayState.Hidden:
+                    return VncCardDisplayState.Hidden;
+                case VncCardDisplayState.Fullscreen:
+                    return VncCardDisplayState.Fullscreen;
+                case VncCardDisplayState.Undefined:
+                    return VncCardDisplayState.Undefined;
                 }
             });
         },
-        [ setDisplayState ]
+        [setDisplayState],
     );
 
     return (
         <div className="flex flex-col">
             <div className="w-full flex flex-row-reverse -mt-2 mb-2 items-center">
-                { !desktopName ?
+                {!desktopName ? (
                     <PcOnDeskGlyph
-                        glyphTitle={ "Hostname Unknown!" }
                         className="w-5 h-5"
-                        style={ { color: "var(--color-error)" } }
-                    /> :
-                    (
-                        // Hostname known
-                        hasSecurityError ? (
-                            <WarningShieldGlyph
-                                glyphTitle={ "Authentication Error!" }
-                                className="w-5 h-5"
-                                style={ { color: "var(--color-warning)" } }
-                            />
-                        ) : connected ? (
-                            <OnlineGlyph
-                                glyphTitle={ "Connected" }
-                                className="w-5 h-5"
-                                style={ { color: "var(--color-success)" } }
-                            />
-                        ) : (
-                            <OfflineGlyph
-                                glyphTitle={ "Disconnected" }
-                                className="w-5 h-5"
-                                style={ { color: "var(--color-error)" } }
-                            />
-                        )
-                    ) }
-                { displayIncludesCenterModule(displayState) && (
+                        glyphTitle={"Hostname Unknown!"}
+                        style={{ color: "var(--color-error)" }}
+                    />
+                ) : // Hostname known
+                    hasSecurityError ? (
+                        <WarningShieldGlyph
+                            className="w-5 h-5"
+                            glyphTitle={"Authentication Error!"}
+                            style={{ color: "var(--color-warning)" }}
+                        />
+                    ) : connected ? (
+                        <OnlineGlyph
+                            className="w-5 h-5"
+                            glyphTitle={"Connected"}
+                            style={{ color: "var(--color-success)" }}
+                        />
+                    ) : (
+                        <OfflineGlyph
+                            className="w-5 h-5"
+                            glyphTitle={"Disconnected"}
+                            style={{ color: "var(--color-error)" }}
+                        />
+                    )}
+                {displayIncludesCenterModule(displayState) && (
                     <>
-                        <Box sx={ { width: "0.2rem" } } />
-                        <Typography fontSize={ "0.7rem" }>{ desktopName }</Typography>
+                        <Box sx={{ width: "0.2rem" }} />
+                        <Typography fontSize={"0.7rem"}>
+                            {desktopName}
+                        </Typography>
                     </>
-                ) }
+                )}
             </div>
             <div className="flex flex-row items-center content-center justify-center relative">
-                {
-                    connected && <div className="vnc-card-right-module flex flex-col items-center content-center justify-start z-10">
-                        <RefreshData className={ sideButtonClassnames } />
-                        <TweetButton vncRef={ vncRef } className={ sideButtonClassnames } />
-                        <Toggler
-                            value={ isViewOnly }
-                            setValue={ setIsViewOnly }
-                            className={ sideButtonClassnames }
-                            onGlyph={ NaturalUserInterface2Glyph }
-                            onGlyphCaption="Take Control"
-                            offGlyph={ WallMountCameraGlyph }
-                            offGlyphCaption="View Only"
-                            placement={ "right" }
-                        />
-                    </div>
-                }
+                {connected ? <div className="vnc-card-right-module flex flex-col items-center content-center justify-start z-10">
+                    <RefreshData className={sideButtonClassnames} />
+                    <TweetButton
+                        className={sideButtonClassnames}
+                        vncRef={vncRef}
+                    />
+                    <Toggler
+                        className={sideButtonClassnames}
+                        offGlyph={WallMountCameraGlyph}
+                        offGlyphCaption="View Only"
+                        onGlyph={NaturalUserInterface2Glyph}
+                        onGlyphCaption="Take Control"
+                        placement={"right"}
+                        setValue={setIsViewOnly}
+                        value={isViewOnly}
+                    />
+                </div> : null}
 
                 <Expander
-                    isExpanded={ displayState === VncCardDisplayState.Expanded }
-                    setIsExpanded={ setIsExpanded }
-                    className={ sideButtonClassnames }
-                    aria-disabled={ displayState === VncCardDisplayState.Fullscreen }
+                    aria-disabled={
+                        displayState === VncCardDisplayState.Fullscreen
+                    }
+                    className={sideButtonClassnames}
+                    isExpanded={displayState === VncCardDisplayState.Expanded}
+                    setIsExpanded={setIsExpanded}
                 />
 
-                { displayState === VncCardDisplayState.Fullscreen ? (
-                    <Link href={ `/` }>
-                        <Grid className={ sideButtonClassnames } glyphTitle="Back to grid" />
+                {displayState === VncCardDisplayState.Fullscreen ? (
+                    <Link href={`/`}>
+                        <Grid
+                            className={sideButtonClassnames}
+                            glyphTitle="Back to grid"
+                        />
                     </Link>
                 ) : (
-                    <Link href={ `/fullscreen?username=${studentUsername}` }>
+                    <Link href={`/fullscreen?username=${studentUsername}`}>
                         <ExternalLinkGlyph
-                            className={ sideButtonClassnames }
+                            className={sideButtonClassnames}
                             glyphTitle="Popout"
                         />
                     </Link>
-                ) }
+                )}
             </div>
         </div>
     );

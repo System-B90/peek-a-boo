@@ -1,0 +1,12 @@
+node_modules/
+.next/
+coverage/
+dist/
+build/
+venv/
+websock/venv/
+utils/certs/
+scripts/cnet/
+.claude/
+package-lock.json
+package-lock-cnet.json

@@ -1,30 +1,85 @@
-name: Build
+name: CI
 
 on:
-  push:
+    push:
+        branches: ["**"]
+    pull_request:
+        branches: ["**"]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    lint:
+        name: Lint Codebase
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: npm install
+            - name: Setup Node.js 24
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "24"
+                  cache: "npm"
 
-      - name: Run linter
-        run: npm run lint
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
 
-  build:
-    if: github.ref == 'refs/heads/master'   # Only runs on master
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+            - name: Install Dependencies (Node)
+              run: npm ci
 
-      - name: Install dependencies
-        run: npm install
+            - name: Install Dependencies (Python)
+              run: pip install ruff
 
-      - name: Run build
-        run: npm run build
+            - name: Run ESLint
+              run: npm run lint
+
+            - name: Run Ruff (Python Linter)
+              run: ruff check .
+
+            - name: Run Ruff (Python Formatter Check)
+              run: ruff format --check .
+
+    test:
+        name: Unit Tests
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js 24
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "24"
+                  cache: "npm"
+
+            - name: Install Dependencies
+              run: npm ci
+
+            - name: Run Unit Tests
+              run: npm run test:unit
+
+    build:
+        name: Build
+        needs: [lint, test]
+        if: github.ref == 'refs/heads/master'
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js 24
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "24"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run build
+              run: npm run build

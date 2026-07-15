@@ -1,20 +1,19 @@
-'use client';
+"use client";
 
 import "@/style/globals.css";
-import { AuthProvider } from "@/components/auth-provider";
-import { AllStudentInfoProvider } from "@/components/all-student-info-provider";
-import { KnownTagsProvider } from "@/components/known-tags-provider";
 import { ActiveStudentsProvider } from "@/components/active-students-provider";
-import { CurrentTagsProvider } from "@/components/current-tags-provider";
+import { AllStudentInfoProvider } from "@/components/all-student-info-provider";
+import { AuthProvider } from "@/components/auth-provider";
 import { ClassesProvider } from "@/components/classes-provider";
-import MentorAccessBar from "@/components/mentor-access-bar";
+import { CurrentTagsProvider } from "@/components/current-tags-provider";
+import { KnownTagsProvider } from "@/components/known-tags-provider";
+import { MentorAccessBar } from "@/components/mentor-access-bar";
 
 export default function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
-}>)
-{
+}>) {
     return (
         <AuthProvider>
             <AllStudentInfoProvider>
@@ -23,7 +22,7 @@ export default function RootLayout({
                     <KnownTagsProvider>
                         <ActiveStudentsProvider>
                             <CurrentTagsProvider>
-                                { children }
+                                {children}
                             </CurrentTagsProvider>
                         </ActiveStudentsProvider>
                     </KnownTagsProvider>

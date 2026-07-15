@@ -1,12 +1,8 @@
 "use client";
 
+import { createContext, useContext, useMemo } from "react";
+
 import { useQueryParams } from "@/components/query-params-provider";
-import
-{
-    createContext,
-    useContext,
-    useMemo,
-} from "react";
 
 export type ActiveStudentsContext = {
     default: boolean;
@@ -19,42 +15,39 @@ export type ActiveStudentsContext = {
 const ActiveStudentsContextProvider = createContext<ActiveStudentsContext>({
     default: true,
     activeStudents: [],
-    setActiveStudents: () => { },
-    addActive: () => { },
-    removeActive: () => { },
+    setActiveStudents: () => {},
+    addActive: () => {},
+    removeActive: () => {},
 });
 
 export const ActiveStudentsProvider = ({
     children,
 }: {
     children: React.ReactNode;
-}) =>
-{
+}) => {
     const { actives, setActives, addActive, removeActive } = useQueryParams();
-    const activeStudents = useMemo(() => actives, [ actives ]);
+    const activeStudents = useMemo(() => actives, [actives]);
 
     return (
         <ActiveStudentsContextProvider.Provider
-            value={ {
+            value={{
                 default: false,
                 activeStudents,
                 setActiveStudents: setActives,
                 addActive,
                 removeActive,
-            } }
+            }}
         >
-            { children }
+            {children}
         </ActiveStudentsContextProvider.Provider>
     );
 };
 
-export function useActiveStudents()
-{
+export function useActiveStudents() {
     const context = useContext(ActiveStudentsContextProvider);
-    if (context.default)
-    {
+    if (context.default) {
         throw Error(
-            "useActiveStudents must be used inside ActiveStudentsProvider!"
+            "useActiveStudents must be used inside ActiveStudentsProvider!",
         );
     }
     return context;

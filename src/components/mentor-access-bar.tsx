@@ -1,137 +1,156 @@
-import PeekabooIconGlyph from "@/glyphs/peekaboo-icon";
-import { Box, Typography } from "@mui/material";
-import { useState, useCallback, MouseEventHandler } from "react";
-import { useAuth } from "./auth-provider";
-import { useAllStudentInfo } from "./all-student-info-provider";
-import RefreshGlyph from "@/glyphs/refresh";
-import RecurringAppointmentExceptionGlyph from "@/glyphs/RecurringAppointmentException";
-import { enqueueApiErrorSnackbar } from "./snackbar-utils";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import Link from "next/link";
-import SettingsGlyph from "@/glyphs/settings";
 import { usePathname } from "next/navigation";
-import HomeGlyph from "@/glyphs/home";
+import { useState, useCallback, MouseEventHandler } from "react";
 
-function RefreshAllData()
-{
+import { useAllStudentInfo } from "@/components/all-student-info-provider";
+import { useAuth } from "@/components/auth-provider";
+import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
+import { HomeGlyph } from "@/glyphs/home";
+import { PeekabooIconGlyph } from "@/glyphs/peekaboo-icon";
+import { RecurringAppointmentExceptionGlyph } from "@/glyphs/RecurringAppointmentException";
+import { RefreshGlyph } from "@/glyphs/refresh";
+import { SettingsGlyph } from "@/glyphs/settings";
+
+function RefreshAllData() {
     const { refetchAllStudentInfo } = useAllStudentInfo();
 
-    const [ isAnimating, setIsAnimating ] = useState<boolean>(false);
-    const [ hasError, setHasError ] = useState<boolean>(false);
+    const [isAnimating, setIsAnimating] = useState<boolean>(false);
+    const [hasError, setHasError] = useState<boolean>(false);
 
-    const refreshClickCallback: MouseEventHandler<HTMLDivElement> = useCallback((event) =>
-    {
-        event.stopPropagation();
-        event.preventDefault();
+    const refreshClickCallback: MouseEventHandler<HTMLDivElement> = useCallback(
+        (event) => {
+            event.stopPropagation();
+            event.preventDefault();
 
-        setIsAnimating(true);
-        setHasError(false);
+            setIsAnimating(true);
+            setHasError(false);
 
-        refetchAllStudentInfo().then(() =>
-        {
-            setTimeout(() =>
-            {
-                setIsAnimating(false);
-            }, 750);
-        })
-            .catch((error) =>
-            {
-                setIsAnimating(false);
-                enqueueApiErrorSnackbar('Failed to fetch!', error);
-                setHasError(true);
-            });
-
-    }, [ refetchAllStudentInfo, setIsAnimating, setHasError ]);
+            refetchAllStudentInfo()
+                .then(() => {
+                    setTimeout(() => {
+                        setIsAnimating(false);
+                    }, 750);
+                })
+                .catch((error) => {
+                    setIsAnimating(false);
+                    enqueueApiErrorSnackbar("Failed to fetch!", error);
+                    setHasError(true);
+                });
+        },
+        [refetchAllStudentInfo, setIsAnimating, setHasError],
+    );
 
     return (
         <>
-            {
-                hasError ? (
-                    <RecurringAppointmentExceptionGlyph
-                        glyphTitle={ "Failed to fetch!" }
-                        onClick={ refreshClickCallback }
-                        className={ `w-6 h-6 text-red-500` }
-                        data-vnc-refresh-data={ true }
-                        data-animating={ isAnimating }
-                    />
-                ) : (
-                    <RefreshGlyph
-                        data-vnc-refresh-data={ true }
-                        data-animating={ isAnimating }
-                        glyphTitle="Reload All"
-                        className="w-6 h-6"
-                        onClick={ refreshClickCallback } />
-                )
-            }
+            {hasError ? (
+                <RecurringAppointmentExceptionGlyph
+                    className={`w-6 h-6 text-red-500`}
+                    data-animating={isAnimating}
+                    data-vnc-refresh-data={true}
+                    glyphTitle={"Failed to fetch!"}
+                    onClick={refreshClickCallback}
+                />
+            ) : (
+                <RefreshGlyph
+                    className="w-6 h-6"
+                    data-animating={isAnimating}
+                    data-vnc-refresh-data={true}
+                    glyphTitle="Reload All"
+                    onClick={refreshClickCallback}
+                />
+            )}
         </>
     );
-
 }
-function GotoSettings()
-{
+
+function GotoSettings() {
     const pathname = usePathname();
 
-
-    if (pathname === '/settings')
-    {
+    if (pathname === "/settings") {
         return (
-            <Link href={ "/" }>
-                <HomeGlyph glyphTitle="Goto Home" className="w-6 h-6" onClick={ (event) => { event.stopPropagation(); } } />
+            <Link href={"/"}>
+                <HomeGlyph
+                    className="w-6 h-6"
+                    glyphTitle="Goto Home"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                    }}
+                />
             </Link>
         );
-    }
-    else
-    {
+    } else {
         return (
-            <Link href={ "/settings" }>
-                <SettingsGlyph glyphTitle="Goto Settings" className="w-6 h-6" onClick={ (event) => { event.stopPropagation(); } } />
+            <Link href={"/settings"}>
+                <SettingsGlyph
+                    className="w-6 h-6"
+                    glyphTitle="Goto Settings"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                    }}
+                />
             </Link>
         );
     }
 }
-export default function MentorAccessBar()
-{
+export function MentorAccessBar() {
     const { displayName, showMentorAccessBar } = useAuth();
-    const [ minimized, setMinimized ] = useState<boolean>(false);
+    const [minimized, setMinimized] = useState<boolean>(false);
 
-    const logoutCallback = useCallback(() =>
-    {
-        if (typeof window === 'undefined') { return; }
-        window.location.replace('/api/logout');
+    const logoutCallback = useCallback(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+        window.location.replace("/api/logout");
     }, []);
 
-    const toggleMinimize = useCallback(() =>
-    {
-        setMinimized(v => !v);
-    }, [ setMinimized ]);
+    const toggleMinimize = useCallback(() => {
+        setMinimized((v) => !v);
+    }, [setMinimized]);
 
     return (
         <div className="absolute right-0 flex flex-col justify-end">
-            { showMentorAccessBar &&
-                <div className={ `flex items-start flex-row` } data-static>
+            {showMentorAccessBar ? <div className={`flex items-start flex-row`} data-static>
+                <div
+                    className={`relative cursor-pointer flex items-center flex-row rounded-[0px_0px_0px_1rem] bg-[#bb86fc] p-4 z-10 transition-all ${minimized ? "transform-[translateX(calc(100%-4rem))]" : "transform-[translateX(0)]"}`}
+                    dir="rtl"
+                    onClick={toggleMinimize}
+                >
                     <div
-                        className={ `relative cursor-pointer flex items-center flex-row rounded-[0px_0px_0px_1rem] bg-[#bb86fc] p-4 z-10 transition-all ${minimized ? 'transform-[translateX(calc(100%-4rem))]' : 'transform-[translateX(0)]'}` }
-                        dir="rtl"
-                        onClick={ toggleMinimize }
+                        className={`flex flex-col justify-end ${minimized ? "height-[4rem]" : "height-[8rem]"}`}
                     >
-                        <div className={ `flex flex-col justify-end ${minimized ? 'height-[4rem]' : 'height-[8rem]'}` }>
-                            <div className="flex items-center flex-row">
-                                <Box sx={ { width: '2rem', height: '2rem' } } />
-                                <div className={ `flex items-center flex-row ${minimized ? 'transform-[translateX(calc(100%))]' : 'transform-[translateX(0)]'}` } data-static>
-                                    <Box sx={ { width: '0.3rem' } } />
-                                    <Typography fontSize={ '0.8rem' } fontWeight={ 600 }>{ displayName }</Typography>
-                                </div>
-                            </div>
-                            <div className={ `flex flex-row items-center justify-end gap-x-1 ${minimized ? 'transform-[translateX(calc(100%))_translateY(-100%)]' : 'transform-[translateX(0)]'}` }>
-                                <GotoSettings />
-                                <RefreshAllData />
+                        <div className="flex items-center flex-row">
+                            <Box sx={{ width: "2rem", height: "2rem" }} />
+                            <div
+                                className={`flex items-center flex-row ${minimized ? "transform-[translateX(calc(100%))]" : "transform-[translateX(0)]"}`}
+                                data-static
+                            >
+                                <Box sx={{ width: "0.3rem" }} />
+                                <Typography
+                                    fontSize={"0.8rem"}
+                                    fontWeight={600}
+                                >
+                                    {displayName}
+                                </Typography>
                             </div>
                         </div>
-                    </div>
-                    <div className="relative">
-                        <PeekabooIconGlyph glyphTitle={ "Logout" } className={ `absolute transform-[translateX(-3rem)_translateY(1rem)] w-8 h-8 z-50` } onClick={ logoutCallback } />
+                        <div
+                            className={`flex flex-row items-center justify-end gap-x-1 ${minimized ? "transform-[translateX(calc(100%))_translateY(-100%)]" : "transform-[translateX(0)]"}`}
+                        >
+                            <GotoSettings />
+                            <RefreshAllData />
+                        </div>
                     </div>
                 </div>
-            }
+                <div className="relative">
+                    <PeekabooIconGlyph
+                        className={`absolute transform-[translateX(-3rem)_translateY(1rem)] w-8 h-8 z-50`}
+                        glyphTitle={"Logout"}
+                        onClick={logoutCallback}
+                    />
+                </div>
+            </div> : null}
         </div>
     );
 }

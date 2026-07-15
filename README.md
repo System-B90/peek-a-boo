@@ -64,6 +64,34 @@ ruff format --check .  # Python format check
 A Husky pre-commit hook runs `lint-staged` (ESLint on JS/TS, Prettier on JSON/CSS/MD).
 CI (`.github/workflows/ci.yml`) runs lint, unit tests, and a build check on every push and pull request.
 
+## E2E Tests
+
+Playwright drives the app against a real, locally-booted Hive instance —
+Peek-a-boo has no OAuth flow, so `tests/e2e/auth.setup.ts` logs in as Hive's
+`admin`/`Password1` superuser through the real `/login` form and saves the
+session to `tests/.auth/user.json`, which the rest of the suite reuses.
+
+Locally:
+
+```bash
+# Boot Hive yourself (see hivelms/Hive), then generate a CI-style .env and
+# verify the 'api' service account:
+python scripts/ci_setup.py
+
+npm run docker:test          # builds & starts nginx/nextjs/websock on 127.0.0.3
+npx playwright install chromium
+npm run test:e2e             # or test:e2e:ui
+npm run docker:test:down
+```
+
+CI (`.github/workflows/e2e.yml`) is fully hermetic: it clones
+`hivelms/Hive`'s `feature/sso` branch with the `ACCESS_TOKEN` repo secret,
+builds/boots Hive, pins the `api` service account's password, generates a
+self-signed cert + `.env`, builds the Peek-a-boo stack via
+`docker-compose.test.yml` (nginx bound to `127.0.0.3` so it doesn't collide
+with Hive on `127.0.0.1`), then runs the Playwright suite — uploading the
+HTML report, test results, and container logs on failure.
+
 ## Contributing
 
 Segel students are welcome to contribute! Browse [open issues](https://github.com/System-B15/peek-a-boo/issues), especially those labeled `NEWBIES WELCOME`, then fork the repo and open a pull request against `master`.

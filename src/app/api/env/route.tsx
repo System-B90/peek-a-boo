@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
 
         return ApiSuccess({
             WEBSOCKET_PORT: parseInt(
-                process.env.WEBSOCKER_PORT ??
+                process.env.WEBSOCKET_PORT ??
                     (process.env.NODE_ENV === "development" ? "60800" : "443"),
             ),
             WEBSOCKET_SERVER_HOSTNAME:

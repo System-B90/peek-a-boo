@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [displayName, setDisplayName] = useState<string>("");
     const [clientEnvConfig, setClientEnvConfig] = useState<ClientEnvConfig>({
         WEBSOCKET_PORT: parseInt(
-            process.env.WEBSOCKER_PORT ??
+            process.env.WEBSOCKET_PORT ??
                 (process.env.NODE_ENV === "development" ? "60800" : "443"),
         ),
         WEBSOCKET_SERVER_HOSTNAME:

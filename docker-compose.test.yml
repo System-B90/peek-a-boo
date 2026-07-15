@@ -1,0 +1,20 @@
+services:
+  nextjs:
+    container_name: peekaboo-test-nextjs
+    extra_hosts:
+      - "hive.org:${HIVE_HOST_IP:-host-gateway}"
+    environment:
+      # Hive's nginx publishes 0.0.0.0:80/443 (all interfaces), which blocks
+      # any other container from binding those ports on any IP, including
+      # 127.0.0.3. Use non-standard host ports instead (see nginx below) and
+      # tell the client-side WebSocket connector to match.
+      - WEBSOCKET_PORT=8443
+
+  nginx:
+    container_name: peekaboo-test-nginx
+    ports: !override
+      - "127.0.0.3:8443:443"
+      - "127.0.0.3:8080:80"
+
+  websock:
+    container_name: peekaboo-test-websock

@@ -99,9 +99,17 @@ export const KnownTagsProvider = ({
             const filteredKnownTags = tags.filter(
                 (t) => t.name.toLowerCase() === tagName.toLowerCase(),
             );
-            if (filteredKnownTags.length !== 1) {
-                console.error(`Tag ${tagName} not uniquely found!`);
+            if (filteredKnownTags.length === 0) {
+                console.error(`Tag ${tagName} not found!`);
                 return undefined;
+            }
+            if (filteredKnownTags.length > 1) {
+                // Ambiguous names happen (e.g. a mentor username matching a
+                // student name tag). Prefer the first match — `tags` is ordered
+                // mentors > student names > student numbers > classes.
+                console.warn(
+                    `Tag ${tagName} matched ${filteredKnownTags.length} known tags; using the ${filteredKnownTags[0].type} tag.`,
+                );
             }
             return filteredKnownTags[0];
         },

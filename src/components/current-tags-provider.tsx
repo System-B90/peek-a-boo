@@ -31,7 +31,11 @@ export const CurrentTagsProvider = ({
     const { filters, addFilter, removeFilter } = useQueryParams();
 
     const tags = useMemo(
-        () => filters.filter(doesTagExists).map((v) => resolveTag(v) as Tag),
+        () =>
+            filters
+                .filter(doesTagExists)
+                .map((v) => resolveTag(v))
+                .filter((t): t is Tag => t !== undefined),
         [filters, doesTagExists, resolveTag],
     );
 

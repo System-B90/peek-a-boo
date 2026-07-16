@@ -66,4 +66,4 @@ CI (`.github/workflows/ci.yml`) runs lint, unit tests, and a build check on ever
 
 ## Contributing
 
-Segel students are welcome to contribute! Browse [open issues](https://github.com/System-B15/peek-a-boo/issues), especially those labeled `NEWBIES WELCOME`, then fork the repo and open a pull request against `master`.
+Segel students are welcome to contribute! Browse [open issues](https://github.com/System-B90/peek-a-boo/issues), especially those labeled `NEWBIES WELCOME`, then fork the repo and open a pull request against `master`.

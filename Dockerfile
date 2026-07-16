@@ -15,7 +15,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY package.json /app/package.json
 
-# GitHub Packages read token for @system-b15/* (npm resolves ${NPM_TOKEN} from env)
+# GitHub Packages read token for @system-b90/* (npm resolves ${NPM_TOKEN} from env)
 ARG NPM_TOKEN
 ENV NPM_TOKEN=${NPM_TOKEN}
 COPY .npmrc ./

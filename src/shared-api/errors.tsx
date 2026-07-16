@@ -1,5 +1,5 @@
 /*
- * Shared error hierarchy — canonical definitions live in @system-b15/hive-core.
+ * Shared error hierarchy — canonical definitions live in @system-b90/hive-core.
  * Mattermost-specific subclasses remain here as peek-a-boo–only concerns.
  */
 export {
@@ -13,9 +13,9 @@ export {
     parseNetworkHostNotFoundError,
     parseNetworkConnectionResetError,
     parseNetworkTimeoutError,
-} from "@system-b15/hive-core";
+} from "@system-b90/hive-core";
 
-import { ClientApiError } from "@system-b15/hive-core";
+import { ClientApiError } from "@system-b90/hive-core";
 
 export class MattermostError extends ClientApiError {
     constructor(message?: string) {

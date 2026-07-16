@@ -7,6 +7,8 @@ Name: setup.py
 import base64
 import os
 import random
+import shutil
+import subprocess
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -97,6 +99,11 @@ AUTO_VARS = {
 
 SECRET_VARS = ("SYM_ENC_KEY", "JWT_SECRET")
 
+# Images docker-compose.yml expects (README "Quick Start" step 4).
+REQUIRED_DOCKER_IMAGES = ("peekaboo/nextjs", "nginx", "peekaboo/websock")
+# Image tarballs (e.g. from the releases tab) dropped here get `docker load`ed.
+DOCKER_IMAGES_DIR = "images"
+
 PROMPT_VARS: Dict[str, str] = {
     "HOSTNAME": "Hostname for Peek-a-Boo (Used for certificate)",
     "WEBSOCKET_SERVER_HOSTNAME": "Hostname for WebSocket server",
@@ -106,7 +113,7 @@ PROMPT_VARS: Dict[str, str] = {
     "HIVE_PASSWORD": "Password for Hive PostgreSQL",
     "HIVE_API_PASSWORD": "Password for Hive API",
     #
-    "MATTERMOST_URL": 'URL for Mattermost (e.g. "\'https://mattermost.domain.tld")',
+    "MATTERMOST_URL": 'URL for Mattermost (e.g. "https://mattermost.domain.tld")',
     "MATTERMOST_ACCESS_TOKEN": "Mattermost personal access token",
     "TWEET_CHANNEL_ID": "Mattermost channel ID for tweets",
     #
@@ -192,6 +199,49 @@ def get_hive_students(hostname: str, password: str) -> List[Tuple[str, str]]:
         ]
 
 
+def test_mattermost(values: Dict[str, str]):
+    url = values.get("MATTERMOST_URL", "").strip().rstrip("/")
+    token = values.get("MATTERMOST_ACCESS_TOKEN", "").strip()
+    channel_id = values.get("TWEET_CHANNEL_ID", "").strip()
+
+    if not url or not token:
+        warn("Mattermost URL/token not set — skipping Mattermost validation.")
+        return
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    info("Testing Mattermost credentials 💬")
+    try:
+        resp = requests.get(
+            f"{url}/api/v4/users/me", headers=headers, verify=False, timeout=10
+        )
+        resp.raise_for_status()
+        user = resp.json()
+    except Exception as e:
+        error(f"Unable to authenticate to Mattermost: {e}")
+        sys.exit(1)
+    info(f"Tweets will be posted as: {user.get('username', '<unknown>')}")
+
+    info("Resolving tweet channel 📢")
+    try:
+        resp = requests.get(
+            f"{url}/api/v4/channels/{channel_id}",
+            headers=headers,
+            verify=False,
+            timeout=10,
+        )
+        resp.raise_for_status()
+        channel = resp.json()
+    except Exception as e:
+        error(f"Unable to resolve tweet channel '{channel_id}': {e}")
+        sys.exit(1)
+    info(
+        f"Tweets will be posted to: {channel.get('display_name') or channel.get('name', '<unknown>')}"
+    )
+
+    success("Mattermost integration check passed ✅")
+
+
 def test_values(values: Dict[str, str]):
     info("Testing Hive hostname connectivity 🌐")
     try:
@@ -207,6 +257,8 @@ def test_values(values: Dict[str, str]):
         sys.exit(1)
 
     success("Hive integration check passed ✅")
+
+    test_mattermost(values)
 
 
 # ---------------------------------------------------------------------------
@@ -338,6 +390,9 @@ def collect_vars() -> Dict[str, str]:
     # Prompt for interactive vars
     for var, desc in PROMPT_VARS.items():
         default = existing_values.get(var, "")
+        if var == "WEBSOCKET_SERVER_HOSTNAME" and not default:
+            # HOSTNAME is prompted first (dict order), so it's available here.
+            default = f"wss.{values['HOSTNAME']}"
         prompt_msg = (
             f"👉 {var} ({desc}) [{default}]: " if default else f"👉 {var} ({desc}) = "
         )
@@ -349,8 +404,6 @@ def collect_vars() -> Dict[str, str]:
             val = b64_encode(val)
 
         values[var] = val
-
-    existing_values["WEBSOCKET_SERVER_HOSTNAME"] = f"wss.{values['HOSTNAME']}"
 
     return values
 
@@ -372,6 +425,55 @@ def create_tokens_file(token_path: Path, hive_hostname: str, hive_password: str)
     success(f"WebSocket token file created at {token_path}")
 
 
+def docker_image_exists(image: str) -> bool:
+    result = subprocess.run(
+        ["docker", "images", "-q", image],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.returncode == 0 and bool(result.stdout.strip())
+
+
+def handle_docker_images():
+    banner("Checking Docker images 🐳")
+
+    if shutil.which("docker") is None:
+        warn("Docker not found on PATH — skipping image checks.")
+        return
+
+    # Load any image tarballs dropped into ./images/ (offline installs).
+    images_dir = project_root() / DOCKER_IMAGES_DIR
+    for tarball in sorted(images_dir.glob("*.tar")) if images_dir.is_dir() else []:
+        info(f"Loading image from {tarball.name} 📦")
+        result = subprocess.run(
+            ["docker", "load", "-i", str(tarball)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode == 0:
+            success(result.stdout.strip() or f"Loaded {tarball.name}")
+        else:
+            warn(f"Failed to load {tarball.name}: {result.stderr.strip()}")
+
+    missing = [i for i in REQUIRED_DOCKER_IMAGES if not docker_image_exists(i)]
+    if not missing:
+        success("All required Docker images are present")
+        return
+
+    warn(f"Missing Docker images: {', '.join(missing)}")
+    info(
+        f"Place release tarballs in ./{DOCKER_IMAGES_DIR}/ and re-run setup, "
+        "or pull/build them:"
+    )
+    for image in missing:
+        if image.startswith("peekaboo/"):
+            print(f"    docker load -i <{image.split('/')[1]}.tar from releases tab>")
+        else:
+            print(f"    docker pull {image}")
+
+
 def main():
     root = project_root()
     env_file = root / ".env"
@@ -379,14 +481,19 @@ def main():
 
     values = collect_vars()
 
+    # Persist inputs immediately so a failure in any later step (validation,
+    # token fetch, certs) doesn't lose them — a re-run offers them as defaults.
+    banner("Writing configuration files 📁")
+    write_env(values, env_file)
+
     banner("Validating inputs ✅")
     test_values(values)
 
-    banner("Writing configuration files 📁")
-    write_env(values, env_file)
     create_tokens_file(token_file, values["HIVE_HOSTNAME"], values["HIVE_API_PASSWORD"])
 
     handle_certs(values)
+
+    handle_docker_images()
 
     banner("Setup complete 🎉")
     success("Peek-a-boo environment is ready to go! 🚀🔥")

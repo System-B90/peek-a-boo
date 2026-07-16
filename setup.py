@@ -338,6 +338,9 @@ def collect_vars() -> Dict[str, str]:
     # Prompt for interactive vars
     for var, desc in PROMPT_VARS.items():
         default = existing_values.get(var, "")
+        if var == "WEBSOCKET_SERVER_HOSTNAME" and not default:
+            # HOSTNAME is prompted first (dict order), so it's available here.
+            default = f"wss.{values['HOSTNAME']}"
         prompt_msg = (
             f"👉 {var} ({desc}) [{default}]: " if default else f"👉 {var} ({desc}) = "
         )
@@ -349,8 +352,6 @@ def collect_vars() -> Dict[str, str]:
             val = b64_encode(val)
 
         values[var] = val
-
-    existing_values["WEBSOCKET_SERVER_HOSTNAME"] = f"wss.{values['HOSTNAME']}"
 
     return values
 

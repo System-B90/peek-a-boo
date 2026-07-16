@@ -51,7 +51,7 @@ try:
     from pyhive import HiveClient
 except ImportError:
     print("❌  Auto-setup requires 'pyhive' package.")
-    print("➡️   Install it via:\n    pip install git+https://github.com/System-B15/pyhive.git@main")
+    print("➡️   Install it via:\n    pip install git+https://github.com/System-B90/pyhive.git@main")
     sys.exit(1)
 
 # ---------------------------------------------------------------------------

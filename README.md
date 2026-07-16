@@ -23,7 +23,7 @@ Monitor your students the smart way
     ```bash
     py -3.11 -m venv .venv
     source ./.venv/bin/activate
-    pip install git+https://github.com/System-B15/pyhive.git@main dotenv requests cryptography
+    pip install git+https://github.com/System-B90/pyhive.git@main dotenv requests cryptography
     python ./setup.py
     ```
 6. Boot up the environment.
@@ -37,7 +37,7 @@ Monitor your students the smart way
 $env:ALLOW_LOGIN_BYPASS = "true"
 py -3.11 -m venv venv
 .\venv\Scripts\activate
-pip install git+https://github.com/System-B15/pyhive.git@main dotenv requests
+pip install git+https://github.com/System-B90/pyhive.git@main dotenv requests
 python .\setup.py
 
 pushd .\websock\

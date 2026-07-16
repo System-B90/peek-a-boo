@@ -380,11 +380,14 @@ def main():
 
     values = collect_vars()
 
+    # Persist inputs immediately so a failure in any later step (validation,
+    # token fetch, certs) doesn't lose them — a re-run offers them as defaults.
+    banner("Writing configuration files 📁")
+    write_env(values, env_file)
+
     banner("Validating inputs ✅")
     test_values(values)
 
-    banner("Writing configuration files 📁")
-    write_env(values, env_file)
     create_tokens_file(token_file, values["HIVE_HOSTNAME"], values["HIVE_API_PASSWORD"])
 
     handle_certs(values)

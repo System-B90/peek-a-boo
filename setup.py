@@ -106,7 +106,7 @@ PROMPT_VARS: Dict[str, str] = {
     "HIVE_PASSWORD": "Password for Hive PostgreSQL",
     "HIVE_API_PASSWORD": "Password for Hive API",
     #
-    "MATTERMOST_URL": 'URL for Mattermost (e.g. "\'https://mattermost.domain.tld")',
+    "MATTERMOST_URL": 'URL for Mattermost (e.g. "https://mattermost.domain.tld")',
     "MATTERMOST_ACCESS_TOKEN": "Mattermost personal access token",
     "TWEET_CHANNEL_ID": "Mattermost channel ID for tweets",
     #
@@ -192,6 +192,49 @@ def get_hive_students(hostname: str, password: str) -> List[Tuple[str, str]]:
         ]
 
 
+def test_mattermost(values: Dict[str, str]):
+    url = values.get("MATTERMOST_URL", "").strip().rstrip("/")
+    token = values.get("MATTERMOST_ACCESS_TOKEN", "").strip()
+    channel_id = values.get("TWEET_CHANNEL_ID", "").strip()
+
+    if not url or not token:
+        warn("Mattermost URL/token not set — skipping Mattermost validation.")
+        return
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    info("Testing Mattermost credentials 💬")
+    try:
+        resp = requests.get(
+            f"{url}/api/v4/users/me", headers=headers, verify=False, timeout=10
+        )
+        resp.raise_for_status()
+        user = resp.json()
+    except Exception as e:
+        error(f"Unable to authenticate to Mattermost: {e}")
+        sys.exit(1)
+    info(f"Tweets will be posted as: {user.get('username', '<unknown>')}")
+
+    info("Resolving tweet channel 📢")
+    try:
+        resp = requests.get(
+            f"{url}/api/v4/channels/{channel_id}",
+            headers=headers,
+            verify=False,
+            timeout=10,
+        )
+        resp.raise_for_status()
+        channel = resp.json()
+    except Exception as e:
+        error(f"Unable to resolve tweet channel '{channel_id}': {e}")
+        sys.exit(1)
+    info(
+        f"Tweets will be posted to: {channel.get('display_name') or channel.get('name', '<unknown>')}"
+    )
+
+    success("Mattermost integration check passed ✅")
+
+
 def test_values(values: Dict[str, str]):
     info("Testing Hive hostname connectivity 🌐")
     try:
@@ -207,6 +250,8 @@ def test_values(values: Dict[str, str]):
         sys.exit(1)
 
     success("Hive integration check passed ✅")
+
+    test_mattermost(values)
 
 
 # ---------------------------------------------------------------------------

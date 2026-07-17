@@ -54,6 +54,8 @@ A Husky pre-commit hook runs `lint-staged` (ESLint on JS/TS, Prettier on JSON/CS
 don't bypass it. CI (`.github/workflows/ci.yml`) runs lint, unit tests, and a build check
 on every push and PR.
 
+**Regression tests for bugs:** Every closed bug issue must have a dedicated regression test committed alongside the fix. The test should fail on the pre-fix code and pass after. This ensures the bug cannot silently resurface.
+
 ## Key directories
 
 | Path                                  | Contains                                                                                                        |

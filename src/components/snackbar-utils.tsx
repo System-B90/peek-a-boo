@@ -28,7 +28,7 @@ export function enqueueSnackbarWithSubtext(
             enqueueSnackbar(
                 <div className="flex flex-col">
                     <p>{mainText}</p>
-                    <p style={{ fontSize: "0.7em" }}>{subText}</p>
+                    <p className="text-[0.7em]">{subText}</p>
                 </div>,
                 options,
             );
@@ -36,7 +36,7 @@ export function enqueueSnackbarWithSubtext(
             enqueueSnackbar(
                 <div className="flex flex-col">
                     <p>{mainText}</p>
-                    <div style={{ fontSize: "0.7em" }}>{subText}</div>
+                    <div className="text-[0.7em]">{subText}</div>
                 </div>,
                 options,
             );
@@ -48,7 +48,7 @@ export function enqueueSnackbarWithSubtext(
 
 export function enqueueApiErrorSnackbar(
     mainText: React.ReactNode | string,
-    error: any,
+    error: unknown,
 ) {
     if (error instanceof UserNotLoggedInError) {
         console.error(error.message);
@@ -59,7 +59,7 @@ export function enqueueApiErrorSnackbar(
         return enqueueSnackbarWithSubtext(
             enqueueSnackbar,
             mainText,
-            `${error}`,
+            String(error),
             { variant: "error" },
         );
     } else {

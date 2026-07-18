@@ -28,70 +28,31 @@ export function OfflineGlyph({
                     />
                     <g id="surface1">
                         <path
+                            className="glyph-stroke-path"
                             d="M 21.656982 10.343018 C 24.781006 13.467041 24.781006 18.532959 21.656982 21.656982 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 25.898926 6.101074 C 31.365967 11.568115 31.365967 20.433105 25.898926 25.899902 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 3 3 L 29 29 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-fill-path"
                             d="M 79.054688 146.945313 L 55.761719 123.632813 C 29.921875 162.558594 16 208.207031 16 256 C 16 320.113281 40.976563 380.367188 86.304688 425.695313 L 108.929688 403.070313 C 69.648438 363.792969 48 311.566406 48 256 C 48 216.832031 58.960938 179.425781 79.054688 146.945313 Z "
-                            style={{
-                                stroke: "none",
-                                fillRule: "nonzero",
-                                fill: "currentColor",
-                                fillOpacity: "1",
-                            }}
                         />
                         <path
+                            className="glyph-fill-path"
                             d="M 150.609375 218.496094 L 126.175781 194.0625 C 100.71875 247.566406 109.9375 313.601563 154.175781 357.839844 L 176.800781 335.214844 C 145.296875 303.695313 136.65625 257.953125 150.609375 218.496094 Z "
-                            style={{
-                                stroke: "none",
-                                fillRule: "nonzero",
-                                fill: "currentColor",
-                                fillOpacity: "1",
-                            }}
                         />
                         <path
+                            className="glyph-fill-path"
                             d="M 276.558594 299.183594 C 292.71875 291.457031 304 275.089844 304 256 C 304 229.535156 282.464844 208 256 208 C 236.910156 208 220.542969 219.28125 212.816406 235.441406 Z M 256 240 C 264.832031 240 272 247.167969 272 256 C 272 264.832031 264.832031 272 256 272 C 247.167969 272 240 264.832031 240 256 C 240 247.167969 247.167969 240 256 240 Z "
-                            style={{
-                                stroke: "none",
-                                fillRule: "nonzero",
-                                fill: "currentColor",
-                                fillOpacity: "1",
-                            }}
                         />
                     </g>
                 </svg>

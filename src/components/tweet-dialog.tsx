@@ -61,10 +61,9 @@ export function TweetDialog({
         <Dialog dir="rtl" fullWidth maxWidth="sm" onClose={onClose} open={open}>
             <DialogTitle className="flex flex-row items-center gap-2" dir="rtl">
                 <TwitterGlyph
-                    className="w-8 h-8"
+                    className="w-8 h-8 text-[#bb86fc]"
                     data-static="true"
                     glyphTitle=""
-                    style={{ color: "#bb86fc" }}
                 />
                 {title}
             </DialogTitle>
@@ -78,15 +77,10 @@ export function TweetDialog({
                     >
                         <Image
                             alt="צילום מסך"
-                            className="cursor-pointer"
+                            className="cursor-pointer w-full max-h-[200px] object-contain"
                             height={1200}
                             onClick={screenshotClickHandler}
                             src={imageSrc ?? ""}
-                            style={{
-                                width: "100%",
-                                maxHeight: 200,
-                                objectFit: "contain",
-                            }}
                             unoptimized
                             width={1920}
                         />
@@ -118,7 +112,7 @@ export function TweetDialog({
                 <Button
                     onClick={handleSubmit}
                     startIcon={
-                        <SendIcon style={{ transform: "rotateZ(180deg)" }} />
+                        <SendIcon sx={{ transform: "rotateZ(180deg)" }} />
                     }
                     variant="contained"
                 >

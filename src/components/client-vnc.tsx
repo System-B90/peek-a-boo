@@ -33,14 +33,13 @@ type CredentialsRequiredParams = Exclude<
 type DisconnectParams = Exclude<VncScreenProps["onDisconnect"], undefined>;
 type DesktopNameParams = Exclude<VncScreenProps["onDesktopName"], undefined>;
 type CapabilitiesParams = Exclude<VncScreenProps["onCapabilities"], undefined>;
-type EventOf<T extends (...args: any) => any> = Parameters<T>[0];
 
-export type VncConnectEvent = EventOf<ConnectParams>;
-export type VncDisconnectEvent = EventOf<DisconnectParams>;
-export type VncDesktopNameEvent = EventOf<DesktopNameParams>;
-export type VncSecurityFailureEvent = EventOf<SecurityFailureParams>;
-export type VncCredentialsRequiredEvent = EventOf<CredentialsRequiredParams>;
-export type VncCapabilitiesEvent = EventOf<CapabilitiesParams>;
+export type VncConnectEvent = Parameters<ConnectParams>[0];
+export type VncDisconnectEvent = Parameters<DisconnectParams>[0];
+export type VncDesktopNameEvent = Parameters<DesktopNameParams>[0];
+export type VncSecurityFailureEvent = Parameters<SecurityFailureParams>[0];
+export type VncCredentialsRequiredEvent = Parameters<CredentialsRequiredParams>[0];
+export type VncCapabilitiesEvent = Parameters<CapabilitiesParams>[0];
 
 export type VncClientProps = {
     width: number;

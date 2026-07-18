@@ -28,107 +28,43 @@ export function CollapseGlyph({
                     />
                     <g id="surface1">
                         <path
+                            className="glyph-stroke-path"
                             d="M 19 5 L 19 13 L 27 13 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 19 13 L 28 4 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 27 19 L 19 19 L 19 27 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 19 19 L 28 28 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 13 27 L 13 19 L 5 19 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 13 19 L 4 28 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 5 13 L 13 13 L 13 5 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 13 13 L 4 4 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
                             transform="matrix(16,0,0,16,0,0)"
                         />
                     </g>

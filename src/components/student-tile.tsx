@@ -33,12 +33,11 @@ export function StudentTile({
 
     return (
         <div
-            className={`min-h-[70px] flex-grow flex bg-[#bb86fc] overflow-clip relative cursor-pointer ${
+            className={`min-h-[70px] flex-grow flex bg-[#bb86fc] overflow-clip relative cursor-pointer rounded-l-[1rem] ${
                 isInSearch ? "opacity-100" : "opacity-50"
             }`}
             dir="rtl"
             onClick={clickCallback}
-            style={{ borderRadius: "1rem 0 0 1rem" }}
         >
             <div className="bg-[#121212] aspect-[5/7] rounded-l-full flex justify-center items-center font-bold text-xl overflow-hidden">
                 <span className="ml-4">
@@ -80,9 +79,8 @@ export function StudentTile({
 export function StudentTileSkeleton() {
     return (
         <div
-            className={`h-[70px] flex-grow flex bg-[#bb86fc] overflow-clip relative cursor-pointer opacity-100`}
+            className={`h-[70px] flex-grow flex bg-[#bb86fc] overflow-clip relative cursor-pointer opacity-100 rounded-l-[1rem]`}
             dir="rtl"
-            style={{ borderRadius: "1rem 0 0 1rem" }}
         >
             <div className="bg-[#121212] aspect-[5/7] rounded-l-full flex justify-center items-center font-bold text-xl overflow-hidden">
                 <span className="ml-4">

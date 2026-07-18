@@ -51,7 +51,7 @@ export default function Page() {
                     Want to help improve Peek-a-Boo?{" "}
                     <a
                         className="underline"
-                        href="https://github.com/System-B15/peek-a-boo#contributing"
+                        href="https://github.com/System-B90/peek-a-boo#contributing"
                         rel="noopener noreferrer"
                         target="_blank"
                     >

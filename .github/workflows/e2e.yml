@@ -27,7 +27,7 @@ jobs:
             # images), boot + init, readiness check. Hive repo/ref defaults
             # live in the action — one place to update for all consumer repos.
             - name: Set up Hive
-              uses: System-B15/.github/actions/setup-hive@main
+              uses: System-B90/.github/actions/setup-hive@main
               with:
                   hive-token: ${{ secrets.ACCESS_TOKEN }}
                   extra-hosts: 127.0.0.3 peekaboo.dev
@@ -75,7 +75,7 @@ jobs:
               run: touch websock/websocket_token_source.txt
 
             - name: Set up Node + Playwright
-              uses: System-B15/.github/actions/setup-playwright@main
+              uses: System-B90/.github/actions/setup-playwright@main
 
             - name: Verify Hive 'api' account and generate .env
               run: python scripts/ci_setup.py

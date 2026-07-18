@@ -28,17 +28,17 @@ export function ExternalLinkGlyph({
                     />
                     <g id="surface1">
                         <path
-                            d="M 42 32 L 42 50 L 14 50 L 14 22 L 32 22 L 36 18 L 10 18 L 10 54 L 46 54 L 46 28 Z "
                             className="glyph-fill-path"
+                            d="M 42 32 L 42 50 L 14 50 L 14 22 L 32 22 L 36 18 L 10 18 L 10 54 L 46 54 L 46 28 Z "
                         />
                         <path
-                            d="M 18 6 L 26 6 L 26 14 "
                             className="glyph-stroke-path"
+                            d="M 18 6 L 26 6 L 26 14 "
                             transform="matrix(2,0,0,2,0,0)"
                         />
                         <path
-                            d="M 26 6 L 12 20 "
                             className="glyph-stroke-path"
+                            d="M 26 6 L 12 20 "
                             transform="matrix(2,0,0,2,0,0)"
                         />
                     </g>

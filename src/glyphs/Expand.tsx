@@ -28,43 +28,43 @@ export function ExpandGlyph({
                     />
                     <g id="surface1">
                         <path
+                            className="glyph-stroke-path"
                             d="M 27 13 L 27 5 L 19 5 "
-                            className="glyph-stroke-path"
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 27 5 L 18 14 "
-                            className="glyph-stroke-path"
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 19 27 L 27 27 L 27 19 "
-                            className="glyph-stroke-path"
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 27 27 L 18 18 "
-                            className="glyph-stroke-path"
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 5 19 L 5 27 L 13 27 "
-                            className="glyph-stroke-path"
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 5 27 L 14 18 "
-                            className="glyph-stroke-path"
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
+                            className="glyph-stroke-path"
                             d="M 13 5 L 5 5 L 5 13 "
-                            className="glyph-stroke-path"
                             transform="matrix(16,0,0,16,0,0)"
                         />
                         <path
-                            d="M 5 5 L 14 14 "
                             className="glyph-stroke-path"
+                            d="M 5 5 L 14 14 "
                             transform="matrix(16,0,0,16,0,0)"
                         />
                     </g>

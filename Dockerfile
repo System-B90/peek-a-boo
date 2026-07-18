@@ -48,6 +48,18 @@ RUN npm install
 RUN chmod -R +x ./.next/* || true
 RUN chmod -R +x ./node_modules/.bin/* || true
 
+# Placeholders to satisfy buildHiveAuthOptions()'s eager env read during
+# `next build`'s page-data collection — real values come from the runtime
+# environment (docker-compose/.env), not baked into the image.
+ARG NEXTAUTH_SECRET=ci_build_placeholder
+ARG NEXT_PUBLIC_HIVE_URL=https://hive.invalid
+ARG HIVE_CLIENT_ID=ci_build_placeholder
+ARG HIVE_CLIENT_SECRET=ci_build_placeholder
+ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET} \
+    NEXT_PUBLIC_HIVE_URL=${NEXT_PUBLIC_HIVE_URL} \
+    HIVE_CLIENT_ID=${HIVE_CLIENT_ID} \
+    HIVE_CLIENT_SECRET=${HIVE_CLIENT_SECRET}
+
 RUN npm run build
 
 # Final stage: production server

@@ -1,0 +1,57 @@
+name: peek-a-boo
+
+services:
+  nextjs:
+    image: ghcr.io/system-b90/peek-a-boo/nextjs:${PEEKABOO_VERSION:-latest}
+    container_name: peekaboo_nextjs
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    volumes:
+      - ../.env:/app/.env:ro
+    expose:
+      - "3000"
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: peekaboo_nginx
+    restart: always
+    ports:
+      - "443:443"
+      - "80:80"
+    depends_on:
+      - nextjs
+      - websock
+    env_file:
+      - ../.env
+    environment:
+      - SERVER_HOSTNAME=${HOSTNAME}
+      - WEBSOCKET_SERVER_HOSTNAME=${WEBSOCKET_SERVER_HOSTNAME}
+    volumes:
+      - ../utils/certs:/etc/nginx/certs:ro
+      - ../scripts/configs/nginx.conf.template:/etc/nginx/templates/nginx.conf.template:ro
+    networks:
+      - backend
+      - frontend
+
+  websock:
+    image: ghcr.io/system-b90/peek-a-boo/websock:${PEEKABOO_VERSION:-latest}
+    container_name: peekaboo_websock
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    volumes:
+      - ../websock/websocket_token_source.txt:/app/websocket_token_source.txt:ro
+      - ../.env:/app/.env:ro
+    ports:
+      - "60800"
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge

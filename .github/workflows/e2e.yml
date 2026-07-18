@@ -30,6 +30,7 @@ jobs:
               uses: System-B90/.github/actions/setup-hive@main
               with:
                   hive-token: ${{ secrets.ACCESS_TOKEN }}
+                  image-source: registry
                   extra-hosts: 127.0.0.3 peekaboo.dev
 
             # Peek-a-boo authenticates end users directly against Hive's

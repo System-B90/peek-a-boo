@@ -17,8 +17,11 @@ export async function GET(request: NextRequest) {
 
         const postLoginRedirect =
             request.cookies.get("postLoginRedirect")?.value || "/";
+        // request.url resolves to the container-internal address (e.g.
+        // localhost:3000) behind the nginx proxy, not the public-facing
+        // host — build the redirect off NEXTAUTH_URL instead.
         const response = NextResponse.redirect(
-            new URL(postLoginRedirect, request.url),
+            new URL(postLoginRedirect, process.env.NEXTAUTH_URL || request.url),
         );
 
         response.cookies.set(

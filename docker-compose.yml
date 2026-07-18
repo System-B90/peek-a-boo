@@ -7,10 +7,14 @@ services:
       args:
         NODE_DOCKER_REGISTRY: ${NODE_DOCKER_REGISTRY}
         NPM_TOKEN: ${NPM_TOKEN}
+        # NEXT_PUBLIC_* vars are inlined into the JS bundle at build time —
+        # the runtime `environment:` block below can't override them.
+        NEXT_PUBLIC_HIVE_URL: ${NEXT_PUBLIC_HIVE_URL}
       dockerfile: Dockerfile
     environment:
       - NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED}
       - SYM_ENC_KEY=${SYM_ENC_KEY}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - HOSTNAME=${HOSTNAME}
       - WEBSOCKET_SERVER_HOSTNAME=${WEBSOCKET_SERVER_HOSTNAME}

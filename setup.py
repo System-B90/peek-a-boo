@@ -115,6 +115,7 @@ AUTO_VARS = {
     "PIP_CONF_PATH": choose_pip_conf_name(),
     "IS_IN_CNET": "1" if is_connected_to_cnet() else "0",
     "NPM_TOKEN": find_npm_token(),
+    "NEXTAUTH_URL": "",  # filled in after HOSTNAME is known, see collect_vars()
 }
 
 SECRET_VARS = ("SYM_ENC_KEY", "NEXTAUTH_SECRET", "HIVE_CLIENT_SECRET")
@@ -431,6 +432,13 @@ def collect_vars() -> Dict[str, str]:
             val = b64_encode(val)
 
         values[var] = val
+
+    # NextAuth needs this to build correct callback/redirect URLs — without
+    # it, it falls back to guessing from request headers, which breaks
+    # behind the nginx proxy.
+    values["NEXTAUTH_URL"] = existing_values.get(
+        "NEXTAUTH_URL", f"https://{values['HOSTNAME']}"
+    )
 
     return values
 

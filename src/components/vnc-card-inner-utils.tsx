@@ -134,13 +134,7 @@ export function VncCardCenterModule() {
     const { checkersBrief, mentorName, mentorUsername } = useStudentInfo();
 
     const placeholder = (
-        <span
-            style={{
-                direction: "rtl",
-                opacity: 0.5,
-                fontStyle: "italic",
-            }}
-        >
+        <span className="italic opacity-50" dir="rtl">
             מכוון בודק
         </span>
     );
@@ -152,10 +146,7 @@ export function VncCardCenterModule() {
                     {
                         /* Mentor error message */
                         ((!mentorName || !mentorUsername) && (
-                            <Typography
-                                color="error"
-                                style={{ direction: "rtl" }}
-                            >
+                            <Typography color="error" dir="rtl">
                                 אין לחניך מפקד!
                             </Typography>
                         )) || (
@@ -320,28 +311,24 @@ export function VncRightModule({
             <div className="w-full flex flex-row-reverse -mt-2 mb-2 items-center">
                 {!desktopName ? (
                     <PcOnDeskGlyph
-                        className="w-5 h-5"
+                        className="w-5 h-5 text-[var(--color-error)]"
                         glyphTitle={"Hostname Unknown!"}
-                        style={{ color: "var(--color-error)" }}
                     />
                 ) : // Hostname known
                     hasSecurityError ? (
                         <WarningShieldGlyph
-                            className="w-5 h-5"
+                            className="w-5 h-5 text-[var(--color-warning)]"
                             glyphTitle={"Authentication Error!"}
-                            style={{ color: "var(--color-warning)" }}
                         />
                     ) : connected ? (
                         <OnlineGlyph
-                            className="w-5 h-5"
+                            className="w-5 h-5 text-[var(--color-success)]"
                             glyphTitle={"Connected"}
-                            style={{ color: "var(--color-success)" }}
                         />
                     ) : (
                         <OfflineGlyph
-                            className="w-5 h-5"
+                            className="w-5 h-5 text-[var(--color-error)]"
                             glyphTitle={"Disconnected"}
-                            style={{ color: "var(--color-error)" }}
                         />
                     )}
                 {displayIncludesCenterModule(displayState) && (

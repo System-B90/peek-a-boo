@@ -22,18 +22,14 @@ export function VncCard({
 
 export function VncCardSkeleton() {
     const isFullscreen = false;
-    const scaleFactor = 0.2;
-    const width = 1920 * scaleFactor;
-    const height = 1200 * scaleFactor;
 
     return (
         <div>
             <div
                 className={`${
                     isFullscreen ? "m-0" : "m-4"
-                } pt-2 bg-secondary-dark rounded-xl shadow-2xl transition-all vnc-card`}
+                } pt-2 bg-secondary-dark rounded-xl shadow-2xl transition-all vnc-card w-[384px]`}
                 data-is-expanded={false}
-                style={{ width }}
             >
                 {
                     <div className="relative">
@@ -67,15 +63,13 @@ export function VncCardSkeleton() {
                     </div>
                     <div
                         className={`
-                                bg-black 
-                                mx-auto 
-                                rounded-b-xl 
-                                shadow-inner 
+                                bg-black
+                                mx-auto
+                                rounded-b-xl
+                                shadow-inner
+                                w-[384px]
+                                h-[240px]
                                 `}
-                        style={{
-                            width,
-                            height,
-                        }}
                     >
                         <div className="animate-pulse bg-gray-700 h-full w-full rounded-b-xl" />
                     </div>

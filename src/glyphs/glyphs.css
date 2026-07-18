@@ -21,3 +21,22 @@
 [aria-disabled=true]>.svg-glyph {
     opacity: 0.35;
 }
+
+/* Shared presentation for glyph SVG path primitives (not MUI elements —
+   plain SVG attribute styling belongs in CSS, not a style prop). */
+.glyph-stroke-path {
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: butt;
+    stroke-linejoin: miter;
+    stroke: currentColor;
+    stroke-opacity: 1;
+    stroke-miterlimit: 10;
+}
+
+.glyph-fill-path {
+    stroke: none;
+    fill-rule: nonzero;
+    fill: currentColor;
+    fill-opacity: 1;
+}

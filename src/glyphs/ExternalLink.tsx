@@ -29,37 +29,16 @@ export function ExternalLinkGlyph({
                     <g id="surface1">
                         <path
                             d="M 42 32 L 42 50 L 14 50 L 14 22 L 32 22 L 36 18 L 10 18 L 10 54 L 46 54 L 46 28 Z "
-                            style={{
-                                stroke: "none",
-                                fillRule: "nonzero",
-                                fill: "currentColor",
-                                fillOpacity: "1",
-                            }}
+                            className="glyph-fill-path"
                         />
                         <path
                             d="M 18 6 L 26 6 L 26 14 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
+                            className="glyph-stroke-path"
                             transform="matrix(2,0,0,2,0,0)"
                         />
                         <path
                             d="M 26 6 L 12 20 "
-                            style={{
-                                fill: "none",
-                                strokeWidth: "2",
-                                strokeLinecap: "butt",
-                                strokeLinejoin: "miter",
-                                stroke: "currentColor",
-                                strokeOpacity: "1",
-                                strokeMiterlimit: "10",
-                            }}
+                            className="glyph-stroke-path"
                             transform="matrix(2,0,0,2,0,0)"
                         />
                     </g>

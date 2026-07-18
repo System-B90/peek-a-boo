@@ -90,11 +90,31 @@ def choose_pip_conf_name():
     return "pip_cnet.conf" if is_connected_to_cnet() else "pip_online.conf"
 
 
+def find_npm_token() -> str:
+    """Look for an existing @system-b90 GitHub Packages token so
+    `docker compose build` (which can't see the host's global .npmrc) can
+    still pull @system-b90/* deps. Checked in order: NPM_TOKEN/GITHUB_TOKEN
+    env vars, then ~/.npmrc's registry auth line."""
+    for var in ("NPM_TOKEN", "GITHUB_TOKEN"):
+        if os.environ.get(var):
+            return os.environ[var]
+
+    npmrc_path = Path.home() / ".npmrc"
+    if npmrc_path.exists():
+        for line in npmrc_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line.startswith("//npm.pkg.github.com/:_authToken="):
+                return line.split("=", 1)[1].strip()
+
+    return ""
+
+
 AUTO_VARS = {
     "NODE_TLS_REJECT_UNAUTHORIZED": "0",  # Allow self-signed certs
     **choose_docker_registry(),
     "PIP_CONF_PATH": choose_pip_conf_name(),
     "IS_IN_CNET": "1" if is_connected_to_cnet() else "0",
+    "NPM_TOKEN": find_npm_token(),
 }
 
 SECRET_VARS = ("SYM_ENC_KEY", "NEXTAUTH_SECRET", "HIVE_CLIENT_SECRET")
@@ -374,6 +394,14 @@ def collect_vars() -> Dict[str, str]:
 
     existing_values = load_existing_env(env_path)
     values = AUTO_VARS.copy()
+    if not values["NPM_TOKEN"]:
+        values["NPM_TOKEN"] = existing_values.get("NPM_TOKEN", "")
+    if not values["NPM_TOKEN"]:
+        print(
+            "⚠️  No @system-b90 GitHub Packages token found (checked NPM_TOKEN/"
+            "GITHUB_TOKEN env vars and ~/.npmrc). `docker compose build` will "
+            "fail to install @system-b90/* deps until NPM_TOKEN is set in .env."
+        )
 
     info("Generating secure secrets 🔑")
     for s in SECRET_VARS:

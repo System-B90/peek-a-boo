@@ -1,12 +1,10 @@
 ARG NODE_DOCKER_REGISTRY
 ARG IS_IN_CNET
-ARG LDAP_URL
 
 # Use a local Node.js image
 FROM ${NODE_DOCKER_REGISTRY}node:20-alpine AS builder
 ARG NODE_DOCKER_REGISTRY
 ARG IS_IN_CNET
-ARG LDAP_URL
 
 # Set working directory
 WORKDIR /app
@@ -51,9 +49,6 @@ RUN npm run build
 # Final stage: production server
 FROM ${NODE_DOCKER_REGISTRY}node:20-alpine
 ARG NODE_DOCKER_REGISTRY
-ARG LDAP_URL
-ARG LDAP_DC
-ENV LDAP_URL=$LDAP_URL LDAP_DC=$LDAP_DC
 
 LABEL org.opencontainers.image.source="https://github.com/System-B90/peek-a-boo"
 LABEL org.opencontainers.image.description="Peek-a-Boo Next.js app. See README: https://github.com/System-B90/peek-a-boo#readme"

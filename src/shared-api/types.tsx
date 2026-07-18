@@ -1,11 +1,6 @@
- 
+
 export namespace Api {
-    export namespace Request {
-        export type LoginData = {
-            username: string;
-            password: string;
-        };
-    }
+    export namespace Request {}
     export namespace Response {}
 }
 
@@ -74,9 +69,4 @@ export type Tag = {
     name: string;
     type: TagType;
     students: Array<string>; // Student usernames
-}
-
-export enum AuthSystem {
-    LDAP = "ldap",
-    HIVE = "hive",
 }

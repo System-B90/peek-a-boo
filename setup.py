@@ -97,7 +97,7 @@ AUTO_VARS = {
     "IS_IN_CNET": "1" if is_connected_to_cnet() else "0",
 }
 
-SECRET_VARS = ("SYM_ENC_KEY", "JWT_SECRET")
+SECRET_VARS = ("SYM_ENC_KEY", "NEXTAUTH_SECRET", "HIVE_CLIENT_SECRET")
 
 # Images docker-compose.yml expects (README "Quick Start" step 4).
 REQUIRED_DOCKER_IMAGES = ("peekaboo/nextjs", "nginx", "peekaboo/websock")
@@ -117,10 +117,9 @@ PROMPT_VARS: Dict[str, str] = {
     "MATTERMOST_ACCESS_TOKEN": "Mattermost personal access token",
     "TWEET_CHANNEL_ID": "Mattermost channel ID for tweets",
     #
-    "AUTH_SYSTEM": 'Authentication system to use ("ldap" or "hive")',
-    "LDAP_DC": 'Domain for LDAP authentication (e.g. "dc=DOMAIN,dc=TLD")',
-    "LDAP_URL": 'LDAP URL for authentication (e.g. "ldaps://domain.tld")',
-    "SEGEL_OU_PATH": "OU path in the DC in which to search for Segel users (e.g. OU=Segel,OU=Course,DC=DOMAIN,DC=TLD)",
+    "NEXT_PUBLIC_HIVE_URL": 'Base URL of the Hive instance for OIDC SSO (e.g. "https://hive.org")',
+    "HIVE_CLIENT_ID": "OAuth client ID registered with Hive for this app",
+    "HIVE_CLIENT_SECRET": "OAuth client secret registered with Hive for this app",
 }
 
 # ---------------------------------------------------------------------------

@@ -19,7 +19,6 @@ export default defineConfig({
         // Mock fallbacks so `npm run test:unit` runs without a configured
         // environment (settings/auth modules throw at import if these are unset).
         env: {
-            JWT_SECRET: process.env.JWT_SECRET ?? "test-jwt-secret",
             SYM_ENC_KEY:
                 process.env.SYM_ENC_KEY ??
                 Buffer.alloc(32, 1).toString("base64"),

@@ -55,7 +55,7 @@ def main() -> None:
     env_values = {
         "NODE_TLS_REJECT_UNAUTHORIZED": "0",
         "SYM_ENC_KEY": gen_random_b64_str(),
-        "JWT_SECRET": gen_random_b64_str(),
+        "NEXTAUTH_SECRET": gen_random_b64_str(),
         "HOSTNAME": TEST_HOSTNAME,
         "WEBSOCKET_SERVER_HOSTNAME": TEST_WEBSOCKET_HOSTNAME,
         "VNC_CLIENT_PASSWORD": base64.b64encode(VNC_CLIENT_PASSWORD.encode()).decode(),
@@ -65,10 +65,9 @@ def main() -> None:
         "MATTERMOST_URL": "",
         "MATTERMOST_ACCESS_TOKEN": "",
         "TWEET_CHANNEL_ID": "",
-        "AUTH_SYSTEM": "hive",
-        "LDAP_DC": "",
-        "LDAP_URL": "",
-        "SEGEL_OU_PATH": "",
+        "NEXT_PUBLIC_HIVE_URL": f"https://{HIVE_HOSTNAME}",
+        "HIVE_CLIENT_ID": "",
+        "HIVE_CLIENT_SECRET": "",
     }
 
     env_path = Path(__file__).resolve().parent.parent / ".env"

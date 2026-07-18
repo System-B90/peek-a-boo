@@ -16,6 +16,8 @@ jobs:
         name: Full E2E Tests (with Hive)
         runs-on: ubuntu-24.04
         timeout-minutes: 45
+        env:
+            NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
         steps:
             - name: Checkout repository

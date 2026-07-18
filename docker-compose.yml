@@ -6,6 +6,7 @@ services:
       context: ./
       args:
         NODE_DOCKER_REGISTRY: ${NODE_DOCKER_REGISTRY}
+        NPM_TOKEN: ${NPM_TOKEN}
       dockerfile: Dockerfile
     environment:
       - NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED}

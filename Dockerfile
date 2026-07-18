@@ -9,8 +9,12 @@ ARG IS_IN_CNET
 # Set working directory
 WORKDIR /app
 
+# GitHub Packages read token for @system-b90/* (npm resolves ${NPM_TOKEN} from env)
+ARG NPM_TOKEN
+ENV NPM_TOKEN=${NPM_TOKEN}
+
 # Copy package.json and lock file
-COPY package*.json ./
+COPY package*.json .npmrc ./
 COPY package.json /app/package.json
 
 # Copy .npmrc

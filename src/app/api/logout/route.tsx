@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     response.cookies.set("vncClientPassword", "");
     response.cookies.set("username", "");
     response.cookies.set("name", "");
-    response.cookies.set("auth", "");
+    response.cookies.set("next-auth.session-token", "");
+    response.cookies.set("__Secure-next-auth.session-token", "");
     return response;
 }

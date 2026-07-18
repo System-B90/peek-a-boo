@@ -190,6 +190,7 @@ export default defineConfig([
             "utils/certs/",
             "scripts/cnet/**",
             "*.d.ts",
+	    ".claude/",
         ],
     },
 ]);

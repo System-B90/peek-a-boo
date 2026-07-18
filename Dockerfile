@@ -1,18 +1,20 @@
 ARG NODE_DOCKER_REGISTRY
 ARG IS_IN_CNET
-ARG LDAP_URL
 
 # Use a local Node.js image
 FROM ${NODE_DOCKER_REGISTRY}node:20-alpine AS builder
 ARG NODE_DOCKER_REGISTRY
 ARG IS_IN_CNET
-ARG LDAP_URL
 
 # Set working directory
 WORKDIR /app
 
+# GitHub Packages read token for @system-b90/* (npm resolves ${NPM_TOKEN} from env)
+ARG NPM_TOKEN
+ENV NPM_TOKEN=${NPM_TOKEN}
+
 # Copy package.json and lock file
-COPY package*.json ./
+COPY package*.json .npmrc ./
 COPY package.json /app/package.json
 
 # GitHub Packages read token for @system-b90/* (npm resolves ${NPM_TOKEN} from env)
@@ -51,14 +53,23 @@ RUN npm install
 RUN chmod -R +x ./.next/* || true
 RUN chmod -R +x ./node_modules/.bin/* || true
 
+# Placeholders to satisfy buildHiveAuthOptions()'s eager env read during
+# `next build`'s page-data collection — real values come from the runtime
+# environment (docker-compose/.env), not baked into the image.
+ARG NEXTAUTH_SECRET=ci_build_placeholder
+ARG NEXT_PUBLIC_HIVE_URL=https://hive.invalid
+ARG HIVE_CLIENT_ID=ci_build_placeholder
+ARG HIVE_CLIENT_SECRET=ci_build_placeholder
+ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET} \
+    NEXT_PUBLIC_HIVE_URL=${NEXT_PUBLIC_HIVE_URL} \
+    HIVE_CLIENT_ID=${HIVE_CLIENT_ID} \
+    HIVE_CLIENT_SECRET=${HIVE_CLIENT_SECRET}
+
 RUN npm run build
 
 # Final stage: production server
 FROM ${NODE_DOCKER_REGISTRY}node:20-alpine
 ARG NODE_DOCKER_REGISTRY
-ARG LDAP_URL
-ARG LDAP_DC
-ENV LDAP_URL=$LDAP_URL LDAP_DC=$LDAP_DC
 
 LABEL org.opencontainers.image.source="https://github.com/System-B90/peek-a-boo"
 LABEL org.opencontainers.image.description="Peek-a-Boo Next.js app. See README: https://github.com/System-B90/peek-a-boo#readme"

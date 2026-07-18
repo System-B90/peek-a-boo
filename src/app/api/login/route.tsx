@@ -1,74 +1,40 @@
 export const dynamic = "force-dynamic";
 
-import assert from "assert";
+import { NextRequest, NextResponse } from "next/server";
 
-import { headers } from "next/headers";
-import { NextRequest } from "next/server";
-
-import { ApiSuccess, catchHandler, setUserData } from "@/app/api/common";
-import { verifyUser } from "@/server-api/auth";
-import { JWTUserData } from "@/server-api/enc";
-import { sendAdminMessage } from "@/server-api/mattermost";
+import { assertUserLoggedIn, catchHandler } from "@/app/api/common";
 import { getSetting } from "@/server-api/settings";
-import { ClientApiError } from "@/shared-api/errors";
 
-const ALLOW_LOGIN_BYPASS = process.env.ALLOW_LOGIN_BYPASS === "true";
-
-export async function POST(request: NextRequest) {
+/**
+ * Callback landing page after a successful NextAuth Hive sign-in. Sets the
+ * client-readable cookies the VNC/UI code reads directly (vncClientPassword,
+ * username, name), then redirects to wherever the user was headed before
+ * being sent to /login.
+ */
+export async function GET(request: NextRequest) {
     try {
-        const { username, password }: { username: string; password: string } =
-            await request.json();
-        if (!username || !password) {
-            throw new ClientApiError("Invalid username or password!");
-        }
-        let clientSideUserData: JWTUserData;
-        if (!ALLOW_LOGIN_BYPASS) {
-            const user = await verifyUser(
-                username.toString(),
-                password.toString(),
-            );
-            const requestHeaders = await headers();
-            const origin =
-                requestHeaders.get("X-Forwarded-For") ??
-                requestHeaders.get("origin") ??
-                request.nextUrl.toString();
-            if (!user.isUserAllowedToPeek) {
-                void sendAdminMessage({
-                    message: `Login blocked for ${user.username} to ${origin}.`,
-                });
-                throw new ClientApiError("Authentication failed!");
-            }
+        const session = await assertUserLoggedIn();
 
-            void sendAdminMessage({
-                message: `${user.username} logged in from ${origin}.`,
-            });
+        const postLoginRedirect =
+            request.cookies.get("postLoginRedirect")?.value || "/";
+        // request.url resolves to the container-internal address (e.g.
+        // localhost:3000) behind the nginx proxy, not the public-facing
+        // host — build the redirect off NEXTAUTH_URL instead.
+        const response = NextResponse.redirect(
+            new URL(postLoginRedirect, process.env.NEXTAUTH_URL || request.url),
+        );
 
-            clientSideUserData = {
-                name: user.displayName,
-                username: user.username,
-                webSocketHost: "",
-                vncClientPassword:
-                    (await getSetting("VNC_CLIENT_PASSWORD")) ?? "",
-            };
-        } else {
-            assert(ALLOW_LOGIN_BYPASS === true);
-            clientSideUserData = {
-                name: username,
-                username: username,
-                webSocketHost: "",
-                vncClientPassword:
-                    (await getSetting("VNC_CLIENT_PASSWORD")) ?? "",
-            };
-        }
-
-        const response = ApiSuccess(clientSideUserData);
-        await setUserData(clientSideUserData, response);
         response.cookies.set(
             "vncClientPassword",
-            btoa(clientSideUserData.vncClientPassword),
+            btoa((await getSetting("VNC_CLIENT_PASSWORD")) ?? ""),
         );
-        response.cookies.set("username", clientSideUserData.username);
-        response.cookies.set("name", clientSideUserData.name);
+        response.cookies.set("username", session.user.username);
+        response.cookies.set(
+            "name",
+            session.user.display_name || session.user.name,
+        );
+        response.cookies.set("postLoginRedirect", "");
+
         return response;
     } catch (error: unknown) {
         console.error(error);

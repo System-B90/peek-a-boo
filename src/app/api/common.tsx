@@ -1,57 +1,54 @@
 export const dynamic = "force-dynamic";
 
-import jwt from "jsonwebtoken";
+import { AuthSessionData } from "@system-b90/hive-nextauth";
 import { NextApiRequest } from "next";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
 import { friendlyRedirectToLogin } from "@/app/api/login/redirect-to-login";
-import { getJwtSecret, JWTUserData } from "@/server-api/enc";
+import { authOptions } from "@/server-api/next-auth";
 import { ClientApiError, UserNotLoggedInError } from "@/shared-api/errors";
 
-export async function getUserData() {
-    const jwtSecret = getJwtSecret();
-    const authToken = (await cookies()).get("auth");
-    if (!authToken) {
+const ALLOW_LOGIN_BYPASS = process.env.ALLOW_LOGIN_BYPASS === "true";
+
+function bypassSessionData(): AuthSessionData {
+    // Dev-only stub session used when ALLOW_LOGIN_BYPASS=true; clearance/gender
+    // are cast through `unknown` to avoid importing @system-b90/hive-core's
+    // enums just for a placeholder value.
+    return {
+        user: {
+            id: "dev",
+            name: "Dev User",
+            email: null,
+            username: "dev",
+            clearance: 0,
+            program: null,
+            gender: 0,
+            display_name: "Dev User",
+            is_teacher: false,
+        },
+        accessToken: "",
+        refreshToken: "",
+    } as unknown as AuthSessionData;
+}
+
+export async function getUserData(): Promise<AuthSessionData> {
+    if (ALLOW_LOGIN_BYPASS) {
+        return bypassSessionData();
+    }
+
+    const session = (await getServerSession(
+        authOptions,
+    )) as AuthSessionData | null;
+
+    if (!session || session.error === "TokenExpiredError") {
         throw new UserNotLoggedInError(
             "User must be logged in to use this api!",
         );
     }
 
-    // Verify the JWT and get the user data
-    try {
-        try {
-            const userData = jwt.verify(
-                authToken.value,
-                jwtSecret,
-            ) as JWTUserData;
-            return userData;
-        } catch (error: unknown) {
-            console.error(error);
-            throw new Error("Error verifying JWT!");
-        }
-    } catch (e: unknown) {
-        console.error(e);
-        throw new Error("Error getting user data!");
-    }
-}
-
-export async function setUserData(
-    newData: JWTUserData,
-    response?: NextResponse,
-) {
-    // Generate a JWT with the user data and a secret key
-    const token = jwt.sign(newData, getJwtSecret());
-
-    // Set the JWT as a cookie
-    (response ? response.cookies : await cookies()).set("auth", token, {
-        httpOnly: true,
-        secure: true, // Use HTTPS in production
-        sameSite: "strict",
-        // 90min
-        maxAge: 3600 * 1.5, // Change this to the desired session duration in seconds
-        path: "/",
-    });
+    return session;
 }
 
 export type ApiResponseHeaders = Record<string, string>;
@@ -123,7 +120,7 @@ export async function catchHandler<T extends NextApiRequest | NextRequest>(
     return ApiError(e);
 }
 
-export async function assertUserLoggedIn() {
+export async function assertUserLoggedIn(): Promise<AuthSessionData> {
     const userData = await getUserData();
     return userData;
 }

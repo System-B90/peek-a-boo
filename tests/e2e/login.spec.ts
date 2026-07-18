@@ -7,24 +7,19 @@ test.describe("Login Page", () => {
         await expect(
             page.getByRole("heading", { name: "Login" }),
         ).toBeVisible();
-        await expect(page.locator("#username")).toBeVisible();
-        await expect(page.locator("#password")).toBeVisible();
         await expect(
-            page.getByRole("button", { name: "Login" }),
+            page.getByRole("button", { name: "Sign in with Hive" }),
         ).toBeVisible();
     });
 
-    test("shows an error on invalid credentials", async ({ page }) => {
+    test("Sign in with Hive redirects to Hive's SSO login", async ({
+        page,
+    }) => {
         await page.goto("/login", { waitUntil: "commit" });
 
-        await page.locator("#username").fill("not-a-real-user");
-        await page.locator("#password").fill("wrong-password");
-        await page.getByRole("button", { name: "Login" }).click();
+        await page.getByRole("button", { name: "Sign in with Hive" }).click();
 
-        await expect(page.getByText(/authentication failed/i)).toBeVisible({
-            timeout: 15_000,
-        });
-        await expect(page).toHaveURL(/\/login/);
+        await page.waitForURL(/hive\.org/, { timeout: 30_000 });
     });
 
     test("unauthenticated visitors are redirected away from the dashboard", async ({

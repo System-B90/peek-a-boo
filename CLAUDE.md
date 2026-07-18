@@ -9,8 +9,8 @@ This file covers what's specific to peek-a-boo.
 
 Student monitoring app ("Monitor your students the smart way"). Next.js frontend + a
 Python **websockify** component (`websock/`) that proxies **VNC** connections to student
-machines into the browser via `react-vnc`. Auth includes an **LDAP** integration
-(`ldapjs`) alongside Hive SSO.
+machines into the browser via `react-vnc`. Auth is **Hive SSO only**, via NextAuth
+(`@system-b90/hive-nextauth`'s `buildHiveAuthOptions()`).
 
 Three deployable pieces, each its own Docker image: `nginx` (proxy), `peekaboo_nextjs`
 (this app), `peekaboo_websock` (the VNC-over-websocket bridge in `websock/`).
@@ -62,7 +62,7 @@ on every push and PR.
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `src/client-api/`                     | Client-side fetch wrappers. Browser-only.                                                                       |
 | `src/app/api/`                        | Route handlers: `avatar`, `class`, `env`, `install-client`, `login`, `logout`, `settings`, `students`, `tweet`. |
-| `src/server-api/`                     | Server-only: LDAP, Hive client, session/auth logic.                                                             |
+| `src/server-api/`                     | Server-only: Hive client, NextAuth options, session/auth logic.                                                 |
 | `src/shared-api/`                     | Shared types/contracts and error classes, pure utils.                                                           |
 | `src/components/search`               | React UI.                                                                                                       |
 | `src/interfaces/`, `src/glyphs/`      | Shared TS interfaces; icon/glyph assets.                                                                        |
@@ -76,8 +76,9 @@ on every push and PR.
 - **Two runtimes in one repo**: the Next.js app (`npm run dev`) and the Python websockify
   bridge (`websock/`, its own venv) are separate processes — both need to be running for
   VNC features to work locally.
-- **LDAP + Hive SSO coexist** for auth — check `src/server-api/` for which path a given
-  route actually uses before assuming Hive SSO covers everything.
+- **Auth is Hive SSO only** (via NextAuth + `@system-b90/hive-nextauth`'s
+  `buildHiveAuthOptions()`) — LDAP support was removed. `src/app/api/auth/[...nextauth]/`
+  is the NextAuth route; `src/app/api/common.tsx` reads the session server-side.
 - `ALLOW_LOGIN_BYPASS` is a real security bypass — local-dev only, never in a committed
   config or deployed environment.
 - Only `master` exists as a long-lived branch (no `dev`) — PR against `master`, per the

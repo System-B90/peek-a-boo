@@ -78,7 +78,7 @@ Locally:
 # verify the 'api' service account:
 python scripts/ci_setup.py
 
-npm run docker:test          # builds & starts nginx/nextjs/websock on 127.0.0.3
+npm run docker:test          # builds & starts nginx/nextjs/websock on 127.0.0.5
 npx playwright install chromium
 npm run test:e2e             # or test:e2e:ui
 npm run docker:test:down
@@ -88,7 +88,7 @@ CI (`.github/workflows/e2e.yml`) is fully hermetic: it clones
 `hivelms/Hive`'s `feature/sso` branch with the `ACCESS_TOKEN` repo secret,
 builds/boots Hive, pins the `api` service account's password, generates a
 self-signed cert + `.env`, builds the Peek-a-boo stack via
-`docker-compose.test.yml` (nginx bound to `127.0.0.3` so it doesn't collide
+`docker-compose.test.yml` (nginx bound to `127.0.0.5` so it doesn't collide
 with Hive on `127.0.0.1`), then runs the Playwright suite — uploading the
 HTML report, test results, and container logs on failure.
 

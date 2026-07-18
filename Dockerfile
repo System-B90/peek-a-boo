@@ -15,6 +15,11 @@ WORKDIR /app
 COPY package*.json ./
 COPY package.json /app/package.json
 
+# GitHub Packages read token for @system-b90/* (npm resolves ${NPM_TOKEN} from env)
+ARG NPM_TOKEN
+ENV NPM_TOKEN=${NPM_TOKEN}
+COPY .npmrc ./
+
 # Copy .npmrc
 COPY ./scripts/cnet/.npmrc-cnet ~/.npmrc-cnet
 # Only use .npmrc-cnet if building within CNET

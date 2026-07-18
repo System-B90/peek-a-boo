@@ -84,5 +84,9 @@ EXPOSE 3000
 
 RUN npm config fix
 
+# Run as non-root (node:20-alpine ships a built-in `node` user)
+RUN chown -R node:node /app
+USER node
+
 # Run Next.js server
 CMD ["npm", "start"]

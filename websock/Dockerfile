@@ -38,5 +38,11 @@ COPY --from=builder /usr/local/ /usr/local/
 # Expose Next.js port
 EXPOSE 60800
 
+# Run as non-root. python:*-slim-bullseye has no built-in "node" user
+# (that's a Node-image concept) so create an unprivileged user here.
+RUN useradd --create-home --shell /usr/sbin/nologin appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
 # Run Next.js server
 CMD ["python", "start_websockify.py"]

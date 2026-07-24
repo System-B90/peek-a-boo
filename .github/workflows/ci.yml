@@ -11,10 +11,19 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-    lint:
-        name: Lint Codebase
+    # This was three jobs — lint, test, build — each with its own checkout,
+    # Node setup and `npm ci`. On GitHub-hosted runners lint and test ran in
+    # parallel and the split paid for itself. On the single self-hosted box
+    # they queue behind one another, so the same commit installed dependencies
+    # three times in a row to run three short commands.
+    #
+    # One job, one install. `!cancelled()` on each check keeps the property
+    # that mattered about separate jobs: a lint failure still doesn't mask a
+    # test failure, so one run reports every problem rather than one per push.
+    verify:
+        name: Lint, Test, Build
         runs-on: self-hosted
-        timeout-minutes: 15
+        timeout-minutes: 30
         steps:
             - name: Checkout repository
               uses: actions/checkout@v7
@@ -26,9 +35,10 @@ jobs:
                   cache: "npm"
 
             - name: Setup Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v6
               with:
                   python-version: "3.11"
+                  cache: pip
 
             - name: Install Dependencies (Node)
               run: npm ci
@@ -42,53 +52,20 @@ jobs:
               run: npm run lint
 
             - name: Run Ruff (Python Linter)
+              if: ${{ !cancelled() }}
               run: ruff check .
 
             - name: Run Ruff (Python Formatter Check)
+              if: ${{ !cancelled() }}
               run: ruff format --check .
 
-    test:
-        name: Unit Tests
-        runs-on: self-hosted
-        timeout-minutes: 25
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v7
-
-            - name: Setup Node.js 24
-              uses: actions/setup-node@v6
-              with:
-                  node-version: "24"
-                  cache: "npm"
-
-            - name: Install Dependencies
-              run: npm ci
-              env:
-                  NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-
             - name: Run Unit Tests
+              if: ${{ !cancelled() }}
               run: npm run test:unit
 
-    build:
-        name: Build
-        needs: [lint, test]
-        if: github.ref == 'refs/heads/master'
-        runs-on: self-hosted
-        timeout-minutes: 30
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v7
-
-            - name: Setup Node.js 24
-              uses: actions/setup-node@v6
-              with:
-                  node-version: "24"
-                  cache: "npm"
-
-            - name: Install dependencies
-              run: npm ci
-              env:
-                  NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-
+            # Master only, as before — a full Next.js build is the most
+            # expensive step here, and it holds the shared runner while every
+            # other repo's jobs wait behind it.
             - name: Run build
+              if: ${{ !cancelled() && github.ref == 'refs/heads/master' }}
               run: npm run build

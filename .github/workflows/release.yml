@@ -20,7 +20,7 @@ jobs:
   build-nextjs:
     name: Build NextJS Image
     runs-on: self-hosted
-    timeout-minutes: 30
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: write
@@ -65,7 +65,7 @@ jobs:
   build-websock:
     name: Build Websock Image
     runs-on: self-hosted
-    timeout-minutes: 30
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: write

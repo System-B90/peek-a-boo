@@ -11,6 +11,7 @@ import {
 
 import { safeApiFetcher } from "@/client-api/common-utils";
 import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
+import { decodeVncClientPassword } from "@/shared-api/vnc-credentials";
 
 export type ClientEnvConfig = {
     WEBSOCKET_PORT: number;
@@ -105,9 +106,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         /* eslint-disable react-hooks/set-state-in-effect -- syncing derived state from the parsed `cookies` state */
         setDisplayName(cookies["name"]);
         setUsername(cookies["username"]);
-        try {
-            setVncClientPassword(atob(cookies["vncClientPassword"]));
-        } catch {}
+        // The cookie is absent for any session that hasn't been issued VNC
+        // credentials. atob(undefined) decodes the literal string "undefined",
+        // which isn't valid base64, so the old unguarded call threw on every
+        // such session — and the empty catch swallowed it. Check for the
+        // cookie first, and report a genuine decode failure instead of
+        // silently leaving VNC without a password and no clue why.
+        const encodedVncPassword = cookies["vncClientPassword"];
+        if (encodedVncPassword) {
+            const vncPassword = decodeVncClientPassword(encodedVncPassword);
+            if (vncPassword === null) {
+                console.error(
+                    "Failed to decode the vncClientPassword cookie; VNC connections will not authenticate.",
+                );
+            } else {
+                setVncClientPassword(vncPassword);
+            }
+        }
         /* eslint-enable react-hooks/set-state-in-effect */
     }, [cookies, setDisplayName, setUsername, setVncClientPassword]);
 

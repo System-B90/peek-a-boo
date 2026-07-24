@@ -1,8 +1,14 @@
 name: CI
 
 on:
+    # push is master-only on purpose. With `push: ["**"]` alongside
+    # `pull_request: ["**"]`, every commit on a PR branch ran this workflow
+    # twice — once for each event — and the two runs did not cancel each other,
+    # because the concurrency key includes github.ref, which is
+    # refs/heads/<branch> for push and refs/pull/N/merge for pull_request.
+    # Two full checkouts, two npm ci runs, two test runs, per commit.
     push:
-        branches: ["**"]
+        branches: [master]
     pull_request:
         branches: ["**"]
 

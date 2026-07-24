@@ -12,7 +12,7 @@
  * expected to treat null as "no usable VNC password" and say so — silently
  * discarding it is what made this hard to diagnose in the first place.
  */
-export function decodeVncClientPassword(encoded: string): string | null {
+export function decodeVncClientPassword(encoded: string): null | string {
     try {
         return atob(encoded);
     } catch {

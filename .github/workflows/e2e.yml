@@ -14,7 +14,9 @@ concurrency:
 jobs:
     e2e:
         name: Full E2E Tests (with Hive)
-        runs-on: ubuntu-24.04
+        # The org is out of GitHub-hosted Actions minutes — everything runs on
+        # the self-hosted pool.
+        runs-on: self-hosted
         timeout-minutes: 45
         env:
             NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
@@ -22,6 +24,18 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v7
+
+            # Serialise against the other repos' Hive stacks. The concurrency:
+            # key above only covers this repo, and the contention is between
+            # repos: every E2E job in the org boots a Hive stack onto the same
+            # 8-vCPU box, and two arriving together push each other past their
+            # healthchecks (System-B90/.github#12). No-ops with a warning until
+            # CI_LOCK_TOKEN exists, so this is safe to land before the secret.
+            - name: Take the E2E lock
+              id: ci_lock
+              uses: System-B90/.github/actions/ci-lock@main
+              with:
+                  token: ${{ secrets.CI_LOCK_TOKEN }}
 
             # ── Hive (identity provider + organizational data) ────────────────
             # Shared org action: disk cleanup, token verify, Hive checkout,
@@ -153,3 +167,18 @@ jobs:
                   name: container-logs
                   path: container-logs/
                   retention-days: 7
+
+            # ── Release the shared box ─────────────────────────────────────
+            # Both must run even when the tests fail: otherwise a dead Hive
+            # stack occupies the runner until the next job clears it, and the
+            # next repo waits out the lock's stale timeout instead of starting.
+            - name: Tear down Hive
+              if: always()
+              uses: System-B90/.github/actions/teardown-hive@main
+
+            - name: Release the E2E lock
+              if: always()
+              uses: System-B90/.github/actions/ci-unlock@main
+              with:
+                  token: ${{ secrets.CI_LOCK_TOKEN }}
+                  acquired: ${{ steps.ci_lock.outputs.acquired }}

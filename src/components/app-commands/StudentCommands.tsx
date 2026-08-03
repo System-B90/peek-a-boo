@@ -123,18 +123,20 @@ export function StudentCommands(): null {
     // ones wait until something is typed, so the default list stays app
     // commands rather than the whole school.
     const source = useCallback(
-        (query: CommandQuery) =>
-            query.text.trim().length === 0
-                ? rosterCommands
-                : [
-                      ...rosterCommands,
-                      ...buildStudentCommands(
-                          studentInfoList,
-                          activeStudents,
-                          toggleWatch,
-                          openStandalone,
-                      ),
-                  ],
+        (query: CommandQuery) => {
+            if (query.text.trim().length === 0) {
+                return rosterCommands;
+            }
+            return [
+                ...rosterCommands,
+                ...buildStudentCommands(
+                    studentInfoList,
+                    activeStudents,
+                    toggleWatch,
+                    openStandalone,
+                ),
+            ];
+        },
         [
             rosterCommands,
             studentInfoList,

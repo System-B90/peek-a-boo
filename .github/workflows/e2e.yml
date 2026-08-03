@@ -25,17 +25,6 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v7
 
-            # Serialise against the other repos' Hive stacks. The concurrency:
-            # key above only covers this repo, and the contention is between
-            # repos: every E2E job in the org boots a Hive stack onto the same
-            # 8-vCPU box, and two arriving together push each other past their
-            # healthchecks (System-B90/.github#12). No-ops with a warning until
-            # CI_LOCK_TOKEN exists, so this is safe to land before the secret.
-            - name: Take the E2E lock
-              id: ci_lock
-              uses: System-B90/.github/actions/ci-lock@main
-              with:
-                  token: ${{ secrets.CI_LOCK_TOKEN }}
 
             # ── Hive (identity provider + organizational data) ────────────────
             # Shared org action: disk cleanup, token verify, Hive checkout,
@@ -169,16 +158,21 @@ jobs:
                   retention-days: 7
 
             # ── Release the shared box ─────────────────────────────────────
-            # Both must run even when the tests fail: otherwise a dead Hive
-            # stack occupies the runner until the next job clears it, and the
-            # next repo waits out the lock's stale timeout instead of starting.
-            - name: Tear down Hive
+            # Runs even when the tests fail: otherwise a dead Hive stack
+            # occupies the shared runner until the next job happens to clear it
+            # (System-B90/.github#12). Best-effort throughout — cleanup must not
+            # turn a green run red.
+            - name: Tear down Hive and reclaim disk
               if: always()
-              uses: System-B90/.github/actions/teardown-hive@main
-
-            - name: Release the E2E lock
-              if: always()
-              uses: System-B90/.github/actions/ci-unlock@main
-              with:
-                  token: ${{ secrets.CI_LOCK_TOKEN }}
-                  acquired: ${{ steps.ci_lock.outputs.acquired }}
+              run: |
+                  docker compose -f docker-compose.yml -f docker-compose.test.yml down -v --remove-orphans || true
+                  docker compose -f hive/docker-compose.yaml down -v --remove-orphans || true
+                  leftovers=$(docker ps -aq --filter "name=^/hive-")
+                  if [ -n "$leftovers" ]; then docker rm -f $leftovers || true; fi
+                  docker container prune -f || true
+                  docker volume prune -f || true
+                  docker builder prune -f --keep-storage 10GB || true
+                  df -h / || true
+                  exit 0
+              env:
+                  COMPOSE_PROJECT_NAME: peekaboo-test

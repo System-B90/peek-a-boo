@@ -179,6 +179,10 @@ jobs:
             - name: Tear down Hive and reclaim disk
               if: always()
               run: |
+                  # Best-effort: GitHub runs this under `bash -e`, where a bare
+                  # command substitution from a dead docker daemon would abort the
+                  # step before `exit 0`. Cleanup must never fail the job.
+                  set +e
                   docker compose -f docker-compose.yml -f docker-compose.test.yml down -v --remove-orphans || true
                   docker compose -f hive/docker-compose.yaml down -v --remove-orphans || true
                   leftovers=$(docker ps -aq --filter "name=^/hive-")

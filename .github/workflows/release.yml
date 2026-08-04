@@ -19,7 +19,7 @@ env:
 jobs:
   build-nextjs:
     name: Build NextJS Image
-    runs-on: self-hosted
+    runs-on: [self-hosted, dind]
     timeout-minutes: 45
     permissions:
       contents: read
@@ -64,7 +64,7 @@ jobs:
 
   build-websock:
     name: Build Websock Image
-    runs-on: self-hosted
+    runs-on: [self-hosted, dind]
     timeout-minutes: 45
     permissions:
       contents: read
@@ -109,7 +109,7 @@ jobs:
     name: Craft Release Packages
     needs: [build-nextjs, build-websock]
     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: self-hosted
+    runs-on: [self-hosted, dind]
     timeout-minutes: 45
     permissions:
       contents: write

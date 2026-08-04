@@ -14,14 +14,31 @@ concurrency:
 jobs:
     e2e:
         name: Full E2E Tests (with Hive)
-        runs-on: ubuntu-24.04
-        timeout-minutes: 45
+        # The org is out of GitHub-hosted Actions minutes — everything runs on
+        # the self-hosted pool.
+        runs-on: self-hosted
+        # 45 was calibrated when this ran on a fresh GitHub-hosted VM. On the
+        # shared box it is not enough, and the job dies mid-build rather than
+        # failing on anything real. Measured on 2026-08-04 (run 30862079400):
+        # Set up Hive 8m52s, Set up Node + Playwright 8m57s, then "Build & start
+        # Peek-a-boo" was still going at 24m14s when the ceiling killed it —
+        # ~46m spent without reaching a single test.
+        #
+        # Bluz's equivalent job already uses 90, and peek-a-boo does comparable
+        # work (it docker-builds nextjs, websock and nginx), so 45 was the
+        # outlier. madash keeps 45 because it never docker-builds the app —
+        # npm run build + next start on the host is far lighter.
+        #
+        # The 24-minute image build is the thing actually worth fixing; a build
+        # cache would cut this far more than the ceiling does (System-B90/.github#12).
+        timeout-minutes: 90
         env:
             NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
         steps:
             - name: Checkout repository
               uses: actions/checkout@v7
+
 
             # ── Hive (identity provider + organizational data) ────────────────
             # Shared org action: disk cleanup, token verify, Hive checkout,
@@ -153,3 +170,27 @@ jobs:
                   name: container-logs
                   path: container-logs/
                   retention-days: 7
+
+            # ── Release the shared box ─────────────────────────────────────
+            # Runs even when the tests fail: otherwise a dead Hive stack
+            # occupies the shared runner until the next job happens to clear it
+            # (System-B90/.github#12). Best-effort throughout — cleanup must not
+            # turn a green run red.
+            - name: Tear down Hive and reclaim disk
+              if: always()
+              run: |
+                  # Best-effort: GitHub runs this under `bash -e`, where a bare
+                  # command substitution from a dead docker daemon would abort the
+                  # step before `exit 0`. Cleanup must never fail the job.
+                  set +e
+                  docker compose -f docker-compose.yml -f docker-compose.test.yml down -v --remove-orphans || true
+                  docker compose -f hive/docker-compose.yaml down -v --remove-orphans || true
+                  leftovers=$(docker ps -aq --filter "name=^/hive-")
+                  if [ -n "$leftovers" ]; then docker rm -f $leftovers || true; fi
+                  docker container prune -f || true
+                  docker volume prune -f || true
+                  docker builder prune -f --keep-storage 10GB || true
+                  df -h / || true
+                  exit 0
+              env:
+                  COMPOSE_PROJECT_NAME: peekaboo-test

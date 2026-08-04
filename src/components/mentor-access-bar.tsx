@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, useCallback, MouseEventHandler } from "react";
 
 import { useAllStudentInfo } from "@/components/all-student-info-provider";
+import { CommandPaletteButton } from "@/components/app-commands/CommandPaletteButton";
 import { useAuth } from "@/components/auth-provider";
 import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
 import { HomeGlyph } from "@/glyphs/home";
@@ -138,6 +139,7 @@ export function MentorAccessBar() {
                         <div
                             className={`flex flex-row items-center justify-end gap-x-1 ${minimized ? "transform-[translateX(calc(100%))_translateY(-100%)]" : "transform-[translateX(0)]"}`}
                         >
+                            <CommandPaletteButton />
                             <GotoSettings />
                             <RefreshAllData />
                         </div>

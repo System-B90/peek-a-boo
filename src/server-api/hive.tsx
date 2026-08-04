@@ -1,6 +1,7 @@
 "use server";
 
-import { Clearance } from "@/server-api/hive-types";
+import { Clearance } from "@system-b90/hive-core";
+
 import { getSetting } from "@/server-api/settings";
 import {
     HiveError,

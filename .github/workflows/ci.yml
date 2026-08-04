@@ -28,7 +28,7 @@ jobs:
     # test failure, so one run reports every problem rather than one per push.
     verify:
         name: Lint, Test, Build
-        runs-on: self-hosted
+        runs-on: [self-hosted, node, python]
         timeout-minutes: 30
         steps:
             - name: Checkout repository

@@ -17,7 +17,21 @@ jobs:
         # The org is out of GitHub-hosted Actions minutes — everything runs on
         # the self-hosted pool.
         runs-on: self-hosted
-        timeout-minutes: 45
+        # 45 was calibrated when this ran on a fresh GitHub-hosted VM. On the
+        # shared box it is not enough, and the job dies mid-build rather than
+        # failing on anything real. Measured on 2026-08-04 (run 30862079400):
+        # Set up Hive 8m52s, Set up Node + Playwright 8m57s, then "Build & start
+        # Peek-a-boo" was still going at 24m14s when the ceiling killed it —
+        # ~46m spent without reaching a single test.
+        #
+        # Bluz's equivalent job already uses 90, and peek-a-boo does comparable
+        # work (it docker-builds nextjs, websock and nginx), so 45 was the
+        # outlier. madash keeps 45 because it never docker-builds the app —
+        # npm run build + next start on the host is far lighter.
+        #
+        # The 24-minute image build is the thing actually worth fixing; a build
+        # cache would cut this far more than the ceiling does (System-B90/.github#12).
+        timeout-minutes: 90
         env:
             NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 

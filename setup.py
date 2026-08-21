@@ -42,7 +42,10 @@ except ImportError:
 try:
     from dotenv import load_dotenv
 except ImportError:
-    handle_import_error("dotenv")
+    # The import name is `dotenv`; the distribution is `python-dotenv`. There
+    # is a separate, unrelated `dotenv` on PyPI, so printing the import name
+    # here sent people to install the wrong package.
+    handle_import_error("python-dotenv")
 
 try:
     import requests

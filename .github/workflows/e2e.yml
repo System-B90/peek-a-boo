@@ -2,10 +2,30 @@ name: E2E Tests
 
 on:
     workflow_dispatch:
-    pull_request:
-        branches: [master]
+    # Master only, deliberately. This suite boots a full Hive stack on the
+    # org's single self-hosted box and runs for the best part of an hour.
+    # Per-pull-request runs spent that shared box on branches that get
+    # force-pushed and rebased, while three other repos queued behind it.
+    # Use workflow_dispatch to run it against a branch on purpose.
+    #
+    # Narrowed further to the paths that can change what the suite exercises.
+    # A docs- or workflow-only push to master was otherwise enough to spend an
+    # hour of the shared box on an identical result — which is exactly what a
+    # CI-config hotfix just did.
     push:
         branches: [master]
+        paths:
+            - 'src/**'
+            - 'tests/**'
+            - 'websock/**'
+            - 'utils/**'
+            - 'deploy/**'
+            - 'scripts/**'
+            - 'docker-compose*.yml'
+            - 'Dockerfile'
+            - 'package.json'
+            - 'package-lock.json'
+            - '.github/workflows/e2e.yml'
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}

@@ -1,4 +1,15 @@
-PyHiveLMS>=1.4.0
+# PyHiveLMS is published to a small PEP 503 index in System-B90/.github, not to
+# PyPI, whose copy stops at 2.1.1. The index is served by GitHub Pages — NOT by
+# raw.githubusercontent.com, which cannot back a pip index at all: it 404s the
+# directory URL pip requests, and serves index.html as text/plain with nosniff
+# so --find-links will not scrape it either.
+--extra-index-url https://system-b90.github.io/.github/pypi/
+
+# 2.1.5 is the release that added Hive API 7.2.0 to SUPPORTED_API_VERSIONS.
+# The floor was >=1.4.0, which PyPI satisfies with a client capped at 7.1.0 —
+# that client raises "Unsupported Hive API version '7.2.0'" against a current
+# Hive and takes setup.py down with it.
+PyHiveLMS>=2.1.5
 python-dotenv>=1.0.0
 requests>=2.31.0
 cryptography>=42.0.0

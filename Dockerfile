@@ -76,16 +76,27 @@ LABEL org.opencontainers.image.description="Peek-a-Boo Next.js app. See README: 
 
 WORKDIR /app
 
-# Copy built files from builder stage
-COPY --from=builder /app /app
+# Copy built files from builder stage.
+#
+# --chown here, not a later `RUN chown -R`: ownership is applied as the layer
+# is written, in one pass. The recursive chown this replaces walked all of
+# /app — node_modules included — and on the CI runners, where dockerd is
+# itself running inside a container, every touched file forces an overlayfs
+# copy-up. Measured on mks-srvu: 50+ minutes elapsed for 24 seconds of CPU,
+# which ran the whole e2e job past its 90-minute budget without ever
+# reaching a test.
+COPY --from=builder --chown=node:node /app /app
 
 # Expose Next.js port
 EXPOSE 3000
 
 RUN npm config fix
 
-# Run as non-root (node:20-alpine ships a built-in `node` user)
-RUN chown -R node:node /app
+# Run as non-root (node:20-alpine ships a built-in `node` user). The COPY
+# above owns everything *inside* /app; this chowns the directory itself, which
+# COPY --chown does not. Non-recursive on purpose — one inode, not a walk of
+# node_modules.
+RUN chown node:node /app
 USER node
 
 # Run Next.js server

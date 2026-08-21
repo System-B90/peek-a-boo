@@ -38,13 +38,17 @@ jobs:
               uses: actions/setup-node@v6
               with:
                   node-version: "24"
-                  cache: "npm"
+                  # No `cache:` on purpose. The self-hosted runners have persistent
+                  # disk, so the npm cache already survives between runs — the
+                  # actions/cache save is pure cost, and it is what left a job wedged
+                  # in "Post Setup Node.js" for over an hour holding a runner.
 
             - name: Setup Python
               uses: actions/setup-python@v6
               with:
                   python-version: "3.11"
-                  cache: pip
+                  # Same reason as the npm cache above: persistent disk already
+                  # keeps the pip cache warm between runs here.
 
             - name: Install Dependencies (Node)
               run: npm ci

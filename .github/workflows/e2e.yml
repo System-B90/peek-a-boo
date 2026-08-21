@@ -2,8 +2,11 @@ name: E2E Tests
 
 on:
     workflow_dispatch:
-    pull_request:
-        branches: [master]
+    # Master only, deliberately. This suite boots a full Hive stack on the
+    # org's single self-hosted box and runs for the best part of an hour.
+    # Per-pull-request runs spent that shared box on branches that get
+    # force-pushed and rebased, while three other repos queued behind it.
+    # Use workflow_dispatch to run it against a branch on purpose.
     push:
         branches: [master]
 

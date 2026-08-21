@@ -75,3 +75,11 @@ jobs:
             - name: Run build
               if: ${{ !cancelled() && github.ref == 'refs/heads/master' }}
               run: npm run build
+              env:
+                  # `next build` collects page data, which imports the auth
+                  # setup — and @system-b90/hive-nextauth throws at import when
+                  # NEXTAUTH_SECRET is unset, failing the build on
+                  # /api/settings/default. Not a real secret: nothing signed at
+                  # build time is ever served. bluz passes a placeholder the
+                  # same way for its unit tests.
+                  NEXTAUTH_SECRET: ci_build_placeholder

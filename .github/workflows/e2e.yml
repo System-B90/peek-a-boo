@@ -127,6 +127,11 @@ jobs:
             - name: Build & start Peek-a-boo
               env:
                   COMPOSE_PROJECT_NAME: peekaboo-test
+                  # setup-hive checks Hive out to hive/, so its compose network
+                  # is hive_hive-net — not the hive-stack_hive-net a local
+                  # checkout produces. nextjs joins it to resolve the hive.org
+                  # alias Hive's nginx publishes.
+                  HIVE_NETWORK_NAME: hive_hive-net
                   NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
               run: |
                   docker compose -f docker-compose.yml -f docker-compose.test.yml build

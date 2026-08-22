@@ -23,9 +23,13 @@ Monitor your students the smart way
     ```bash
     py -3.11 -m venv .venv
     source ./.venv/bin/activate
-    pip install PyHiveLMS dotenv requests cryptography
+    pip install -r scripts/requirements.txt
     python ./setup.py
     ```
+    `scripts/requirements.txt` carries the org pip index URL and the
+    PyHiveLMS floor. Installing those packages by hand instead gets you
+    PyPI's PyHiveLMS, which caps at Hive API 7.1.0 and fails against a
+    current Hive.
 6. Boot up the environment.
     ```bash
     sudo docker-compose up
@@ -37,7 +41,7 @@ Monitor your students the smart way
 $env:ALLOW_LOGIN_BYPASS = "true"
 py -3.11 -m venv venv
 .\venv\Scripts\activate
-pip install PyHiveLMS dotenv requests
+pip install -r scripts\requirements.txt
 python .\setup.py
 
 pushd .\websock\

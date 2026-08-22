@@ -1,8 +1,24 @@
 services:
   nextjs:
     container_name: peekaboo-test-nextjs
-    extra_hosts:
-      - "hive.org:${HIVE_HOST_IP:-host-gateway}"
+    # Join Hive's network instead of routing hive.org through the host.
+    #
+    # `extra_hosts: hive.org:host-gateway` resolves to the host's gateway IP,
+    # which does not reach Hive at all now that Hive's nginx binds a specific
+    # loopback alias (127.0.0.6, so a co-located Bluz can keep :80/:443 on
+    # 127.0.0.3 — System-B90/pyhive#24). A loopback address means nothing
+    # outside its own network namespace: inside this container 127.0.0.6 is
+    # this container.
+    #
+    # Hive's nginx already publishes a `hive.org` alias on hive-net, so
+    # joining that network lets Docker's embedded DNS resolve it with no
+    # dependency on host bind addresses or the host hosts file. Bluz hit
+    # exactly this and fixed it the same way (System-B90/Bluz#412); the
+    # symptom there was identical to ours — a bare SIGNIN_OAUTH_ERROR, because
+    # the server-side OAuth call was resolving hive.org to the app itself.
+    networks:
+      - backend
+      - hive_net
     environment:
       # Hive's nginx publishes 0.0.0.0:80/443 (all interfaces), which blocks
       # any other container from binding those ports on any IP, including
@@ -18,3 +34,11 @@ services:
 
   websock:
     container_name: peekaboo-test-websock
+
+networks:
+  hive_net:
+    # Compose derives a network's name from the directory the stack came up in.
+    # setup-hive checks Hive out to hive/, so CI gets hive_hive-net, while a
+    # local hive-stack/ checkout produces hive-stack_hive-net.
+    name: ${HIVE_NETWORK_NAME:-hive-stack_hive-net}
+    external: true

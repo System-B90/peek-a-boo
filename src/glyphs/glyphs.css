@@ -5,7 +5,7 @@
     transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-:not([aria-disabled=true]):not([data-static])>.svg-glyph {
+:not([aria-disabled="true"]):not([data-static]) > .svg-glyph {
     cursor: pointer;
 }
 
@@ -14,11 +14,11 @@
     pointer-events: bounding-box;
 }
 
-:not([aria-disabled=true]):not([data-static])>.svg-glyph:hover {
+:not([aria-disabled="true"]):not([data-static]) > .svg-glyph:hover {
     transform: scale(1.1);
 }
 
-[aria-disabled=true]>.svg-glyph {
+[aria-disabled="true"] > .svg-glyph {
     opacity: 0.35;
 }
 
@@ -39,4 +39,19 @@
     fill-rule: nonzero;
     fill: currentColor;
     fill-opacity: 1;
+}
+/* Screen recording in progress — the record glyph pulses while capturing. */
+[data-recording="true"] > .svg-glyph {
+    color: var(--color-error);
+    animation: glyph-recording-pulse 1s ease-in-out infinite;
+}
+
+@keyframes glyph-recording-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.35;
+    }
 }

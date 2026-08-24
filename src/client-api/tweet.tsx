@@ -2,13 +2,14 @@ import { safeApiFetcher } from "@/client-api/common-utils";
 
 export async function sendTweet({
     message,
-    screenShotData,
+    attachment,
 }: {
     message: string;
-    screenShotData?: string;
+    /** Base64 data URI of a screenshot or a screen recording. */
+    attachment?: string;
 }) {
     await safeApiFetcher(`/api/tweet`, {
         method: "POST",
-        body: JSON.stringify({ message, image: screenShotData }),
+        body: JSON.stringify({ message, attachment }),
     });
 }

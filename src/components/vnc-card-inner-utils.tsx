@@ -20,7 +20,7 @@ import { useAllStudentInfo } from "@/components/all-student-info-provider";
 import { useAuth } from "@/components/auth-provider";
 import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
 import { useStudentInfo } from "@/components/student-info-provider";
-import { TweetButton } from "@/components/tweet-bot";
+import { RecordButton, TweetButton } from "@/components/tweet-bot";
 import { CollapseGlyph } from "@/glyphs/Collapse";
 import { ExpandGlyph } from "@/glyphs/Expand";
 import { ExternalLinkGlyph } from "@/glyphs/ExternalLink";
@@ -344,6 +344,10 @@ export function VncRightModule({
                 {connected ? <div className="vnc-card-right-module flex flex-col items-center content-center justify-start z-10">
                     <RefreshData className={sideButtonClassnames} />
                     <TweetButton
+                        className={sideButtonClassnames}
+                        vncRef={vncRef}
+                    />
+                    <RecordButton
                         className={sideButtonClassnames}
                         vncRef={vncRef}
                     />

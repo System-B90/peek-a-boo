@@ -7,8 +7,9 @@ import { sendTweet } from "@/server-api/mattermost";
 
 export async function POST(request: NextRequest) {
     try {
-        const { message, image } = await request.json();
-        await sendTweet({ message, image });
+        // `image` is the pre-recording field name; still sent by older clients.
+        const { message, image, attachment } = await request.json();
+        await sendTweet({ message, attachment: attachment ?? image });
         return ApiSuccess({ ok: "ok" });
     } catch (e: unknown) {
         return await catchHandler(request, e);

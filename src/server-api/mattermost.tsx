@@ -1,41 +1,36 @@
 import { getSetting } from "@/server-api/settings";
 import {
-    ClientApiError,
     MattermostApiError,
     MattermostConnectionError,
     parseNetworkHostNotFoundError,
 } from "@/shared-api/errors";
+import { parseMediaAttachment } from "@/shared-api/media-attachment";
 
 export async function sendMessage({
     botToken,
     channelId,
     message,
-    image,
+    attachment,
 }: {
     botToken: string;
     channelId: string;
     message: string;
-    image?: string;
+    /** Base64 data URI of an image or a video to post alongside the message. */
+    attachment?: string;
 }) {
     const MATTERMOST_URL = await getSetting("MATTERMOST_URL");
     try {
         const fileIds: Array<string> = [];
-        if (image) {
-            const matches = image.match(/^data:(.+);base64,(.+)$/);
-            if (!matches) {
-                throw new ClientApiError(
-                    "Mattermost sendMessage API accepts Base64 encoded images only!",
-                );
-            }
-            const contentType = matches[1];
-            const imageData64 = matches[2];
-            const imageBuffer = Buffer.from(imageData64, "base64");
+        if (attachment) {
+            const { contentType, data64, filename } =
+                parseMediaAttachment(attachment);
+            const attachmentBuffer = Buffer.from(data64, "base64");
 
             const form = new FormData();
             form.append(
                 "files",
-                new Blob([imageBuffer], { type: contentType }),
-                "image.png",
+                new Blob([attachmentBuffer], { type: contentType }),
+                filename,
             );
             form.append("channel_id", channelId);
 
@@ -48,7 +43,7 @@ export async function sendMessage({
             });
             if (!uploadRes.ok) {
                 throw new MattermostApiError(
-                    `Failed to upload image to mattermost! ${await uploadRes.text()}`,
+                    `Failed to upload attachment to mattermost! ${await uploadRes.text()}`,
                 );
             }
 
@@ -90,16 +85,16 @@ export async function sendMessage({
 export async function sendBotMessage({
     channelId,
     message,
-    image,
+    attachment,
 }: {
     channelId: string;
     message: string;
-    image?: string;
+    attachment?: string;
 }) {
     const botToken = await getSetting("MATTERMOST_ACCESS_TOKEN");
     return await sendMessage({
         message,
-        image: image,
+        attachment,
         botToken,
         channelId,
     });
@@ -107,15 +102,15 @@ export async function sendBotMessage({
 
 export async function sendTweet({
     message,
-    image,
+    attachment,
 }: {
     message: string;
-    image?: string;
+    attachment?: string;
 }) {
     const channelId = await getSetting("TWEET_CHANNEL_ID");
     return await sendBotMessage({
         message,
-        image: image,
+        attachment,
         channelId,
     });
 }
@@ -123,29 +118,29 @@ export async function sendTweet({
 export async function sendDirecMessage({
     message,
     reciever,
-    image,
+    attachment,
 }: {
     message: string;
     reciever: string;
-    image?: string;
+    attachment?: string;
 }) {
     return await sendBotMessage({
         message,
-        image: image,
+        attachment,
         channelId: reciever,
     });
 }
 
 export async function sendAdminMessage({
     message,
-    image,
+    attachment,
 }: {
     message: string;
-    image?: string;
+    attachment?: string;
 }) {
     return await sendBotMessage({
         message,
-        image: image,
+        attachment,
         channelId: "bu4mwukaktngjg3hybsriojira",
     });
 }

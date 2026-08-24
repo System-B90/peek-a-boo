@@ -52,12 +52,15 @@ class FakeMediaRecorder {
     }
 }
 
+let readerReads = 0;
+
 class FakeFileReader {
     onerror: (() => void) | null = null;
     onload: (() => void) | null = null;
     result: null | string = null;
 
     readAsDataURL(blob: Blob) {
+        readerReads += 1;
         this.result = `data:${blob.type};base64,QUJD`;
         this.onload?.();
     }
@@ -86,6 +89,7 @@ afterEach(() => {
     vi.unstubAllGlobals();
     vi.useRealTimers();
     stoppedTracks.length = 0;
+    readerReads = 0;
 });
 
 describe("recordCanvas", () => {
@@ -138,6 +142,31 @@ describe("recordCanvas", () => {
 
         await expect(promise).rejects.toThrow("produced no data");
         expect(stoppedTracks).toHaveLength(1);
+    });
+
+    it("discards the clip and stops the capture when aborted", async () => {
+        install();
+        const controller = new AbortController();
+
+        const promise = recordCanvas(fakeCanvas(), 10_000, controller.signal);
+        lastRecorder.emit("dataavailable", chunk(1024));
+        controller.abort();
+
+        await expect(promise).rejects.toThrow("cancelled");
+        expect(lastRecorder.state).toBe("inactive");
+        expect(stoppedTracks).toHaveLength(1);
+        // The stop event that follows stop() must not encode the discarded
+        // clip on top of the rejection.
+        expect(readerReads).toBe(0);
+    });
+
+    it("rejects immediately when the signal is already aborted", async () => {
+        install();
+
+        await expect(
+            recordCanvas(fakeCanvas(), 10_000, AbortSignal.abort()),
+        ).rejects.toThrow("cancelled");
+        expect(readerReads).toBe(0);
     });
 
     it("rejects when the browser cannot record", async () => {

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { ClientApiError } from "@/shared-api/errors";
-import { parseMediaAttachment } from "@/shared-api/media-attachment";
+import {
+    decodedBase64Length,
+    MAX_ATTACHMENT_BYTES,
+    parseMediaAttachment,
+} from "@/shared-api/media-attachment";
 
 describe("parseMediaAttachment", () => {
     it("parses a PNG screenshot data URI", () => {
@@ -52,5 +56,58 @@ describe("parseMediaAttachment", () => {
         expect(() =>
             parseMediaAttachment("data:text/html;base64,QUJD"),
         ).toThrow(ClientApiError);
+    });
+
+    it("rejects a data URI with an empty payload", () => {
+        expect(() => parseMediaAttachment("data:image/png;base64,")).toThrow(
+            ClientApiError,
+        );
+    });
+
+    it("rejects an oversized attachment without decoding it", () => {
+        // 4 base64 chars per 3 bytes; one char past the ceiling.
+        const oversized = "A".repeat(
+            Math.ceil(((MAX_ATTACHMENT_BYTES + 1) * 4) / 3),
+        );
+
+        expect(() =>
+            parseMediaAttachment(`data:video/webm;base64,${oversized}`),
+        ).toThrow(/too large/);
+    });
+
+    it("accepts an attachment right at the ceiling", () => {
+        const atLimit = "A".repeat((MAX_ATTACHMENT_BYTES * 4) / 3);
+
+        expect(
+            parseMediaAttachment(`data:video/webm;base64,${atLimit}`).filename,
+        ).toBe("recording.webm");
+    });
+
+    it("ignores a base64 marker buried in the payload", () => {
+        // The header is located within a bounded prefix, so a payload that
+        // happens to spell ";base64," cannot move the split point.
+        const attachment = parseMediaAttachment(
+            `data:video/webm;base64,${"A".repeat(300)};base64,QUJD`,
+        );
+
+        expect(attachment.contentType).toBe("video/webm");
+        expect(attachment.data64.startsWith("AAAA")).toBe(true);
+    });
+});
+
+describe("decodedBase64Length", () => {
+    it("accounts for padding", () => {
+        expect(decodedBase64Length("QUJD")).toBe(3);
+        expect(decodedBase64Length("QUJDRA==")).toBe(4);
+        expect(decodedBase64Length("QUJDREU=")).toBe(5);
+    });
+
+    it("matches what Buffer actually decodes", () => {
+        for (const text of [ "a", "ab", "abc", "abcd", "abcde" ]) {
+            const encoded = Buffer.from(text).toString("base64");
+            expect(decodedBase64Length(encoded)).toBe(
+                Buffer.from(encoded, "base64").length,
+            );
+        }
     });
 });

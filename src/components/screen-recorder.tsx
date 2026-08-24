@@ -39,10 +39,15 @@ export function getVncCanvas(
  *
  * Rejects when the browser cannot capture the canvas or record media at all,
  * so callers can surface that instead of silently tweeting nothing.
+ *
+ * Aborting via `signal` tears the capture down immediately and discards the
+ * clip — a card that unmounts mid-recording must not keep a live stream and
+ * megabytes of chunks alive behind it.
  */
 export function recordCanvas(
     canvas: HTMLCanvasElement,
     durationMs: number,
+    signal?: AbortSignal,
 ): Promise<string> {
     if (typeof MediaRecorder === "undefined" || !canvas.captureStream) {
         return Promise.reject(
@@ -63,6 +68,8 @@ export function recordCanvas(
 
     return new Promise<string>((resolve, reject) => {
         let timer: ReturnType<typeof setTimeout> | undefined;
+        let abortListener: (() => void) | undefined;
+        let aborted = false;
 
         const stopRecording = () => {
             if (timer !== undefined) {
@@ -80,7 +87,26 @@ export function recordCanvas(
             chunks = [];
             bufferedBytes = 0;
             stream.getTracks().forEach((track) => track.stop());
+            if (abortListener) {
+                signal?.removeEventListener("abort", abortListener);
+                abortListener = undefined;
+            }
         };
+
+        if (signal?.aborted) {
+            release();
+            reject(new Error("Screen recording was cancelled!"));
+            return;
+        }
+        abortListener = () => {
+            // Flag first: `stop()` fires the stop handler, which must know to
+            // discard the clip rather than spend a FileReader encoding it.
+            aborted = true;
+            stopRecording();
+            release();
+            reject(new Error("Screen recording was cancelled!"));
+        };
+        signal?.addEventListener("abort", abortListener, { once: true });
 
         recorder.addEventListener("dataavailable", (event) => {
             if (event.data.size === 0) {
@@ -97,6 +123,9 @@ export function recordCanvas(
             reject(new Error("Screen recording failed!"));
         });
         recorder.addEventListener("stop", () => {
+            if (aborted) {
+                return;
+            }
             if (chunks.length === 0) {
                 release();
                 reject(new Error("Screen recording produced no data!"));
@@ -126,10 +155,11 @@ export function recordCanvas(
 export async function recordVncScreen(
     vncRef: RefObject<null | VncScreenHandle>,
     durationMs: number,
+    signal?: AbortSignal,
 ): Promise<string> {
     const canvas = getVncCanvas(vncRef);
     if (!canvas) {
         throw new Error("No connected screen to record!");
     }
-    return await recordCanvas(canvas, durationMs);
+    return await recordCanvas(canvas, durationMs, signal);
 }

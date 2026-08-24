@@ -1,6 +1,13 @@
 "use client";
 
-import { RefObject, useCallback, useMemo, useState } from "react";
+import {
+    RefObject,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { VncScreenHandle } from "react-vnc";
 
 import { sendTweet } from "@/client-api/tweet";
@@ -107,6 +114,17 @@ export function RecordButton({ vncRef, ...props }: TweetButtonProps) {
     const [recordingData, setRecordingData] = useState<string | undefined>(
         undefined,
     );
+    const abortRef = useRef<AbortController | null>(null);
+
+    useEffect(
+        () => () => {
+            // Unmounting mid-recording (card closed, grid re-rendered) must
+            // tear the capture down; otherwise it runs to completion holding
+            // the stream and its chunks for a component nobody can see.
+            abortRef.current?.abort();
+        },
+        [],
+    );
 
     const handleDialogSubmit = useTweetSubmitHandler(
         baseTweetMessage,
@@ -121,21 +139,36 @@ export function RecordButton({ vncRef, ...props }: TweetButtonProps) {
     }, []);
 
     const startRecording = useCallback(() => {
-        if (isRecording) {
+        // A ref, not the isRecording state: two clicks in one frame would both
+        // read the pre-render state and start two captures.
+        if (abortRef.current) {
             return;
         }
+        const controller = new AbortController();
+        abortRef.current = controller;
         setIsRecording(true);
-        recordVncScreen(vncRef, SCREEN_RECORDING_SECONDS * 1000)
+
+        recordVncScreen(
+            vncRef,
+            SCREEN_RECORDING_SECONDS * 1000,
+            controller.signal,
+        )
             .then((dataUri) => {
+                abortRef.current = null;
                 setIsRecording(false);
                 setRecordingData(dataUri);
                 setDialogOpen(true);
             })
             .catch((error) => {
+                abortRef.current = null;
+                if (controller.signal.aborted) {
+                    // Cancelled by unmount — there is nobody left to tell.
+                    return;
+                }
                 setIsRecording(false);
                 enqueueApiErrorSnackbar("Failed to record screen!", error);
             });
-    }, [isRecording, vncRef]);
+    }, [vncRef]);
 
     return (
         <>

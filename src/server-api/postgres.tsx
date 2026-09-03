@@ -58,9 +58,10 @@ export async function queryPostgres(
         const sql = await getPostgres();
 
         if (studentUsername) {
-            return await sql.unsafe(
-                `${baseQuery} AND mentee.username = '${studentUsername}'`,
-            );
+            // The username is bound, never concatenated: interpolating it into
+            // the SQL text made the roster query injectable from the route's
+            // `[[...slug]]` path segment.
+            return await sql`${sql.unsafe(baseQuery)} AND mentee.username = ${studentUsername}`;
         }
 
         return await sql.unsafe(baseQuery);

@@ -18,6 +18,7 @@ import { VncScreenHandle } from "react-vnc";
 
 import { useAllStudentInfo } from "@/components/all-student-info-provider";
 import { useAuth } from "@/components/auth-provider";
+import { InstantReplayButton } from "@/components/instant-replay-button";
 import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
 import { useStudentInfo } from "@/components/student-info-provider";
 import { RecordButton, TweetButton } from "@/components/tweet-bot";
@@ -348,6 +349,10 @@ export function VncRightModule({
                         vncRef={vncRef}
                     />
                     <RecordButton
+                        className={sideButtonClassnames}
+                        vncRef={vncRef}
+                    />
+                    <InstantReplayButton
                         className={sideButtonClassnames}
                         vncRef={vncRef}
                     />

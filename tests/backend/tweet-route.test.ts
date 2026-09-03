@@ -69,7 +69,7 @@ describe("POST /api/tweet", () => {
 
         expect(sendTweet).toHaveBeenCalledWith({
             message: "hello",
-            image: "data:image/png;base64,AAAA",
+            attachment: "data:image/png;base64,AAAA",
         });
     });
 });

@@ -18,6 +18,8 @@ type TweetDialogProps = {
     title: string;
     description?: string;
     imageSrc?: string;
+    /** Base64 data URI of a screen recording, shown instead of the screenshot. */
+    videoSrc?: string;
     baseMessageText?: string;
 
     open: boolean;
@@ -29,6 +31,7 @@ export function TweetDialog({
     title,
     description,
     imageSrc,
+    videoSrc,
     baseMessageText,
     open,
     onClose,
@@ -70,21 +73,31 @@ export function TweetDialog({
             <DialogContent dir="rtl">
                 <DialogContentText>{description}</DialogContentText>
                 <Box mb={2} mt={2}>
-                    <Tooltip
-                        arrow
-                        placement="right"
-                        title="לחץ לפתיחת התמונה בחלון חדש"
-                    >
-                        <Image
-                            alt="צילום מסך"
-                            className="cursor-pointer w-full max-h-[200px] object-contain"
-                            height={1200}
-                            onClick={screenshotClickHandler}
-                            src={imageSrc ?? ""}
-                            unoptimized
-                            width={1920}
+                    {videoSrc ? (
+                        <video
+                            className="w-full max-h-[200px] object-contain"
+                            controls
+                            loop
+                            muted
+                            src={videoSrc}
                         />
-                    </Tooltip>
+                    ) : (
+                        <Tooltip
+                            arrow
+                            placement="right"
+                            title="לחץ לפתיחת התמונה בחלון חדש"
+                        >
+                            <Image
+                                alt="צילום מסך"
+                                className="cursor-pointer w-full max-h-[200px] object-contain"
+                                height={1200}
+                                onClick={screenshotClickHandler}
+                                src={imageSrc ?? ""}
+                                unoptimized
+                                width={1920}
+                            />
+                        </Tooltip>
+                    )}
                 </Box>
                 <Typography
                     className="mb-0 pb-0 mt-2 pt-2"

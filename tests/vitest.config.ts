@@ -1,21 +1,21 @@
 import path from "path";
 
+import { defineSharedVitestConfig } from "@system-b90/test-kit/vitest";
 import tsconfigPaths from "vite-tsconfig-paths";
-import { configDefaults, defineConfig } from "vitest/config";
 
-export default defineConfig({
-    plugins: [
-        tsconfigPaths({
-            projects: [ path.resolve(__dirname, "../tsconfig.json") ],
-        }),
-    ],
+export default defineSharedVitestConfig({
+    include: [ "tests/backend/**/*.test.ts" ],
+    alias: {
+        "@": path.resolve(__dirname, "../src"),
+    },
+    config: {
+        plugins: [
+            tsconfigPaths({
+                projects: [ path.resolve(__dirname, "../tsconfig.json") ],
+            }),
+        ],
+    },
     test: {
-        environment: "node",
-        include: [ "tests/backend/**/*.test.ts" ],
-        exclude: [ ...configDefaults.exclude, "**/.claude/**", "**/worktrees/**" ],
-        alias: {
-            "@": path.resolve(__dirname, "../src"),
-        },
         // Mock fallbacks so `npm run test:unit` runs without a configured
         // environment (settings/auth modules throw at import if these are unset).
         env: {

@@ -1,7 +1,7 @@
 import path from "node:path";
 
-import { definePlaywrightConfig } from "@system-b90/test-kit/playwright";
 import { devices } from "@playwright/test";
+import { definePlaywrightConfig } from "@system-b90/test-kit/playwright";
 
 export default definePlaywrightConfig({
     testDir: "./e2e",

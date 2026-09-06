@@ -44,6 +44,7 @@
         "@eslint/eslintrc": "^3",
         "@playwright/test": "^1.61.1",
         "@stylistic/eslint-plugin": "^5.10.0",
+        "@system-b90/test-kit": "^0.1.0",
         "@tailwindcss/postcss": "^4",
         "@types/node": "^20",
         "@types/react": "^19",

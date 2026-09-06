@@ -1,9 +1,9 @@
 import path from "path";
 
+import { defineSharedVitestConfig } from "@system-b90/test-kit/vitest";
 import tsconfigPaths from "vite-tsconfig-paths";
-import { configDefaults, defineConfig } from "vitest/config";
 
-export default defineConfig({
+export default defineSharedVitestConfig({
     plugins: [
         tsconfigPaths({
             projects: [ path.resolve(__dirname, "../tsconfig.json") ],
@@ -12,7 +12,6 @@ export default defineConfig({
     test: {
         environment: "node",
         include: [ "tests/backend/**/*.test.ts" ],
-        exclude: [ ...configDefaults.exclude, "**/.claude/**", "**/worktrees/**" ],
         alias: {
             "@": path.resolve(__dirname, "../src"),
         },

@@ -1,19 +1,15 @@
 import path from "node:path";
 
-import { defineConfig, devices } from "@playwright/test";
+import { definePlaywrightConfig } from "@system-b90/test-kit/playwright";
+import { devices } from "@playwright/test";
 
-export default defineConfig({
+export default definePlaywrightConfig({
     testDir: "./e2e",
-    testMatch: "**/*.spec.ts",
     timeout: 30_000,
     fullyParallel: false,
-    forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 1,
     workers: 1,
-    reporter: process.env.CI ? [["html"], ["github"]] : [["html"], ["list"]],
     use: {
         baseURL: process.env.BASE_URL ?? "https://peekaboo.dev",
-        ignoreHTTPSErrors: true,
         screenshot: "only-on-failure",
         video: "on-first-retry",
         trace: "on-first-retry",

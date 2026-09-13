@@ -1,7 +1,6 @@
- 
+import { classifyHiveNetworkError } from "@system-b90/hive-core";
 import postgres, { Sql } from "postgres";
 
-import { hiveErrorHandler } from "@/server-api/hive";
 import { getSetting } from "@/server-api/settings";
 
 let pg: Sql<{}> | undefined;
@@ -18,7 +17,7 @@ async function getPostgres(): Promise<Sql<{}>> {
         }
         return pg;
     } catch (error: unknown) {
-        throw await hiveErrorHandler(error);
+        throw classifyHiveNetworkError(error);
     }
 }
 
@@ -66,6 +65,6 @@ export async function queryPostgres(
 
         return await sql.unsafe(baseQuery);
     } catch (error: unknown) {
-        throw await hiveErrorHandler(error);
+        throw classifyHiveNetworkError(error);
     }
 }

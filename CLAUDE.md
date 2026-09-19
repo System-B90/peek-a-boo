@@ -46,6 +46,7 @@ For the full Docker/Ubuntu quick start (TLS certs in `utils/certs/` as `star.key
 ```bash
 npm run lint            # ESLint over the whole repo (lint:fix to autofix)
 npm run test:unit       # Vitest (tests/backend/*.test.ts)
+pytest tests/websock -q  # Pytest for the websockify bridge
 ruff check .             # Python lint (websock/, scripts/, setup.py)
 ruff format --check .    # Python format check
 ```
@@ -58,18 +59,19 @@ on every push and PR.
 
 ## Key directories
 
-| Path                                  | Contains                                                                                                        |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `src/client-api/`                     | Client-side fetch wrappers. Browser-only.                                                                       |
-| `src/app/api/`                        | Route handlers: `avatar`, `class`, `env`, `install-client`, `login`, `logout`, `settings`, `students`, `tweet`. |
-| `src/server-api/`                     | Server-only: Hive client, NextAuth options, session/auth logic.                                                 |
-| `src/shared-api/`                     | Shared types/contracts and error classes, pure utils.                                                           |
-| `src/components/search`               | React UI.                                                                                                       |
-| `src/interfaces/`, `src/glyphs/`      | Shared TS interfaces; icon/glyph assets.                                                                        |
-| `websock/`                            | Standalone Python websockify service — VNC bridge, own `requirements.txt` + venv.                               |
-| `utils/certs/`                        | TLS certs for local/prod (`star.key`, `star.crt`) — never commit real certs.                                    |
-| `tests/backend/`                      | Vitest: `enc.test.ts`, `error-classes.test.ts`, `network-error-parsing.test.ts`.                                |
-| `create_fake_students.py`, `setup.py` | Local/demo data + environment setup.                                                                            |
+| Path                                  | Contains                                                                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `src/client-api/`                     | Client-side fetch wrappers. Browser-only.                                                                           |
+| `src/app/api/`                        | Route handlers: `avatar`, `class`, `env`, `install-client`, `login`, `logout`, `settings`, `students`, `tweet`.     |
+| `src/server-api/`                     | Server-only: Hive client, NextAuth options, session/auth logic.                                                     |
+| `src/shared-api/`                     | Shared types/contracts and error classes, pure utils.                                                               |
+| `src/components/search`               | React UI.                                                                                                           |
+| `src/interfaces/`, `src/glyphs/`      | Shared TS interfaces; icon/glyph assets.                                                                            |
+| `websock/`                            | Standalone Python websockify service — VNC bridge, own `requirements.txt` + venv.                                   |
+| `utils/certs/`                        | TLS certs for local/prod (`star.key`, `star.crt`) — never commit real certs.                                        |
+| `tests/backend/`                      | Vitest backend suites — one per module or route (`api-common`, `settings`, `hive-server-api`, `students-route`, …). |
+| `tests/websock/`                      | Pytest for the Python bridge (`test_start_websockify.py`).                                                          |
+| `create_fake_students.py`, `setup.py` | Local/demo data + environment setup.                                                                                |
 
 ## Gotchas
 

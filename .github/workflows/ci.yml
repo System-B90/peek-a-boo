@@ -56,7 +56,7 @@ jobs:
                   NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
             - name: Install Dependencies (Python)
-              run: pip install ruff
+              run: pip install ruff pytest
 
             - name: Run ESLint
               run: npm run lint
@@ -72,6 +72,13 @@ jobs:
             - name: Run Unit Tests
               if: ${{ !cancelled() }}
               run: npm run test:unit
+
+            # websock/ is the repo's only Python runtime code and had no tests
+            # at all; its token-file resolution decides whether the VNC bridge
+            # starts or crash-loops.
+            - name: Run Python Unit Tests
+              if: ${{ !cancelled() }}
+              run: pytest tests/websock -q
 
             # Master only, as before — a full Next.js build is the most
             # expensive step here, and it holds the shared runner while every

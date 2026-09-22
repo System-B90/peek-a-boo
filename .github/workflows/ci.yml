@@ -56,7 +56,7 @@ jobs:
                   NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
             - name: Install Dependencies (Python)
-              run: pip install ruff pytest
+              run: pip install ruff==0.16.8 pytest
 
             - name: Run ESLint
               run: npm run lint

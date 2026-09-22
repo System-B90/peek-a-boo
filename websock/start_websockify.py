@@ -42,7 +42,7 @@ def resolve_token_source_file(
 
 
 def start():
-    websocket_port = os.environ.get("WEBSOCKET_PORT", 60800)
+    websocket_port = os.environ.get("WEBSOCKET_PORT", "60800")
 
     token_source_file = resolve_token_source_file()
 

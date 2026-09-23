@@ -10,9 +10,9 @@ import random
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 
 def handle_import_error(module_name: str):
@@ -128,19 +128,19 @@ REQUIRED_DOCKER_IMAGES = ("peekaboo/nextjs", "nginx", "peekaboo/websock")
 # Image tarballs (e.g. from the releases tab) dropped here get `docker load`ed.
 DOCKER_IMAGES_DIR = "images"
 
-PROMPT_VARS: Dict[str, str] = {
+PROMPT_VARS: dict[str, str] = {
     "HOSTNAME": "Hostname for Peek-a-Boo (Used for certificate)",
     "WEBSOCKET_SERVER_HOSTNAME": "Hostname for WebSocket server",
     "VNC_CLIENT_PASSWORD": "Password for VNC on student PCs",
-    #
+    # Hive
     "HIVE_HOSTNAME": 'Hostname of Hive instance (e.g. "hive.org")',
     "HIVE_PASSWORD": "Password for Hive PostgreSQL",
     "HIVE_API_PASSWORD": "Password for Hive API",
-    #
+    # Mattermost
     "MATTERMOST_URL": 'URL for Mattermost (e.g. "https://mattermost.domain.tld")',
     "MATTERMOST_ACCESS_TOKEN": "Mattermost personal access token",
     "TWEET_CHANNEL_ID": "Mattermost channel ID for tweets",
-    #
+    # Hive SSO
     "NEXT_PUBLIC_HIVE_URL": 'Base URL of the Hive instance for OIDC SSO (e.g. "https://hive.org")',
     "HIVE_CLIENT_ID": "OAuth client ID registered with Hive for this app",
     "HIVE_CLIENT_SECRET": "OAuth client secret registered with Hive for this app",
@@ -200,12 +200,14 @@ def test_hive_user(hostname: str, password: str) -> bool:
         ) as client:
             client.get_hive_version()
             return True
-    except Exception as e:
+    # Deliberately broad: this is a yes/no probe, and every way the login can
+    # fail (network, TLS, bad credentials, an unexpected reply) is a "no".
+    except Exception as e:  # noqa: BLE001
         warn(f"Hive authentication test failed: {e}")
         return False
 
 
-def get_hive_students(hostname: str, password: str) -> List[Tuple[str, str]]:
+def get_hive_students(hostname: str, password: str) -> list[tuple[str, str]]:
     with HiveClient(
         username="api",
         password=password,
@@ -222,7 +224,7 @@ def get_hive_students(hostname: str, password: str) -> List[Tuple[str, str]]:
         ]
 
 
-def test_mattermost(values: Dict[str, str]):
+def test_mattermost(values: dict[str, str]):
     url = values.get("MATTERMOST_URL", "").strip().rstrip("/")
     token = values.get("MATTERMOST_ACCESS_TOKEN", "").strip()
     channel_id = values.get("TWEET_CHANNEL_ID", "").strip()
@@ -240,7 +242,7 @@ def test_mattermost(values: Dict[str, str]):
         )
         resp.raise_for_status()
         user = resp.json()
-    except Exception as e:
+    except (requests.RequestException, ValueError) as e:
         error(f"Unable to authenticate to Mattermost: {e}")
         sys.exit(1)
     info(f"Tweets will be posted as: {user.get('username', '<unknown>')}")
@@ -255,7 +257,7 @@ def test_mattermost(values: Dict[str, str]):
         )
         resp.raise_for_status()
         channel = resp.json()
-    except Exception as e:
+    except (requests.RequestException, ValueError) as e:
         error(f"Unable to resolve tweet channel '{channel_id}': {e}")
         sys.exit(1)
     info(
@@ -265,12 +267,12 @@ def test_mattermost(values: Dict[str, str]):
     success("Mattermost integration check passed ✅")
 
 
-def test_values(values: Dict[str, str]):
+def test_values(values: dict[str, str]):
     info("Testing Hive hostname connectivity 🌐")
     try:
         resp = requests.get(f"https://{values['HIVE_HOSTNAME']}/", verify=False)
         resp.raise_for_status()
-    except Exception as e:
+    except requests.RequestException as e:
         error(f"Unable to reach Hive: {e}")
         sys.exit(1)
 
@@ -289,7 +291,7 @@ def test_values(values: Dict[str, str]):
 # ---------------------------------------------------------------------------
 
 
-def load_existing_env(env_path: Path) -> Dict[str, str]:
+def load_existing_env(env_path: Path) -> dict[str, str]:
     """Load existing .env file into a dictionary if it exists."""
     if not env_path.exists():
         return {}
@@ -308,7 +310,7 @@ def generate_self_signed_cert(
     cert_path: Path,
     key_path: Path,
     common_name: str,
-    alt_names: Optional[list[str]] = None,  # list of DNS names or IP addresses
+    alt_names: list[str] | None = None,  # list of DNS names or IP addresses
 ):
     alt_names = alt_names or [common_name]
 
@@ -342,8 +344,8 @@ def generate_self_signed_cert(
         .issuer_name(issuer)
         .public_key(key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(datetime.utcnow())
-        .not_valid_after(datetime.utcnow() + timedelta(days=365))
+        .not_valid_before(datetime.now(UTC))
+        .not_valid_after(datetime.now(UTC) + timedelta(days=365))
         .add_extension(x509.SubjectAlternativeName(san_list), critical=False)
         .sign(key, hashes.SHA256())
     )
@@ -391,7 +393,7 @@ def handle_certs(values: dict[str, Any]):
     assert key == KEY_PATH
 
 
-def collect_vars() -> Dict[str, str]:
+def collect_vars() -> dict[str, str]:
     banner("Hive Setup Wizard 🚀")
     root = project_root()
     env_path = root / ".env"
@@ -446,7 +448,7 @@ def collect_vars() -> Dict[str, str]:
     return values
 
 
-def write_env(values: Dict[str, str], env_path: Path):
+def write_env(values: dict[str, str], env_path: Path):
     env_content = "\n".join(f"{k}='{v}'" for k, v in values.items())
     env_path.write_text(env_content)
     success(f".env file created at {env_path}")

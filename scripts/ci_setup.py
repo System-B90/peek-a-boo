@@ -45,7 +45,7 @@ def verify_hive_api_account() -> None:
             client.get_hive_version()
     except Exception as e:
         print(f"Failed to authenticate Hive 'api' service account: {e}")
-        sys.exit(1)
+        raise SystemExit(1) from e
     print("Hive 'api' service account OK.")
 
 
@@ -70,7 +70,7 @@ def register_sso_service(nextauth_url: str) -> tuple[str, str]:
             return client_id, client_secret
     except Exception as e:
         print(f"Failed to register SSO with Hive: {e}")
-        sys.exit(1)
+        raise SystemExit(1) from e
 
 
 def main() -> None:

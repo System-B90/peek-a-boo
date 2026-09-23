@@ -58,3 +58,7 @@ websock/*.txt
 package-lock-cnet.json
 settings.json
 create_fake_students.py
+
+__pycache__/
+*.py[cod]
+.pytest_cache/

@@ -1,0 +1,27 @@
+{
+    "name": "peekaboo",
+    "display_name": "Peek-a-boo",
+    "env_prefix": "PEEKABOO",
+    "release_repo": "System-B90/peek-a-boo",
+    "roll": ["ui", "vnc-bridge", "proxy"],
+    "health": { "service": "ui", "url": "http://127.0.0.1:3000/api/health" },
+    "containers": { "ui": "peekaboo-ui", "proxy": "peekaboo-proxy" },
+    "required_files": [
+        "websock/websocket_token_source.txt",
+        "nginx/ssl/star.crt",
+        "nginx/ssl/star.key"
+    ],
+    "state": ["nginx/ssl", "websock/websocket_token_source.txt"],
+    "post_install": [
+        "Trust nginx/ssl/ca.crt (System-B90 Local Dev CA) to silence certificate warnings."
+    ],
+    "bundle": {
+        "dir": "peekaboo",
+        "files": {
+            "docker-compose.yml": "deploy/docker-compose.release.yml",
+            "docker-compose.hive-local.yml": "deploy/docker-compose.hive-local.yml",
+            "setup.py": "scripts/setup.py",
+            "nginx/nginx.conf.template": "nginx/nginx.conf.template"
+        }
+    }
+}

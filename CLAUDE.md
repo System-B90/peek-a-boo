@@ -43,12 +43,13 @@ over `deploy/docker-compose.yml` � builds the `dev` Dockerfile target, live-sy
 via `compose --watch`, nginx on `127.0.0.4:80/443` (needs `.env` with `NPM_TOKEN`).
 `docker:down` / `docker:nuke` tear it down.
 
-For the release-bundle install (`install.sh`/`install.ps1`, `update.sh`, `link-hive.sh`; TLS certs in `nginx/ssl/` as `star.key` /
-`star.crt`), see [README.md](README.md). Release bundles mirror Bluz: `release.yml` packs
-`scripts/*` + `deploy/docker-compose.release.yml` (shipped as `docker-compose.yml`) +
-`docker-compose.hive-local.yml` + `nginx/nginx.conf.template` + `VERSION` into a versionless
-`peekaboo/` dir; the offline bundle adds `images/*.tar` and vendored `wheels/`. Bundle scripts
-run from the bundle root — keep `release.yml`'s file list and guard in sync when adding one.
+For the release-bundle install (`./install.sh` / `.\install.ps1`, `./update.sh`, `./link-hive.sh`; TLS certs in `nginx/ssl/` as `star.key` /
+`star.crt`), see [README.md](README.md). Bundles are built by the shared
+[sb90-deploy](https://github.com/System-B90/deploy-py) (org `craft-release` action) from
+`deploy/app.json`: its `bundle.files` lists what ships next to the generated launchers,
+`bootstrap.py` and `app.json`; images are read from `deploy/docker-compose.release.yml`.
+Add a bundle file there, not in `release.yml`. The install/update/link-hive logic lives in
+sb90-deploy — only `scripts/setup.py` (the wizard's peek-a-boo questions) stays here.
 
 ## Tests
 
@@ -78,7 +79,7 @@ on every push and PR.
 | `websock/`                       | Standalone Python websockify service — VNC bridge, own `requirements.txt` + venv.                               |
 | `nginx/`                         | `nginx.conf.template`; `ssl/` holds TLS certs (`star.key`, `star.crt`, `ca.crt`) — gitignored, never commit.    |
 | `deploy/`                        | Compose: base, `.dev`, `.test` (e2e), `.hive-local` (co-located Hive), `.release` (shipped in bundles).         |
-| `scripts/`                       | `setup.py` wizard, `install.sh`/`.ps1`, `update.sh`, `link-hive.sh`, `ci_setup.py`, `bump_version.py`.          |
+| `scripts/`                       | `setup.py` wizard (on sb90-deploy), `ci_setup.py`, `bump_version.py`.                                           |
 | `tests/backend/`                 | Vitest: `enc.test.ts`, `error-classes.test.ts`, `network-error-parsing.test.ts`.                                |
 
 ## Gotchas

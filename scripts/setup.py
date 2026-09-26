@@ -16,8 +16,8 @@ CA + leaf certificate, Hive clients — live in sb90-deploy
 
 import base64
 import json
-import secrets
 import os
+import secrets
 import ssl
 import sys
 import urllib.error
@@ -44,15 +44,15 @@ SECRET_VARS = ("SYM_ENC_KEY", "NEXTAUTH_SECRET")
 
 PROMPT_VARS = {
     "VNC_CLIENT_PASSWORD": "Password for VNC on student PCs",
-    #
+    # Hive
     "HIVE_HOSTNAME": 'Hostname of Hive instance (e.g. "hive.org")',
     "HIVE_PASSWORD": "Password for Hive PostgreSQL",
     "HIVE_API_PASSWORD": "Password for Hive API",
-    #
+    # Mattermost
     "MATTERMOST_URL": 'URL for Mattermost (e.g. "https://mattermost.domain.tld")',
     "MATTERMOST_ACCESS_TOKEN": "Mattermost personal access token",
     "TWEET_CHANNEL_ID": "Mattermost channel ID for tweets",
-    #
+    # Hive SSO
     "NEXT_PUBLIC_HIVE_URL": 'Base URL of the Hive instance for OIDC SSO (e.g. "https://hive.org")',
     "HIVE_CLIENT_ID": "OAuth client ID registered with Hive for this app",
     "HIVE_CLIENT_SECRET": "OAuth client secret registered with Hive for this app",

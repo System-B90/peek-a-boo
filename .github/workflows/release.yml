@@ -1,4 +1,4 @@
-name: Build and Release Peek-a-boo
+name: Release
 
 on:
     push:

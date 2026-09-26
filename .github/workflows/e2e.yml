@@ -32,7 +32,7 @@ permissions:
 
 jobs:
     e2e:
-        name: E2E Tests (shared Hive)
+        name: E2E Tests (Shared Hive)
         runs-on: [self-hosted, shared-hive]
         # Image builds (before the lock) + queueing for the lock + the 25m
         # Hive budget. The budget itself is enforced by shared-hive-acquire.

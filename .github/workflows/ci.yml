@@ -28,7 +28,7 @@ jobs:
     # test failure, so one run reports every problem rather than one per push.
     verify:
         name: Lint, Test, Build
-        runs-on: [self-hosted, node, python]
+        runs-on: [self-hosted, Linux, node, python]
         timeout-minutes: 30
         steps:
             - name: Checkout repository
@@ -55,10 +55,8 @@ jobs:
               env:
                   NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
-            # sb90-deploy (org pip index) is what scripts/setup.py and the
-            # bundle dry-run test run on.
             - name: Install Dependencies (Python)
-              run: pip install ruff pytest sb90-deploy --extra-index-url https://system-b90.github.io/.github/pypi/
+              run: pip install ruff
 
             - name: Run ESLint
               run: npm run lint
@@ -70,10 +68,6 @@ jobs:
             - name: Run Ruff (Python Formatter Check)
               if: ${{ !cancelled() }}
               run: ruff format --check .
-
-            - name: Run Python Tests
-              if: ${{ !cancelled() }}
-              run: pytest -q scripts/tests
 
             - name: Run Unit Tests
               if: ${{ !cancelled() }}

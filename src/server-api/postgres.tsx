@@ -1,24 +1,28 @@
- 
+
+import { classifyHiveNetworkError } from "@system-b90/hive-core";
 import postgres, { Sql } from "postgres";
 
-import { hiveErrorHandler } from "@/server-api/hive";
 import { getSetting } from "@/server-api/settings";
 
 let pg: Sql<{}> | undefined;
 
-async function getPostgres(): Promise<Sql<{}>> {
-    try {
-        if (!pg) {
+async function getPostgres(): Promise<Sql<{}>>
+{
+    try
+    {
+        if (!pg)
+        {
             pg = postgres({
                 username: await getSetting("HIVE_POSTGRES_USERNAME"),
                 password: await getSetting("HIVE_PASSWORD"),
                 database: "core",
-                host: await getSetting("HIVE_HOSTNAME"),
+                host: await getSetting("HIVE_POSTGRES_HOSTNAME"),
             });
         }
         return pg;
-    } catch (error: unknown) {
-        throw await hiveErrorHandler(error);
+    } catch (error: unknown)
+    {
+        throw classifyHiveNetworkError(error);
     }
 }
 
@@ -53,11 +57,14 @@ const baseQuery = `SELECT
 
 export async function queryPostgres(
     studentUsername?: string,
-): Promise<unknown> {
-    try {
+): Promise<unknown>
+{
+    try
+    {
         const sql = await getPostgres();
 
-        if (studentUsername) {
+        if (studentUsername)
+        {
             // The username is bound, never concatenated: interpolating it into
             // the SQL text made the roster query injectable from the route's
             // `[[...slug]]` path segment.
@@ -65,7 +72,8 @@ export async function queryPostgres(
         }
 
         return await sql.unsafe(baseQuery);
-    } catch (error: unknown) {
-        throw await hiveErrorHandler(error);
+    } catch (error: unknown)
+    {
+        throw classifyHiveNetworkError(error);
     }
 }

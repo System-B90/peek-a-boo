@@ -9,10 +9,6 @@ vi.mock("@/server-api/settings", () => ({
     getSetting: vi.fn(),
 }));
 
-vi.mock("@/server-api/hive", () => ({
-    hiveErrorHandler: vi.fn(async (error: unknown) => error),
-}));
-
 /**
  * Records how the module builds its queries.
  *

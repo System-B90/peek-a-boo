@@ -1,215 +1,145 @@
 name: Build and Release Peek-a-boo
 
 on:
-  push:
-    tags: ["v*"]
-  workflow_dispatch:
+    push:
+        tags: ["v*"]
+    workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME_NEXTJS: system-b90/peek-a-boo/nextjs
-  IMAGE_NAME_WEBSOCK: system-b90/peek-a-boo/websock
+    REGISTRY: ghcr.io
+    IMAGE_NAME_NEXTJS: system-b90/peek-a-boo/nextjs
+    IMAGE_NAME_WEBSOCK: system-b90/peek-a-boo/websock
 
 jobs:
-  build-nextjs:
-    name: Build NextJS Image
-    runs-on: [self-hosted, dind]
-    timeout-minutes: 45
-    permissions:
-      contents: read
-      packages: write
+    build-nextjs:
+        name: Build NextJS Image
+        runs-on: [self-hosted, dind, Linux]
+        timeout-minutes: 45
+        permissions:
+            contents: read
+            packages: write
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Log in to GitHub Container Registry
+              uses: docker/login-action@v4
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for NextJS Image
-        id: meta
-        uses: docker/metadata-action@v6
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_NEXTJS }}
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=ref,event=tag
-            type=sha,format=short
+            - name: Extract metadata for NextJS Image
+              id: meta
+              uses: docker/metadata-action@v6
+              with:
+                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_NEXTJS }}
+                  tags: |
+                      type=raw,value=latest,enable={{is_default_branch}}
+                      type=ref,event=tag
+                      type=sha,format=short
 
-      - name: Build and push NextJS Image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            NPM_TOKEN=${{ secrets.ACCESS_TOKEN }}
+            - name: Build and push NextJS Image
+              uses: docker/build-push-action@v7
+              with:
+                  context: .
+                  file: Dockerfile
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+                  build-args: |
+                      NPM_TOKEN=${{ secrets.ACCESS_TOKEN }}
 
-  build-websock:
-    name: Build Websock Image
-    runs-on: [self-hosted, dind]
-    timeout-minutes: 45
-    permissions:
-      contents: read
-      packages: write
+    build-websock:
+        name: Build Websock Image
+        runs-on: [self-hosted, dind, Linux]
+        timeout-minutes: 45
+        permissions:
+            contents: read
+            packages: write
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Log in to GitHub Container Registry
+              uses: docker/login-action@v4
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for Websock Image
-        id: meta
-        uses: docker/metadata-action@v6
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_WEBSOCK }}
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=ref,event=tag
-            type=sha,format=short
+            - name: Extract metadata for Websock Image
+              id: meta
+              uses: docker/metadata-action@v6
+              with:
+                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_WEBSOCK }}
+                  tags: |
+                      type=raw,value=latest,enable={{is_default_branch}}
+                      type=ref,event=tag
+                      type=sha,format=short
 
-      - name: Build and push Websock Image
-        uses: docker/build-push-action@v7
-        with:
-          context: websock/
-          file: websock/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            - name: Build and push Websock Image
+              uses: docker/build-push-action@v7
+              with:
+                  context: websock/
+                  file: websock/Dockerfile
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
 
-  craft-release:
-    name: Craft Release Packages
-    needs: [build-nextjs, build-websock]
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: [self-hosted, dind]
-    timeout-minutes: 45
-    permissions:
-      contents: write
-      packages: read
+    craft-release:
+        name: Craft Release Packages
+        needs: [build-nextjs, build-websock]
+        if: startsWith(github.ref, 'refs/tags/v')
+        runs-on: [self-hosted, dind, Linux]
+        timeout-minutes: 45
+        permissions:
+            contents: write
+            packages: read
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Log in to GitHub Container Registry
+              uses: docker/login-action@v4
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Prepare Workspace
-        run: |
-          for dir in release-online release-offline; do
-            mkdir -p "${dir}/nginx" "${dir}/websock"
+            # Workspace prep, image export (read from docker-compose.release.yml),
+            # wheel vendoring, the "wrong compose file / missing file" guards and the
+            # versionless peekaboo/ packing all live in sb90-deploy now, driven by
+            # deploy/app.json — shared with Bluz and madash.
+            - name: Craft release bundles
+              uses: System-B90/.github/actions/craft-release@main
+              with:
+                  tag: ${{ github.ref_name }}
+                  out: .
 
-            cp scripts/install.sh scripts/install.ps1 scripts/update.sh scripts/link-hive.sh \
-               scripts/setup.py scripts/requirements.txt "${dir}/"
-            chmod +x "${dir}"/*.sh
-
-            # The release compose file (not the repo one, whose paths assume
-            # deploy/ and ../.env) ships as docker-compose.yml at the root.
-            cp deploy/docker-compose.release.yml "${dir}/docker-compose.yml"
-            cp deploy/docker-compose.hive-local.yml "${dir}/"
-            cp nginx/nginx.conf.template "${dir}/nginx/"
-
-            # Pin the bundle to this release's tag (`latest` is never what a
-            # release should run).
-            echo "${{ github.ref_name }}" > "${dir}/VERSION"
-          done
-
-          # Guard: fail loudly if a bundle ships the repo compose file or is
-          # missing anything the scripts reference.
-          for dir in release-online release-offline; do
-            grep -q '\.\./' "${dir}/docker-compose.yml" \
-              && { echo "::error::${dir} shipped the repo compose file"; exit 1; }
-            for f in install.sh install.ps1 update.sh link-hive.sh setup.py requirements.txt \
-                     VERSION docker-compose.hive-local.yml nginx/nginx.conf.template; do
-              [ -f "${dir}/${f}" ] || { echo "::error::${f} missing from ${dir}"; exit 1; }
-            done
-          done
-
-      - name: Export Offline Images
-        run: |
-          TAG_NAME=${{ github.ref_name }}
-          # Read the proxy image from the release compose file so the offline
-          # tar and the online pull can never disagree.
-          NGINX_IMAGE=$(grep -oE 'nginx:[^[:space:]]+' deploy/docker-compose.release.yml | head -1)
-          [ -n "$NGINX_IMAGE" ] || { echo "::error::no nginx image in docker-compose.release.yml"; exit 1; }
-
-          mkdir -p release-offline/images
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_NEXTJS }}:$TAG_NAME
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_WEBSOCK }}:$TAG_NAME
-          docker pull "$NGINX_IMAGE"
-
-          docker save ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_NEXTJS }}:$TAG_NAME -o release-offline/images/peekaboo-nextjs.tar
-          docker save ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_WEBSOCK }}:$TAG_NAME -o release-offline/images/peekaboo-websock.tar
-          docker save "$NGINX_IMAGE" -o release-offline/images/nginx.tar
-
-      - name: Setup Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.11"
-
-      # An offline box has no PyPI and no route to the org index, so vendor
-      # every wheel the wizard needs; install.sh/install.ps1 install from
-      # wheels/ with --no-index. Linux and Windows are both install targets.
-      - name: Vendor Python wheels for the offline bundle
-        run: |
-          mkdir -p release-offline/wheels
-          for platform in manylinux2014_x86_64 win_amd64; do
-            python -m pip download -r scripts/requirements.txt \
-              --only-binary=:all: --platform "${platform}" --python-version 3.11 \
-              -d release-offline/wheels
-          done
-          count=$(ls release-offline/wheels/*.whl | wc -l)
-          [ "$count" -gt 1 ] || { echo "::error::offline bundle has no vendored wheels"; exit 1; }
-          echo "Vendored ${count} wheels."
-
-      - name: Compress Final Packages
-        run: |
-          # Both bundles extract into a versionless peekaboo/ — upgrades are in
-          # place (update.sh), so a version in the directory name would be a
-          # lie after the first upgrade.
-          mv release-online peekaboo
-          tar -czf peekaboo-online-${{ github.ref_name }}.tar.gz peekaboo
-          rm -rf peekaboo
-
-          mv release-offline peekaboo
-          tar -czf peekaboo-offline-${{ github.ref_name }}.tar.gz peekaboo
-
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v3
-        with:
-          files: |
-            peekaboo-online-${{ github.ref_name }}.tar.gz
-            peekaboo-offline-${{ github.ref_name }}.tar.gz
-          generate_release_notes: true
-          draft: false
-          prerelease: ${{ contains(github.ref_name, '-rc') }}
+            - name: Publish GitHub Release
+              uses: softprops/action-gh-release@v3
+              with:
+                  files: |
+                      peekaboo-online-${{ github.ref_name }}.tar.gz
+                      peekaboo-offline-${{ github.ref_name }}.tar.gz
+                  generate_release_notes: true
+                  draft: false
+                  prerelease: ${{ contains(github.ref_name, '-rc') }}

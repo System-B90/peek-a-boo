@@ -10,6 +10,10 @@
 # that client raises "Unsupported Hive API version '7.2.0'" against a current
 # Hive and takes setup.py down with it.
 PyHiveLMS>=2.1.5
-# Shared install/upgrade/wizard flows (System-B90/deploy-py): setup.py runs on
-# it. Brings cryptography with it; release bundles vendor it themselves.
-sb90-deploy>=0.1.0
+# Shared install/upgrade/wizard/publish flows (System-B90/deploy-py): setup.py
+# runs on it, and 0.2.0 adds `python -m sb90_deploy publish`. Brings
+# cryptography with it; release bundles vendor it themselves.
+sb90-deploy>=0.2.0
+# Lint and scripts/tests (test_bundle.py), as in Bluz.
+ruff==0.16.8
+pytest>=8.0.0

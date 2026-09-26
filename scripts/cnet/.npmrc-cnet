@@ -1,3 +1,0 @@
-always-auth = true
-registry=https://8200artifactory.dother.mil/artifactory/api/npm/npm-all/
-strict-ssl = false

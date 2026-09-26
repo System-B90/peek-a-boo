@@ -188,7 +188,6 @@ export default defineConfig([
             "venv/",
             "websock/venv/",
             "nginx/ssl/",
-            "scripts/cnet/**",
             "*.d.ts",
 	    ".claude/",
         ],

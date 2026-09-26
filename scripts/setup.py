@@ -35,11 +35,14 @@ except ImportError:
     )
     sys.exit(1)
 
-CNET_TEST_URL = "https://8200artifactory.dother.mil/"
-CNET_REGISTRIES = {
-    "NODE_DOCKER_REGISTRY": "8200artifactory.dother.mil/docker-images/",
-    "PYTHON_DOCKER_REGISTRY": "8200artifactory.dother.mil/uni-registry/base-images/",
-}
+# Build-time CNET switches from before images shipped in the release bundle.
+# Dropped from .env on re-run rather than carried forward.
+OBSOLETE_VARS = (
+    "NODE_DOCKER_REGISTRY",
+    "PYTHON_DOCKER_REGISTRY",
+    "PIP_CONF_PATH",
+    "IS_IN_CNET",
+)
 SECRET_VARS = ("SYM_ENC_KEY", "NEXTAUTH_SECRET")
 
 PROMPT_VARS = {
@@ -54,8 +57,6 @@ PROMPT_VARS = {
     "TWEET_CHANNEL_ID": "Mattermost channel ID for tweets",
     # Hive SSO
     "NEXT_PUBLIC_HIVE_URL": 'Base URL of the Hive instance for OIDC SSO (e.g. "https://hive.org")',
-    "HIVE_CLIENT_ID": "OAuth client ID registered with Hive for this app",
-    "HIVE_CLIENT_SECRET": "OAuth client secret registered with Hive for this app",
 }
 
 _INSECURE = ssl.create_default_context()
@@ -92,14 +93,6 @@ def _get(url: str, headers: dict | None = None, timeout: float = 10) -> dict:
     ) as response:
         body = response.read()
     return json.loads(body) if body.strip().startswith((b"{", b"[")) else {}
-
-
-def is_connected_to_cnet() -> bool:
-    try:
-        _get(CNET_TEST_URL, timeout=2)
-        return True
-    except (OSError, ValueError):
-        return False
 
 
 def find_npm_token() -> str:
@@ -183,12 +176,9 @@ def _set_master_password(w: Wizard, previous_client: str) -> None:
 def main() -> None:
     w = Wizard(_spec())
 
-    cnet = is_connected_to_cnet()
+    for key in OBSOLETE_VARS:
+        w.existing.pop(key, None)
     w.set("NODE_TLS_REJECT_UNAUTHORIZED", "0")  # allow self-signed certs
-    for key, value in CNET_REGISTRIES.items():
-        w.set(key, value if cnet else "")
-    w.set("PIP_CONF_PATH", "pip_cnet.conf" if cnet else "pip_online.conf")
-    w.set("IS_IN_CNET", "1" if cnet else "0")
     w.set("NPM_TOKEN", find_npm_token() or w.prev("NPM_TOKEN"))
     if not w.values["NPM_TOKEN"]:
         print(
@@ -214,6 +204,9 @@ def main() -> None:
             w.set(key, base64.b64encode(w.ask(key, description).encode()).decode())
         else:
             w.ask(key, description)
+    # Registers the Hive SSO client (browser/password fallbacks in sb90-deploy),
+    # or keeps an existing one.
+    w.sso(w.values["NEXT_PUBLIC_HIVE_URL"])
 
     # Persist inputs now so a failure in validation / token fetch / certs
     # doesn't lose them — a re-run offers them as defaults.

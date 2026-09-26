@@ -12,7 +12,6 @@ import { StudentsPanel } from "@/components/students-panel";
 import { CheckAllGlyph } from "@/glyphs/check-all";
 import { GuardianGlyph } from "@/glyphs/guardian";
 import { MenuGlyph } from "@/glyphs/menu";
-import { SchoolGlyph } from "@/glyphs/school";
 import { StudentTileInfo } from "@/interfaces/student";
 
 type Props = {
@@ -98,13 +97,6 @@ export function Drawer({
                             className="w-8 h-8"
                             glyphTitle={"Show Mentees"}
                             onClick={selectPrivateMentees}
-                            placement="bottom"
-                        />
-                        <Box sx={{ width: "0.3rem" }} />
-                        <SchoolGlyph
-                            className="w-8 h-8"
-                            glyphTitle={"RESERVED"}
-                            onClick={undefined}
                             placement="bottom"
                         />
                     </div>

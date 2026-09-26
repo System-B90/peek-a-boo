@@ -1,4 +1,4 @@
-extend-exclude = ["venv", "websock/venv", "nginx/ssl", "scripts/cnet"]
+extend-exclude = ["venv", "websock/venv", "nginx/ssl"]
 
 # Lints under ruff's own defaults for the version CI pins
 # (.github/workflows/ci.yml). That pin is what keeps the result stable: ruff's

@@ -11,6 +11,16 @@ on:
         branches: [master]
     pull_request:
         branches: ["**"]
+    workflow_dispatch:
+        inputs:
+            runner:
+                description: 'Runner environment to execute on'
+                required: false
+                default: 'self-hosted'
+                type: choice
+                options:
+                    - self-hosted
+                    - github-hosted
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,7 +38,7 @@ jobs:
     # test failure, so one run reports every problem rather than one per push.
     verify:
         name: Lint, Test, Build
-        runs-on: [self-hosted, Linux, node, python]
+        runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "node", "python"]') }}
         timeout-minutes: 30
         steps:
             - name: Checkout repository

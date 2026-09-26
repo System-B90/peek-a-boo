@@ -1,5 +1,19 @@
 client_max_body_size 30M;
 
+# Catch-all: nginx serves the FIRST server block for any Host that matches no
+# server_name, so without this the app answers for every hostname pointed at
+# this box (e.g. madash.dev). 444 closes the connection without a response.
+server {
+    listen 80 default_server;
+    listen 443 ssl default_server;
+    server_name _;
+
+    ssl_certificate /etc/nginx/certs/star.crt;
+    ssl_certificate_key /etc/nginx/certs/star.key;
+
+    return 444;
+}
+
 server {
     listen 80;
     server_name $SERVER_HOSTNAME;

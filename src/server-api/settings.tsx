@@ -19,7 +19,13 @@ export const SETTINGS_PATH = path.join(process.cwd(), "settings.json");
 
 const DEFAULT_SETTINGS = {
     VNC_CLIENT_PASSWORD: atob(process.env.VNC_CLIENT_PASSWORD ?? ""),
-    VNC_MASTER_PASSWORD: atob(process.env.VNC_CLIENT_PASSWORD ?? ""),
+    // Falls back to the client password so deployments that predate
+    // VNC_MASTER_PASSWORD keep their current master password.
+    VNC_MASTER_PASSWORD: atob(
+        process.env.VNC_MASTER_PASSWORD ||
+            process.env.VNC_CLIENT_PASSWORD ||
+            "",
+    ),
     HIVE_HOSTNAME: process.env.HIVE_HOSTNAME ?? "hive.org",
     HIVE_PASSWORD: process.env.HIVE_PASSWORD ?? "",
     HIVE_POSTGRES_HOSTNAME:

@@ -8,6 +8,7 @@ vi.mock("fs", () => ({
 
 const ENV_KEYS = [
     "VNC_CLIENT_PASSWORD",
+    "VNC_MASTER_PASSWORD",
     "HIVE_HOSTNAME",
     "HIVE_PASSWORD",
     "HIVE_POSTGRES_HOSTNAME",
@@ -129,26 +130,38 @@ describe("VNC password defaults", () => {
         );
     });
 
-    it("defaults VNC_MASTER_PASSWORD to the CLIENT password", async () => {
-        // Pinned as current behaviour, NOT endorsed. DEFAULT_SETTINGS reads
-        // process.env.VNC_CLIENT_PASSWORD for both keys, so until an admin
-        // sets a master password through the settings form, the master and
-        // client VNC passwords are identical -- and install-client hands the
-        // master one to every student machine.
-        //
-        // There is no VNC_MASTER_PASSWORD env var anywhere in the repo
-        // (setup.py, ci_setup.py and docker-compose.yml all define only the
-        // client one), so this cannot be "fixed" by reading the right
-        // variable: doing so would silently set every existing deployment's
-        // master password to "". See the PR discussion.
+    it("falls back to the CLIENT password when VNC_MASTER_PASSWORD is unset", async () => {
+        // Deployments that predate VNC_MASTER_PASSWORD only define the client
+        // variable; falling back keeps their master password unchanged.
+        delete process.env.VNC_MASTER_PASSWORD;
         process.env.VNC_CLIENT_PASSWORD = btoa("client-only");
         const settings = await freshSettings();
 
         expect(await settings.getSetting("VNC_MASTER_PASSWORD")).toBe(
             "client-only",
         );
+    });
+
+    it("falls back to the CLIENT password when VNC_MASTER_PASSWORD is empty", async () => {
+        process.env.VNC_MASTER_PASSWORD = "";
+        process.env.VNC_CLIENT_PASSWORD = btoa("client-only");
+        const settings = await freshSettings();
+
         expect(await settings.getSetting("VNC_MASTER_PASSWORD")).toBe(
-            await settings.getSetting("VNC_CLIENT_PASSWORD"),
+            "client-only",
+        );
+    });
+
+    it("reads a distinct master password from VNC_MASTER_PASSWORD", async () => {
+        process.env.VNC_MASTER_PASSWORD = btoa("master-only");
+        process.env.VNC_CLIENT_PASSWORD = btoa("client-only");
+        const settings = await freshSettings();
+
+        expect(await settings.getSetting("VNC_MASTER_PASSWORD")).toBe(
+            "master-only",
+        );
+        expect(await settings.getSetting("VNC_CLIENT_PASSWORD")).toBe(
+            "client-only",
         );
     });
 

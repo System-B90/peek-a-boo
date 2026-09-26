@@ -51,10 +51,14 @@ venv/
 
 node_modules2/
 src/hanichim-info/
-utils/certs/
+nginx/ssl/
 my_utils/
 websock/*.txt
 .vscode/PythonImportHelper-v2-Completion.json
 package-lock-cnet.json
 settings.json
 create_fake_students.py
+
+# Python bytecode
+__pycache__/
+*.py[cod]

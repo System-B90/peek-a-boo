@@ -55,6 +55,15 @@ const QueryParamsContextProvider = createContext<QueryParamsContext>({
     removeActive: () => {},
 });
 
+/**
+ * The filter/active URL sync rewrites the whole query string, which would
+ * strip params it doesn't own. Pre-auth pages (/login) carry NextAuth's
+ * `?error=` and `callbackUrl`, so they must be left alone.
+ */
+export function shouldSyncQueryParams(pathname: null | string): boolean {
+    return pathname !== "/login";
+}
+
 function arraysEqual(a: Array<string>, b: Array<string>) {
     if (a === b) return true;
     if (a.length !== b.length) return false;
@@ -121,7 +130,7 @@ export const QueryParamsProvider = ({
     // ---- React state -> URL (only if truly different) ----
     //
     useEffect(() => {
-        if (!initialized) {
+        if (!initialized || !shouldSyncQueryParams(pathname)) {
             return;
         }
 

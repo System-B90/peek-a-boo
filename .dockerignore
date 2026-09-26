@@ -18,7 +18,7 @@ out/
 .env.*
 
 # TLS material
-utils/certs/
+nginx/ssl/
 
 # Debugging
 npm-debug.log*

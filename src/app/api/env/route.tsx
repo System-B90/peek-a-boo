@@ -8,15 +8,14 @@ export async function GET(request: NextRequest) {
         await assertUserLoggedIn();
 
         return ApiSuccess({
-            WEBSOCKET_PORT: parseInt(
-                process.env.WEBSOCKET_PORT ??
-                    (process.env.NODE_ENV === "development" ? "60800" : "443"),
-            ),
-            WEBSOCKET_SERVER_HOSTNAME:
-                process.env.WEBSOCKET_SERVER_HOSTNAME ??
-                `wss.${process.env.HOSTNAME}`,
-            WEBSOCKET_PROTOCOL_PREFIX:
-                process.env.NODE_ENV === "development" ? "ws" : "wss",
+            // Relative paths (the default, served by nginx) are resolved
+            // against the page origin client-side. Bare `npm run dev` has no
+            // nginx, so it talks to websockify directly.
+            WEBSOCKET_URL:
+                process.env.WEBSOCKET_URL ??
+                (process.env.NODE_ENV === "development"
+                    ? "ws://localhost:60800"
+                    : "/ws"),
             HIVE_HOSTNAME: await getSetting("HIVE_HOSTNAME"),
         });
     } catch (e: unknown) {

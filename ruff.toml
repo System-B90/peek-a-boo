@@ -1,4 +1,4 @@
-extend-exclude = ["venv", "websock/venv", "utils/certs", "scripts/cnet"]
+extend-exclude = ["venv", "websock/venv", "nginx/ssl", "scripts/cnet"]
 
 [lint]
 # Pinned explicitly rather than inherited. CI installs ruff unpinned

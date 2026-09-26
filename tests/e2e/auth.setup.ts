@@ -7,11 +7,44 @@ const AUTH_FILE = path.join(__dirname, "..", ".auth", "user.json");
 const HIVE_ADMIN_USERNAME = "admin";
 const HIVE_ADMIN_PASSWORD = "Password1";
 
+type FetchResult = {
+    ok: boolean;
+    status: number;
+    body: string;
+};
+
+// Requests go through the page's own fetch, not page.request: CI resolves the
+// e2e host only inside Chromium (--host-resolver-rules), so Node-side
+// requests cannot reach it.
+async function browserFetch(
+    page: Page,
+    url: string,
+    form?: Record<string, string>,
+): Promise<FetchResult> {
+    return await page.evaluate(
+        async ({ url, form }) => {
+            const response = await fetch(url, {
+                method: form ? "POST" : "GET",
+                body: form ? new URLSearchParams(form) : undefined,
+            });
+            return {
+                ok: response.ok,
+                status: response.status,
+                body: await response.text(),
+            };
+        },
+        { url, form },
+    );
+}
+
 async function waitForAuthApi(page: Page, baseURL: string): Promise<void> {
     for (let attempt = 1; attempt <= 10; attempt++) {
         try {
-            const response = await page.request.get(`${baseURL}/api/auth/csrf`);
-            if (response.ok()) {
+            const response = await browserFetch(
+                page,
+                `${baseURL}/api/auth/csrf`,
+            );
+            if (response.ok) {
                 return;
             }
         } catch {
@@ -25,27 +58,26 @@ async function waitForAuthApi(page: Page, baseURL: string): Promise<void> {
 async function startHiveSso(page: Page, baseURL: string): Promise<void> {
     await waitForAuthApi(page, baseURL);
 
-    const csrfResponse = await page.request.get(`${baseURL}/api/auth/csrf`);
-    if (!csrfResponse.ok()) {
-        throw new Error(`CSRF request failed: ${csrfResponse.status()}`);
+    const csrfResponse = await browserFetch(page, `${baseURL}/api/auth/csrf`);
+    if (!csrfResponse.ok) {
+        throw new Error(`CSRF request failed: ${csrfResponse.status}`);
     }
 
-    const { csrfToken } = await csrfResponse.json();
-    const signInResponse = await page.request.post(
+    const { csrfToken } = JSON.parse(csrfResponse.body);
+    const signInResponse = await browserFetch(
+        page,
         `${baseURL}/api/auth/signin/hive`,
         {
-            form: {
-                csrfToken,
-                callbackUrl: `${baseURL}/api/login`,
-                json: "true",
-            },
+            csrfToken,
+            callbackUrl: `${baseURL}/api/login`,
+            json: "true",
         },
     );
-    if (!signInResponse.ok()) {
-        throw new Error(`Sign-in request failed: ${signInResponse.status()}`);
+    if (!signInResponse.ok) {
+        throw new Error(`Sign-in request failed: ${signInResponse.status}`);
     }
 
-    const signInData = await signInResponse.json();
+    const signInData = JSON.parse(signInResponse.body);
     await page.goto(signInData.url, { waitUntil: "commit", timeout: 60_000 });
     await page.waitForURL(/hive\.org/, { timeout: 60_000 });
 }

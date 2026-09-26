@@ -1,0 +1,87 @@
+# Peek-a-boo — release bundle compose file.
+#
+# Shipped INSIDE the release tarball as docker-compose.yml, at the bundle root
+# next to .env, nginx/, websock/ and install.sh. Deliberately not
+# deploy/docker-compose.yml (the dev/repo file), mirroring Bluz:
+#
+#   * paths are relative to the bundle root, not to a deploy/ subdirectory
+#   * no build: contexts — a bundle ships no source
+#   * no external hive_net — co-located installs layer
+#     docker-compose.hive-local.yml on top (./link-hive.sh does it)
+#   * image tags use ${PEEKABOO_VERSION:?} so a missing .env fails loudly
+#     instead of resolving to the never-published `latest` tag
+#
+# .github/workflows/release.yml guards that the bundle ships this file.
+
+name: peek-a-boo
+
+services:
+  ui:
+    image: ghcr.io/system-b90/peek-a-boo/nextjs:${PEEKABOO_VERSION:?PEEKABOO_VERSION is not set — run ./install.sh, which writes it into .env from the bundle's VERSION file}
+    container_name: peekaboo-ui
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./.env:/app/.env:ro
+    expose:
+      - "3000"
+    # ui makes SERVER-SIDE calls to Hive during NextAuth's OAuth exchange.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      # No curl/wget in the runner image; node is the only HTTP client.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - backend
+
+  vnc-bridge:
+    image: ghcr.io/system-b90/peek-a-boo/websock:${PEEKABOO_VERSION:?PEEKABOO_VERSION is not set — run ./install.sh, which writes it into .env from the bundle's VERSION file}
+    container_name: peekaboo-vnc-bridge
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./websock/websocket_token_source.txt:/app/websocket_token_source.txt:ro
+      - ./.env:/app/.env:ro
+    expose:
+      - "60800"
+    networks:
+      - backend
+
+  proxy:
+    # Pinned rather than a floating tag so the offline bundle's nginx.tar and
+    # an online pull resolve to the same image.
+    image: nginx:1.27-alpine
+    container_name: peekaboo-proxy
+    restart: unless-stopped
+    ports:
+      - "${PEEKABOO_BIND_IP:-0.0.0.0}:${PEEKABOO_HTTP_PORT:-80}:80"
+      - "${PEEKABOO_BIND_IP:-0.0.0.0}:${PEEKABOO_HTTPS_PORT:-443}:443"
+    depends_on:
+      ui:
+        condition: service_healthy
+      vnc-bridge:
+        condition: service_started
+    environment:
+      - SERVER_HOSTNAME=${HOSTNAME:?HOSTNAME is not set — .env must sit next to this compose file}
+    volumes:
+      - ./nginx/ssl:/etc/nginx/certs:ro
+      - ./nginx/nginx.conf.template:/etc/nginx/templates/nginx.conf.template:ro
+    networks:
+      - backend
+      - frontend
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge

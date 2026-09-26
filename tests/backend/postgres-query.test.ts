@@ -9,10 +9,6 @@ vi.mock("@/server-api/settings", () => ({
     getSetting: vi.fn(),
 }));
 
-vi.mock("@/server-api/hive", () => ({
-    hiveErrorHandler: vi.fn(async (error: unknown) => error),
-}));
-
 /**
  * Records how the module builds its queries.
  *
@@ -51,7 +47,9 @@ describe("queryPostgres", () => {
 
     beforeEach(() => {
         fake = makeFakeSql();
-        vi.mocked(postgres).mockReset().mockReturnValue(fake.sql as never);
+        vi.mocked(postgres)
+            .mockReset()
+            .mockReturnValue(fake.sql as never);
         vi.mocked(getSetting)
             .mockReset()
             .mockImplementation(async (key: string) => `value-for-${key}`);

@@ -14,9 +14,7 @@ import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
 import { decodeVncClientPassword } from "@/shared-api/vnc-credentials";
 
 export type ClientEnvConfig = {
-    WEBSOCKET_PORT: number;
-    WEBSOCKET_SERVER_HOSTNAME: string;
-    WEBSOCKET_PROTOCOL_PREFIX: string;
+    WEBSOCKET_URL: string;
     HIVE_HOSTNAME: string;
 };
 
@@ -36,9 +34,7 @@ const AuthContextProvider = createContext<AuthContext>({
     username: "",
     displayName: "",
     clientEnvConfig: {
-        WEBSOCKET_PORT: 0,
-        WEBSOCKET_SERVER_HOSTNAME: "",
-        WEBSOCKET_PROTOCOL_PREFIX: "",
+        WEBSOCKET_URL: "",
         HIVE_HOSTNAME: "",
     },
     showMentorAccessBar: true,
@@ -53,15 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [username, setUsername] = useState<string>("");
     const [displayName, setDisplayName] = useState<string>("");
     const [clientEnvConfig, setClientEnvConfig] = useState<ClientEnvConfig>({
-        WEBSOCKET_PORT: parseInt(
-            process.env.WEBSOCKET_PORT ??
-                (process.env.NODE_ENV === "development" ? "60800" : "443"),
-        ),
-        WEBSOCKET_SERVER_HOSTNAME:
-            process.env.WEBSOCKET_SERVER_HOSTNAME ??
-            `wss.${process.env.HOSTNAME}`,
-        WEBSOCKET_PROTOCOL_PREFIX:
-            process.env.WEBSOCKET_PROTOCOL_PREFIX ?? "wss",
+        WEBSOCKET_URL: process.env.WEBSOCKET_URL ?? "/ws",
         HIVE_HOSTNAME: process.env.HIVE_HOSTNAME ?? "hive.org",
     });
     const [showMentorAccessBar, setShowMentorAccessBar] =

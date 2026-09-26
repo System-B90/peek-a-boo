@@ -1,0 +1,32 @@
+# Peek-a-boo — overlay for running peek-a-boo and Hive on the SAME Docker host.
+#
+# Separate hosts need nothing from this file: HIVE_HOSTNAME resolves through
+# ordinary DNS. Co-located, `ui` makes SERVER-SIDE calls to Hive during
+# NextAuth's OAuth token/profile exchange, and the host's hosts file resolves
+# the Hive hostname to 127.0.0.x, which inside `ui`'s own network namespace is
+# `ui` itself — sign-in then dies with a bare OAuthCallback/OAuthSignin error.
+# `extra_hosts: host-gateway` does not help either when Hive's nginx is bound to
+# a specific loopback address. Joining Hive's network and resolving a container
+# alias avoids both problems.
+#
+# Usage:
+#
+#   docker network connect --alias <HIVE_HOSTNAME> hive-stack_hive-net <hive-nginx-container>
+#   docker compose -f docker-compose.yml -f docker-compose.hive-local.yml up -d
+#
+# The alias lives on Hive's nginx container, so it cannot be declared here.
+# Compose derives a network's name from the directory the stack was brought up
+# in (hive-stack/ locally -> hive-stack_hive-net); override with
+# HIVE_NETWORK_NAME if Hive was brought up elsewhere.
+name: peek-a-boo
+
+services:
+  ui:
+    networks:
+      - backend
+      - hive_net
+
+networks:
+  hive_net:
+    name: ${HIVE_NETWORK_NAME:-hive-stack_hive-net}
+    external: true

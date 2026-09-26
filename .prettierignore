@@ -5,7 +5,7 @@ dist/
 build/
 venv/
 websock/venv/
-utils/certs/
+nginx/ssl/
 scripts/cnet/
 .claude/
 package-lock.json

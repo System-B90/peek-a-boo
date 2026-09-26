@@ -10,6 +10,6 @@
 # that client raises "Unsupported Hive API version '7.2.0'" against a current
 # Hive and takes setup.py down with it.
 PyHiveLMS>=2.1.5
-python-dotenv>=1.0.0
-requests>=2.31.0
-cryptography>=42.0.0
+# Shared install/upgrade/wizard flows (System-B90/deploy-py): setup.py runs on
+# it. Brings cryptography with it; release bundles vendor it themselves.
+sb90-deploy>=0.1.0

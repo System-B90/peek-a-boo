@@ -11,6 +11,16 @@ on:
         branches: [master]
     pull_request:
         branches: ["**"]
+    workflow_dispatch:
+        inputs:
+            runner:
+                description: 'Runner environment to execute on'
+                required: false
+                default: 'self-hosted'
+                type: choice
+                options:
+                    - self-hosted
+                    - github-hosted
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,7 +38,7 @@ jobs:
     # test failure, so one run reports every problem rather than one per push.
     verify:
         name: Lint, Test, Build
-        runs-on: [self-hosted, node, python]
+        runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "node", "python"]') }}
         timeout-minutes: 30
         steps:
             - name: Checkout repository
@@ -55,8 +65,10 @@ jobs:
               env:
                   NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
+            # sb90-deploy (org pip index) is what scripts/setup.py and the
+            # bundle dry-run test run on.
             - name: Install Dependencies (Python)
-              run: pip install ruff==0.16.8 pytest
+              run: pip install ruff==0.16.8 pytest sb90-deploy --extra-index-url https://system-b90.github.io/.github/pypi/
 
             - name: Run ESLint
               run: npm run lint
@@ -68,6 +80,10 @@ jobs:
             - name: Run Ruff (Python Formatter Check)
               if: ${{ !cancelled() }}
               run: ruff format --check .
+
+            - name: Run Python Tests
+              if: ${{ !cancelled() }}
+              run: pytest -q scripts/tests
 
             - name: Run Unit Tests
               if: ${{ !cancelled() }}

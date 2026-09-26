@@ -6,6 +6,7 @@ export type UserControlledSettings = {
     VNC_MASTER_PASSWORD: string;
     HIVE_HOSTNAME: string;
     HIVE_PASSWORD: string;
+    HIVE_POSTGRES_HOSTNAME: string;
     HIVE_API_USERNAME: string;
     HIVE_API_PASSWORD: string;
     HIVE_POSTGRES_USERNAME: string;
@@ -21,6 +22,8 @@ const DEFAULT_SETTINGS = {
     VNC_MASTER_PASSWORD: atob(process.env.VNC_CLIENT_PASSWORD ?? ""),
     HIVE_HOSTNAME: process.env.HIVE_HOSTNAME ?? "hive.org",
     HIVE_PASSWORD: process.env.HIVE_PASSWORD ?? "",
+    HIVE_POSTGRES_HOSTNAME:
+        process.env.HIVE_POSTGRES_HOSTNAME ?? "hive-postgres",
     HIVE_API_USERNAME: process.env.HIVE_API_USERNAME ?? "api",
     HIVE_API_PASSWORD: process.env.HIVE_API_PASSWORD ?? "",
     HIVE_POSTGRES_USERNAME:

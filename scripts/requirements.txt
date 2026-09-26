@@ -15,5 +15,5 @@ PyHiveLMS>=2.1.5
 # cryptography with it; release bundles vendor it themselves.
 sb90-deploy>=0.2.0
 # Lint and scripts/tests (test_bundle.py), as in Bluz.
-ruff==0.16.8
+ruff==0.16.9
 pytest>=8.0.0

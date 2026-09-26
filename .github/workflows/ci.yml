@@ -68,7 +68,7 @@ jobs:
             # sb90-deploy (org pip index) is what scripts/setup.py and the
             # bundle dry-run test run on.
             - name: Install Dependencies (Python)
-              run: pip install ruff==0.16.8 pytest sb90-deploy --extra-index-url https://system-b90.github.io/.github/pypi/
+              run: pip install ruff==0.16.9 pytest sb90-deploy --extra-index-url https://system-b90.github.io/.github/pypi/
 
             - name: Run ESLint
               run: npm run lint

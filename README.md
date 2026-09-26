@@ -9,15 +9,19 @@ Monitor your students the smart way
 Every `v*` tag publishes two bundles on the [releases page](https://github.com/System-B90/peek-a-boo/releases),
 both extracting into a versionless `peekaboo/` directory:
 
-| Bundle                          | Contains                                                                    |
-| ------------------------------- | --------------------------------------------------------------------------- |
-| `peekaboo-online-<tag>.tar.gz`  | scripts, compose files, nginx template, `VERSION` — images pulled from GHCR |
-| `peekaboo-offline-<tag>.tar.gz` | the same, plus `images/*.tar` and vendored Python `wheels/` (air-gapped)    |
+| Bundle                          | Contains                                                                                  |
+| ------------------------------- | ----------------------------------------------------------------------------------------- |
+| `peekaboo-online-<tag>.tar.gz`  | launchers, `setup.py`, compose files, nginx template, `VERSION` — images pulled from GHCR |
+| `peekaboo-offline-<tag>.tar.gz` | the same, plus `images/*.tar` and vendored Python `wheels/` (air-gapped)                  |
 
 ```bash
 tar -xzf peekaboo-online-v1.2.3.tar.gz && cd peekaboo
 ./install.sh            # Windows: .\install.ps1
 ```
+
+Needs Docker Compose v2 and Python 3.10+ (Ubuntu 22.04's stock `python3` works, no
+`python3-venv` needed): the launchers run `bootstrap.py`, which builds `.venv` with the
+shared [sb90-deploy](https://github.com/System-B90/deploy-py) tooling (from `wheels/` offline).
 
 `install.sh` preflights Docker/Compose/ports, runs the `setup.py` wizard on first
 run (writes `.env`, `nginx/ssl/` certs signed by a local System-B90 CA, and
@@ -25,19 +29,20 @@ run (writes `.env`, `nginx/ssl/` certs signed by a local System-B90 CA, and
 images if present, pins `PEEKABOO_VERSION` from `VERSION`, and brings the stack up.
 To use your own certificate, place it at `nginx/ssl/star.crt` / `nginx/ssl/star.key`.
 
-| Script         | Purpose                                                                                                |
-| -------------- | ------------------------------------------------------------------------------------------------------ |
-| `update.sh`    | In-place upgrade: `./update.sh` (latest), `--version <tag>`, or `--package <offline.tar.gz>`           |
-| `link-hive.sh` | Co-located Hive on the same Docker host: aliases Hive's nginx and adds `docker-compose.hive-local.yml` |
+| Script                  | Purpose                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| `update.sh` / `.ps1`    | In-place upgrade: `./update.sh` (latest), `--version <tag>`, or `--package <offline.tar.gz>`           |
+| `link-hive.sh` / `.ps1` | Co-located Hive on the same Docker host: aliases Hive's nginx and adds `docker-compose.hive-local.yml` |
+| `bootstrap.py setup`    | Re-run the `.env` wizard (`python3 bootstrap.py setup`); existing secrets are kept                     |
 
 ## Repository layout
 
-| Path       | Contains                                                                                                                    |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/` | `setup.py` wizard, `install.sh`/`install.ps1`, `update.sh`, `link-hive.sh`, CI helpers                                      |
-| `deploy/`  | Compose files: `docker-compose.yml` (base), `.dev.yml`, `.test.yml`, `.hive-local.yml`, `.release.yml` (shipped in bundles) |
-| `nginx/`   | `nginx.conf.template`; `ssl/` holds certs (gitignored)                                                                      |
-| `websock/` | Python websockify VNC bridge                                                                                                |
+| Path       | Contains                                                                                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/` | `setup.py` wizard (on sb90-deploy), CI helpers                                                                                                                                        |
+| `deploy/`  | `app.json` (how sb90-deploy bundles/installs peek-a-boo); compose files: `docker-compose.yml` (base), `.dev.yml`, `.test.yml`, `.hive-local.yml`, `.release.yml` (shipped in bundles) |
+| `nginx/`   | `nginx.conf.template`; `ssl/` holds certs (gitignored)                                                                                                                                |
+| `websock/` | Python websockify VNC bridge                                                                                                                                                          |
 
 ## Development Setup (Windows)
 
@@ -59,7 +64,7 @@ popd
 npm run dev
 ```
 
-Containerised: `npm run docker:dev` (see CLAUDE.md). Co-located Hive: `scripts/link-hive.sh`.
+Containerised: `npm run docker:dev` (see CLAUDE.md). Co-located Hive: `python -m sb90_deploy link-hive` from the repo root.
 
 ## Lint & Test
 

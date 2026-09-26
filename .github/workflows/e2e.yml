@@ -15,16 +15,16 @@ on:
     push:
         branches: [master]
         paths:
-            - 'src/**'
-            - 'tests/**'
-            - 'websock/**'
-            - 'nginx/**'
-            - 'deploy/**'
-            - 'scripts/**'
-            - 'Dockerfile'
-            - 'package.json'
-            - 'package-lock.json'
-            - '.github/workflows/e2e.yml'
+            - "src/**"
+            - "tests/**"
+            - "websock/**"
+            - "nginx/**"
+            - "deploy/**"
+            - "scripts/**"
+            - "Dockerfile"
+            - "package.json"
+            - "package-lock.json"
+            - ".github/workflows/e2e.yml"
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
@@ -57,7 +57,6 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v7
-
 
             # ── Hive (identity provider + organizational data) ────────────────
             # Shared org action: disk cleanup, token verify, Hive checkout,

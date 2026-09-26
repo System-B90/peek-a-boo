@@ -31,7 +31,7 @@
         "@mui/icons-material": "^7.3.11",
         "@mui/material": "^7.3.11",
         "@system-b90/command-palette": "^0.1.0",
-        "@system-b90/hive-core": "^0.3.0",
+        "@system-b90/hive-core": "^0.3.1",
         "@system-b90/hive-nextauth": "^0.1.4",
         "jsonwebtoken": "^9.0.3",
         "next": "^16.3.6",

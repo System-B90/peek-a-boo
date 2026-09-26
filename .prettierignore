@@ -6,7 +6,5 @@ build/
 venv/
 websock/venv/
 nginx/ssl/
-scripts/cnet/
 .claude/
 package-lock.json
-package-lock-cnet.json

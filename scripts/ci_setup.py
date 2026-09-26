@@ -15,8 +15,9 @@ from pathlib import Path
 
 try:
     from pyhive import HiveClient
+    from sb90_deploy import envfile, hive
 except ImportError:
-    print("Error: PyHiveLMS is not installed. Run: pip install PyHiveLMS")
+    print("Error: dependencies missing. Run: pip install -r scripts/requirements.txt")
     sys.exit(1)
 
 
@@ -25,38 +26,32 @@ def gen_random_b64_str(byte_len: int = 32) -> str:
 
 
 HIVE_HOSTNAME = "hive.org"
+HIVE_URL = f"https://{HIVE_HOSTNAME}/"
+# The shared CI Hive is initialised with these; the workflow sets api's.
+HIVE_ADMIN_PASSWORD = "Password1"
 HIVE_API_PASSWORD = "Password1"
-TEST_HOSTNAME = "peekaboo.dev"
+# The e2e stack's proxy publishes on 127.0.0.5:8443 (docker-compose.test.yml).
+TEST_HOSTNAME = "peekaboo.test"
 VNC_CLIENT_PASSWORD = "TestVncPass1"
 VNC_MASTER_PASSWORD = "TestVncMaster1"
 
 
 def verify_hive_api_account() -> None:
-    print(f"Verifying Hive 'api' service account against https://{HIVE_HOSTNAME}...")
-    try:
-        with HiveClient(
-            username="api",
-            password=HIVE_API_PASSWORD,
-            hive_url=f"https://{HIVE_HOSTNAME}/",
-            verify=False,
-            skip_version_check=True,
-            timeout=10,
-        ) as client:
-            client.get_hive_version()
-    except Exception as e:
-        print(f"Failed to authenticate Hive 'api' service account: {e}")
-        raise SystemExit(1) from e
+    print(f"Verifying Hive 'api' service account against {HIVE_URL}...")
+    problem = hive.check_api_user(HIVE_URL, "api", HIVE_API_PASSWORD)
+    if problem:
+        print(f"Failed to authenticate Hive 'api' service account: {problem}")
+        raise SystemExit(1)
     print("Hive 'api' service account OK.")
 
 
 def register_sso_service(nextauth_url: str) -> tuple[str, str]:
-    print(f"Registering Peek-a-Boo SSO service with Hive at https://{HIVE_HOSTNAME}...")
+    print(f"Registering Peek-a-Boo SSO service with Hive at {HIVE_URL}...")
     try:
-        # Hive is initialized with admin/Password1 in CI setup.
         with HiveClient(
             "admin",
-            "Password1",
-            f"https://{HIVE_HOSTNAME}",
+            HIVE_ADMIN_PASSWORD,
+            HIVE_URL,
             verify=False,
             timeout=10,
         ) as client:
@@ -99,7 +94,7 @@ def main() -> None:
     }
 
     env_path = Path(__file__).resolve().parent.parent / ".env"
-    env_path.write_text("\n".join(f"{k}='{v}'" for k, v in env_values.items()) + "\n")
+    envfile.write(str(env_path), env_values)
     print(f".env file created at {env_path}")
 
 

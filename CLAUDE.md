@@ -57,6 +57,7 @@ sb90-deploy — only `scripts/setup.py` (the wizard's peek-a-boo questions) stay
 npm run lint            # ESLint over the whole repo (lint:fix to autofix)
 npm run test:unit       # Vitest (tests/backend/*.test.ts)
 pytest tests/websock -q  # Pytest for the websockify bridge
+pytest scripts/tests -q  # Pytest for scripts/ (publish, release bundle)
 ruff check .             # Python lint (websock/, scripts/)
 ruff format --check .    # Python format check
 ```
@@ -80,7 +81,7 @@ on every push and PR.
 | `websock/`                       | Standalone Python websockify service — VNC bridge, own `requirements.txt` + venv.                                   |
 | `nginx/`                         | `nginx.conf.template`; `ssl/` holds TLS certs (`star.key`, `star.crt`, `ca.crt`) — gitignored, never commit.        |
 | `deploy/`                        | Compose: base, `.dev`, `.test` (e2e), `.hive-local` (co-located Hive), `.release` (shipped in bundles).             |
-| `scripts/`                       | `setup.py` wizard (on sb90-deploy), `ci_setup.py`, `bump_version.py`.                                               |
+| `scripts/`                       | `setup.py` wizard (on sb90-deploy), `ci_setup.py` (e2e `.env`), `publish.py` (release tag).                         |
 | `tests/backend/`                 | Vitest backend suites — one per module or route (`api-common`, `settings`, `hive-server-api`, `students-route`, …). |
 | `tests/websock/`                 | Pytest for the Python bridge (`test_start_websockify.py`).                                                          |
 
@@ -94,6 +95,10 @@ on every push and PR.
   is the NextAuth route; `src/app/api/common.tsx` reads the session server-side.
 - `ALLOW_LOGIN_BYPASS` is a real security bypass — local-dev only, never in a committed
   config or deployed environment.
+- **Hostnames**: dev is `peekaboo.dev`, e2e/test runs are `peekaboo.test` (CI pins it to
+  127.0.0.5 via `curl --resolve` / Chromium `--host-resolver-rules`, no hosts entry).
+- **No CNET build path**: images are built in CI and shipped in the release bundle
+  (offline bundle for air-gapped installs), so there are no registry-mirror build args.
 - Only `master` exists as a long-lived branch (no `dev`) — PR against `master`, per the
   README's own contributing note. Open issues labeled `NEWBIES WELCOME` are meant for
   external/student contributors, not a signal to skip normal review.

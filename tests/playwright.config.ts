@@ -13,6 +13,11 @@ export default definePlaywrightConfig({
         screenshot: "only-on-failure",
         video: "on-first-retry",
         trace: "on-first-retry",
+        // CI serves the stack as peekaboo.test without a hosts-file entry;
+        // pin the name in Chromium instead (see .github/workflows/e2e.yml).
+        launchOptions: process.env.HOST_RESOLVER_RULES
+            ? { args: [`--host-resolver-rules=${process.env.HOST_RESOLVER_RULES}`] }
+            : {},
     },
     projects: [
         {

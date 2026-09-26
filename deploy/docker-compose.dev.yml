@@ -12,7 +12,6 @@ services:
       dockerfile: Dockerfile
       target: dev
       args:
-        NODE_DOCKER_REGISTRY: ${NODE_DOCKER_REGISTRY:-}
         NPM_TOKEN: ${NPM_TOKEN}
     environment:
       - NODE_ENV=development
@@ -43,9 +42,6 @@ services:
     build:
       context: ../websock/
       dockerfile: Dockerfile
-      args:
-        PYTHON_DOCKER_REGISTRY: ${PYTHON_DOCKER_REGISTRY:-}
-        PIP_CONF_PATH: ${PIP_CONF_PATH:-pip_online.conf}
     restart: "no"
     ports: !override
       - "127.0.0.4:60800:60800"

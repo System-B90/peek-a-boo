@@ -13,3 +13,10 @@ PyHiveLMS>=2.1.5
 # Shared install/upgrade/wizard flows (System-B90/deploy-py): setup.py runs on
 # it. Brings cryptography with it; release bundles vendor it themselves.
 sb90-deploy>=0.1.0
+# scripts/publish.py (ported from Bluz, same pins).
+InquirerPy>=0.3.4
+typer==0.27.0
+tqdm>=4.70.0
+# Lint and scripts/tests (test_bundle.py), as in Bluz.
+ruff==0.16.8
+pytest>=8.0.0

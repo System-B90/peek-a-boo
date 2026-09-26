@@ -9,16 +9,16 @@ on:
     push:
         branches: [master]
         paths:
-            - 'src/**'
-            - 'tests/**'
-            - 'websock/**'
-            - 'nginx/**'
-            - 'deploy/**'
-            - 'scripts/**'
-            - 'Dockerfile'
-            - 'package.json'
-            - 'package-lock.json'
-            - '.github/workflows/e2e.yml'
+            - "src/**"
+            - "tests/**"
+            - "websock/**"
+            - "nginx/**"
+            - "deploy/**"
+            - "scripts/**"
+            - "Dockerfile"
+            - "package.json"
+            - "package-lock.json"
+            - ".github/workflows/e2e.yml"
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
@@ -43,6 +43,12 @@ jobs:
             # The shared Hive runs as compose project "hive"; ui joins its
             # network to resolve the hive.org alias.
             HIVE_NETWORK_NAME: hive_hive-net
+            # Test runs use peekaboo.test (dev keeps peekaboo.dev). The runner's
+            # /etc/hosts has no entry for it, so it is pinned to the test
+            # proxy's address per tool: curl --resolve, Chromium
+            # --host-resolver-rules (HOST_RESOLVER_RULES below).
+            E2E_HOST: peekaboo.test
+            E2E_HOST_IP: 127.0.0.5
 
         steps:
             - name: Checkout repository
@@ -54,8 +60,8 @@ jobs:
                   mkdir -p nginx/ssl
                   openssl req -x509 -newkey rsa:4096 -keyout nginx/ssl/star.key \
                     -out nginx/ssl/star.crt -sha256 -days 30 -nodes \
-                    -subj "/CN=peekaboo.dev" \
-                    -addext "subjectAltName=DNS:peekaboo.dev,DNS:localhost"
+                    -subj "/CN=$E2E_HOST" \
+                    -addext "subjectAltName=DNS:$E2E_HOST,DNS:localhost"
 
             - name: Prepare websocket token file
               run: touch websock/websocket_token_source.txt
@@ -94,7 +100,7 @@ jobs:
             - name: Wait for Peek-a-boo to be ready
               run: |
                   for i in $(seq 1 60); do
-                    code=$(curl -ks -o /dev/null -w "%{http_code}" https://peekaboo.dev:8443/login || true)
+                    code=$(curl -ks --resolve "$E2E_HOST:8443:$E2E_HOST_IP" -o /dev/null -w "%{http_code}" "https://$E2E_HOST:8443/login" || true)
                     if [ "$code" -ge 200 ] && [ "$code" -lt 500 ]; then
                       echo "Peek-a-boo is up (HTTP $code)"
                       exit 0
@@ -109,7 +115,8 @@ jobs:
               run: npm run test:e2e
               env:
                   CI: true
-                  BASE_URL: https://peekaboo.dev:8443
+                  BASE_URL: https://${{ env.E2E_HOST }}:8443
+                  HOST_RESOLVER_RULES: MAP ${{ env.E2E_HOST }} ${{ env.E2E_HOST_IP }}
 
             - name: Dump Container Logs
               if: failure()

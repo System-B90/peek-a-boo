@@ -1,10 +1,7 @@
-ARG NODE_DOCKER_REGISTRY
-ARG IS_IN_CNET
-
 # Dev target: `docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml`
 # (npm run docker:dev). Source is synced in by compose `develop.watch`, so only
 # dependencies are baked in; `next dev` does the rest.
-FROM ${NODE_DOCKER_REGISTRY}node:20-alpine AS dev
+FROM node:20-alpine AS dev
 ARG NPM_TOKEN
 ENV NPM_TOKEN=${NPM_TOKEN}
 WORKDIR /app
@@ -16,9 +13,7 @@ EXPOSE 3000
 CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
 
 # Use a local Node.js image
-FROM ${NODE_DOCKER_REGISTRY}node:20-alpine AS builder
-ARG NODE_DOCKER_REGISTRY
-ARG IS_IN_CNET
+FROM node:20-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -29,22 +24,6 @@ ENV NPM_TOKEN=${NPM_TOKEN}
 
 # Copy package.json and lock file
 COPY package*.json .npmrc ./
-COPY package.json /app/package.json
-
-# GitHub Packages read token for @system-b90/* (npm resolves ${NPM_TOKEN} from env)
-ARG NPM_TOKEN
-ENV NPM_TOKEN=${NPM_TOKEN}
-COPY .npmrc ./
-
-# Copy .npmrc
-COPY ./scripts/cnet/.npmrc-cnet ~/.npmrc-cnet
-# Only use .npmrc-cnet if building within CNET
-RUN if [ "$IS_IN_CNET" = "1" ]; then \
-    echo "Copying .npmrc because IS_IN_CNET=1"; \
-    cp ~/.npmrc-cnet ~/.npmrc; \
-    else \
-    echo "Skipping .npmrc because IS_IN_CNET=0"; \
-    fi
 
 # Install dependencies in offline mode (ensure lock file exists)
 RUN export NODE_TLS_REJECT_UNAUTHORIZED=0
@@ -82,8 +61,7 @@ ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET} \
 RUN npm run build
 
 # Final stage: production server
-FROM ${NODE_DOCKER_REGISTRY}node:20-alpine
-ARG NODE_DOCKER_REGISTRY
+FROM node:20-alpine
 
 LABEL org.opencontainers.image.source="https://github.com/System-B90/peek-a-boo"
 LABEL org.opencontainers.image.description="Peek-a-Boo Next.js app. See README: https://github.com/System-B90/peek-a-boo#readme"

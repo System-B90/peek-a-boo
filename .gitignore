@@ -55,7 +55,6 @@ nginx/ssl/
 my_utils/
 websock/*.txt
 .vscode/PythonImportHelper-v2-Completion.json
-package-lock-cnet.json
 settings.json
 create_fake_students.py
 

@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "peekaboo-cli"
+dynamic = ["version"]
+description = "Peek-a-boo command-line tool — drive Peek-a-boo from your terminal."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Michael K. Steinberg", email = "m.kuper.steinberg@gmail.com" }]
+license = { text = "Proprietary" }
+keywords = ["peek-a-boo", "cli", "vnc", "monitoring"]
+
+dependencies = [
+    "typer>=0.20.0",
+    "InquirerPy>=0.3.4",
+    "httpx>=0.28.0",
+    "python-dotenv>=1.0.0",
+    "rich>=13.0.0",
+    "tqdm>=4.65.0",
+]
+
+[project.scripts]
+peekaboo = "peekaboo_cli.main:run"
+
+[project.urls]
+Homepage = "https://github.com/system-b90/peek-a-boo"
+Repository = "https://github.com/system-b90/peek-a-boo"
+
+[tool.hatch.build.targets.wheel]
+packages = ["peekaboo_cli"]
+
+[tool.hatch.version]
+path = "peekaboo_cli/__init__.py"

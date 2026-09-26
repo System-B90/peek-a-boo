@@ -60,6 +60,12 @@ jobs:
             - name: Prepare websocket token file
               run: touch websock/websocket_token_source.txt
 
+            # The shared-hive runners' system Python is externally managed (PEP 668).
+            - name: Set up Python
+              uses: actions/setup-python@v6
+              with:
+                  python-version: "3.12"
+
             - name: Install Python dependencies
               run: pip install -r scripts/requirements.txt
 

@@ -57,7 +57,7 @@ sb90-deploy — only `scripts/setup.py` (the wizard's peek-a-boo questions) stay
 npm run lint            # ESLint over the whole repo (lint:fix to autofix)
 npm run test:unit       # Vitest (tests/backend/*.test.ts)
 pytest tests/websock -q  # Pytest for the websockify bridge
-pytest scripts/tests -q  # Pytest for scripts/ (publish, release bundle)
+pytest scripts/tests -q  # Pytest for scripts/ (release bundle)
 ruff check .             # Python lint (websock/, scripts/)
 ruff format --check .    # Python format check
 ```
@@ -81,7 +81,7 @@ on every push and PR.
 | `websock/`                       | Standalone Python websockify service — VNC bridge, own `requirements.txt` + venv.                                   |
 | `nginx/`                         | `nginx.conf.template`; `ssl/` holds TLS certs (`star.key`, `star.crt`, `ca.crt`) — gitignored, never commit.        |
 | `deploy/`                        | Compose: base, `.dev`, `.test` (e2e), `.hive-local` (co-located Hive), `.release` (shipped in bundles).             |
-| `scripts/`                       | `setup.py` wizard (on sb90-deploy), `ci_setup.py` (e2e `.env`), `publish.py` (release tag).                         |
+| `scripts/`                       | `setup.py` wizard (on sb90-deploy), `ci_setup.py` (e2e `.env`). Releases: `python -m sb90_deploy publish`.          |
 | `tests/backend/`                 | Vitest backend suites — one per module or route (`api-common`, `settings`, `hive-server-api`, `students-route`, …). |
 | `tests/websock/`                 | Pytest for the Python bridge (`test_start_websockify.py`).                                                          |
 

@@ -39,17 +39,18 @@ To use your own certificate, place it at `nginx/ssl/star.crt` / `nginx/ssl/star.
 
 | Path       | Contains                                                                                                                                                                              |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/` | `setup.py` wizard (on sb90-deploy), `publish.py` release tagger, `ci_setup.py` e2e `.env`                                                                                             |
+| `scripts/` | `setup.py` wizard (on sb90-deploy), `ci_setup.py` e2e `.env`                                                                                                                          |
 | `deploy/`  | `app.json` (how sb90-deploy bundles/installs peek-a-boo); compose files: `docker-compose.yml` (base), `.dev.yml`, `.test.yml`, `.hive-local.yml`, `.release.yml` (shipped in bundles) |
 | `nginx/`   | `nginx.conf.template`; `ssl/` holds certs (gitignored)                                                                                                                                |
 | `websock/` | Python websockify VNC bridge                                                                                                                                                          |
 
 ## Releasing
 
-From a clean `master`, `python scripts/publish.py` picks the next version from the
-latest `v*` tag (patch/minor/major, optional `-rc.N`), bumps `package.json` and
-`package-lock.json`, commits, tags and pushes. The tag runs `release.yml`.
-Non-interactive: `--bump patch --no-rc --yes`; `--dry` skips the push.
+From a clean `master`, `python -m sb90_deploy publish` (shared, from
+[sb90-deploy](https://github.com/System-B90/deploy-py)) picks the next version from the
+latest `v*` tag (patch/minor/major, optional `-rc.N`), bumps the manifests listed in
+`deploy/app.json` `release.manifests`, commits, tags and pushes. The tag runs
+`release.yml`. Non-interactive: `--bump patch --no-rc --yes`; `--dry` pushes nothing.
 
 ## Development Setup (Windows)
 

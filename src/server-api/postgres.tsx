@@ -12,7 +12,7 @@ async function getPostgres(): Promise<Sql<{}>> {
                 username: await getSetting("HIVE_POSTGRES_USERNAME"),
                 password: await getSetting("HIVE_PASSWORD"),
                 database: "core",
-                host: await getSetting("HIVE_HOSTNAME"),
+                host: await getSetting("HIVE_POSTGRES_HOSTNAME"),
             });
         }
         return pg;

@@ -4,6 +4,7 @@
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import dynamic from "next/dynamic";
+import { enqueueSnackbar } from "notistack";
 import {
     RefObject,
     useCallback,
@@ -15,6 +16,7 @@ import { VncScreenHandle, VncScreenProps } from "react-vnc";
 
 import { useAuth } from "@/components/auth-provider";
 import { useSettings } from "@/components/settings-provider";
+import { enqueueSnackbarWithSubtext } from "@/components/snackbar-utils";
 
 const VncScreen = dynamic(
     () => import("react-vnc").then((mod) => mod.VncScreen),
@@ -49,6 +51,7 @@ export type VncClientProps = {
 export function ClientVNC({
     vncRef,
     onSecurityFailure,
+    onDisconnect,
     ...props
 }: { vncRef: RefObject<null | VncScreenHandle> } & VncClientProps) {
     const { vncClientPassword } = useAuth();
@@ -71,6 +74,21 @@ export function ClientVNC({
             }
         },
         [vncClientPassword, vncRef, onSecurityFailure],
+    );
+
+    const onDisconnectWrapper: DisconnectParams = useCallback(
+        (event) => {
+            if (!event?.detail?.clean) {
+                enqueueSnackbarWithSubtext(
+                    enqueueSnackbar,
+                    "Failed to connect to student machine!",
+                    "Connection closed unexpectedly",
+                    { variant: "error", preventDuplicate: true },
+                );
+            }
+            onDisconnect?.(event);
+        },
+        [onDisconnect],
     );
 
     const connectMe = useCallback(() => {
@@ -142,6 +160,7 @@ export function ClientVNC({
                 url={wsProxyUrl}
                 viewOnly={isViewOnly}
                 {...props}
+                onDisconnect={onDisconnectWrapper}
             />
         </div>
     );

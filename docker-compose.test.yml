@@ -1,6 +1,6 @@
 services:
-  nextjs:
-    container_name: peekaboo-test-nextjs
+  ui:
+    container_name: peekaboo-test-ui
     # Join Hive's network instead of routing hive.org through the host.
     #
     # `extra_hosts: hive.org:host-gateway` resolves to the host's gateway IP,
@@ -26,14 +26,14 @@ services:
       # tell the client-side WebSocket connector to match.
       - WEBSOCKET_PORT=8443
 
-  nginx:
-    container_name: peekaboo-test-nginx
+  proxy:
+    container_name: peekaboo-test-proxy
     ports: !override
       - "127.0.0.5:8443:443"
       - "127.0.0.5:8080:80"
 
-  websock:
-    container_name: peekaboo-test-websock
+  vnc-bridge:
+    container_name: peekaboo-test-vnc-bridge
 
 networks:
   hive_net:

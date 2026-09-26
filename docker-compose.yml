@@ -1,7 +1,7 @@
 services:
-  nextjs:
+  ui:
     image: peekaboo/nextjs
-    container_name: peekaboo_nextjs
+    container_name: peekaboo-ui
     build:
       context: ./
       args:
@@ -36,16 +36,16 @@ services:
     networks:
       - backend
 
-  nginx:
+  proxy:
     image: nginx:alpine
-    container_name: peekaboo_nginx
+    container_name: peekaboo-proxy
     restart: always
     ports:
       - "443:443"
       - "80:80"
     depends_on:
-      - nextjs
-      - websock
+      - ui
+      - vnc-bridge
     environment:
       - SERVER_HOSTNAME=${HOSTNAME}
       - WEBSOCKET_SERVER_HOSTNAME=${WEBSOCKET_SERVER_HOSTNAME}
@@ -56,9 +56,9 @@ services:
       - backend
       - frontend
 
-  websock:
+  vnc-bridge:
     image: peekaboo/websock
-    container_name: peekaboo_websock
+    container_name: peekaboo-vnc-bridge
     build:
       context: ./websock/
       args:

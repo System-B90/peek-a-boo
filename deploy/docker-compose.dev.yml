@@ -1,0 +1,64 @@
+# Dev override: `npm run docker:dev`.
+# Layered on deploy/docker-compose.yml — swaps the published ghcr images for
+# locally built ones and live-syncs source into the containers.
+name: peek-a-boo
+
+services:
+  ui:
+    # Own tag so building the dev target never overwrites the prod image name.
+    image: peekaboo-ui:dev
+    build:
+      context: ../
+      dockerfile: Dockerfile
+      target: dev
+      args:
+        NODE_DOCKER_REGISTRY: ${NODE_DOCKER_REGISTRY:-}
+        NPM_TOKEN: ${NPM_TOKEN}
+    environment:
+      - NODE_ENV=development
+      # Bind-mounted/synced files on Docker Desktop (Windows/macOS) don't emit
+      # inotify events reliably.
+      - WATCHPACK_POLLING=true
+    restart: "no"
+    develop:
+      watch:
+        - action: sync
+          path: ../src
+          target: /app/src
+        - action: sync
+          path: ../public
+          target: /app/public
+        - action: sync+restart
+          path: ../next.config.ts
+          target: /app/next.config.ts
+        - action: rebuild
+          path: ../package.json
+        - action: rebuild
+          path: ../package-lock.json
+
+  vnc-bridge:
+    image: peekaboo-vnc-bridge:dev
+    build:
+      context: ../websock/
+      dockerfile: Dockerfile
+      args:
+        PYTHON_DOCKER_REGISTRY: ${PYTHON_DOCKER_REGISTRY:-}
+        PIP_CONF_PATH: ${PIP_CONF_PATH:-pip_online.conf}
+    restart: "no"
+    ports: !override
+      - "127.0.0.4:60800:60800"
+    develop:
+      watch:
+        - action: sync+restart
+          path: ../websock/start_websockify.py
+          target: /app/start_websockify.py
+        - action: rebuild
+          path: ../websock/requirements.txt
+
+  proxy:
+    restart: "no"
+    # Loopback alias so dev can coexist with Hive (127.0.0.6) and Bluz
+    # (127.0.0.3) holding :80/:443 on their own addresses.
+    ports: !override
+      - "127.0.0.4:80:80"
+      - "127.0.0.4:443:443"

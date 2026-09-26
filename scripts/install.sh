@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Always run from the repo root, whether invoked as scripts/install.sh or ./install.sh
+cd "$(dirname "$0")/.."
+COMPOSE=(docker compose --env-file .env -f deploy/docker-compose.yml)
+
 echo -e "\033[1;36m=========================================\033[0m"
 echo -e "\033[1;36m      Peek-a-boo Linux Bootstrapper      \033[0m"
 echo -e "\033[1;36m=========================================\033[0m"
@@ -21,7 +25,7 @@ if [ ! -f ".env" ]; then
     echo -e "\n\033[1;33m[WAIT] Initializing environment configuration wizard...\033[0m"
     python3 -m venv .venv
     source .venv/bin/activate
-    pip install -r requirements.txt --quiet
+    pip install -r scripts/requirements.txt --quiet
     python3 setup.py
     deactivate
     echo -e "\033[1;32m[OK] Environment configured.\033[0m"
@@ -62,13 +66,17 @@ fi
 # Boot Application
 if [ "$IS_OFFLINE" = false ]; then
     echo -e "\n\033[1;33m[WAIT] Pulling latest containers from GHCR...\033[0m"
-    docker compose pull
+    "${COMPOSE[@]}" pull
 fi
 
 echo -e "\n\033[1;33m[WAIT] Starting Peek-a-boo services...\033[0m"
-docker compose up -d
+"${COMPOSE[@]}" up -d
 
 echo -e "\n\033[1;32m=========================================\033[0m"
 echo -e "\033[1;32m 🎉 Peek-a-boo Installation Complete! 🎉 \033[0m"
 echo -e "\033[1;32m=========================================\033[0m"
-echo -e "To stop the system, run: docker compose down"
+BIND_IP=$(grep -E '^PEEKABOO_BIND_IP=' .env | cut -d= -f2- | tr -d "'\"" || true)
+HOST=$(grep -E '^HOSTNAME=' .env | cut -d= -f2- | tr -d "'\"" || true)
+echo -e "Open https://${HOST:-localhost} (bound on ${BIND_IP:-0.0.0.0})."
+echo -e "Trust utils/certs/ca.crt (System-B90 Local Dev CA) to silence certificate warnings."
+echo -e "To stop the system, run: npm run docker:down (or docker compose --env-file .env -f deploy/docker-compose.yml down)"

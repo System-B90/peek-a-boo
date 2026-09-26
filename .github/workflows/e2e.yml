@@ -45,7 +45,7 @@ jobs:
         # ~46m spent without reaching a single test.
         #
         # Bluz's equivalent job already uses 90, and peek-a-boo does comparable
-        # work (it docker-builds nextjs, websock and nginx), so 45 was the
+        # work (it docker-builds ui, vnc-bridge and proxy), so 45 was the
         # outlier. madash keeps 45 because it never docker-builds the app —
         # npm run build + next start on the host is far lighter.
         #
@@ -129,7 +129,7 @@ jobs:
                   COMPOSE_PROJECT_NAME: peekaboo-test
                   # setup-hive checks Hive out to hive/, so its compose network
                   # is hive_hive-net — not the hive-stack_hive-net a local
-                  # checkout produces. nextjs joins it to resolve the hive.org
+                  # checkout produces. ui joins it to resolve the hive.org
                   # alias Hive's nginx publishes.
                   HIVE_NETWORK_NAME: hive_hive-net
                   NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
@@ -184,8 +184,8 @@ jobs:
                     name=$(docker inspect --format '{{.Name}}' "$c" | tr -d '/')
                     docker logs "$c" > "container-logs/$name.log" 2>&1 || true
                   done
-                  echo "::group::Peek-a-boo nextjs container log (tail)"
-                  docker logs --tail 400 peekaboo-test-nextjs 2>&1 || true
+                  echo "::group::Peek-a-boo ui container log (tail)"
+                  docker logs --tail 400 peekaboo-test-ui 2>&1 || true
                   echo "::endgroup::"
 
             - name: Upload Container Logs

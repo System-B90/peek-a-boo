@@ -10,9 +10,9 @@ import random
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 def handle_import_error(module_name: str):
@@ -25,12 +25,13 @@ try:
     from cryptography import x509
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.serialization import (
         Encoding,
         NoEncryption,
         PrivateFormat,
     )
-    from cryptography.x509.oid import NameOID
+    from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 except ImportError:
     handle_import_error("cryptography")
 
@@ -118,13 +119,20 @@ AUTO_VARS = {
     "PIP_CONF_PATH": choose_pip_conf_name(),
     "IS_IN_CNET": "1" if is_connected_to_cnet() else "0",
     "NPM_TOKEN": find_npm_token(),
+    "PEEKABOO_BIND_IP": "127.0.0.4",
+    "PEEKABOO_HTTP_PORT": "80",
+    "PEEKABOO_HTTPS_PORT": "443",
     "NEXTAUTH_URL": "",  # filled in after HOSTNAME is known, see collect_vars()
 }
 
 SECRET_VARS = ("SYM_ENC_KEY", "NEXTAUTH_SECRET", "HIVE_CLIENT_SECRET")
 
 # Images docker-compose.yml expects (README "Quick Start" step 4).
-REQUIRED_DOCKER_IMAGES = ("peekaboo/nextjs", "nginx", "peekaboo/websock")
+REQUIRED_DOCKER_IMAGES = (
+    "ghcr.io/system-b90/peek-a-boo/nextjs",
+    "nginx",
+    "ghcr.io/system-b90/peek-a-boo/websock",
+)
 # Image tarballs (e.g. from the releases tab) dropped here get `docker load`ed.
 DOCKER_IMAGES_DIR = "images"
 
@@ -304,91 +312,189 @@ def load_existing_env(env_path: Path) -> Dict[str, str]:
     }
 
 
-def generate_self_signed_cert(
-    cert_path: Path,
-    key_path: Path,
-    common_name: str,
-    alt_names: Optional[list[str]] = None,  # list of DNS names or IP addresses
-):
-    alt_names = alt_names or [common_name]
+CA_NAME = "System-B90 Local Dev CA"
 
-    # Generate private key
-    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
-    # Certificate subject & issuer (self‑signed => identical)
-    subject = issuer = x509.Name(
+def _write_pem(path: Path, data: bytes, private: bool = False):
+    path.write_bytes(data)
+    if private:
+        try:
+            path.chmod(0o600)
+        except OSError:  # Windows: chmod is a no-op for most bits
+            pass
+
+
+def _key_pem(key) -> bytes:
+    return key.private_bytes(
+        encoding=Encoding.PEM,
+        format=PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=NoEncryption(),
+    )
+
+
+def load_or_create_ca(ca_cert_path: Path, ca_key_path: Path):
+    """Return (cert, key) of the local System-B90 dev CA, creating it once.
+
+    The CA is reused so trusting ca.crt in the OS/browser survives leaf
+    regeneration.
+    """
+    if ca_cert_path.exists() and ca_key_path.exists():
+        cert = x509.load_pem_x509_certificate(ca_cert_path.read_bytes())
+        key = serialization.load_pem_private_key(ca_key_path.read_bytes(), None)
+        return cert, key
+
+    key = rsa.generate_private_key(public_exponent=65537, key_size=4096)
+    name = x509.Name(
         [
             x509.NameAttribute(NameOID.COUNTRY_NAME, "IL"),
-            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Peek-a-Boo"),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "System-B90"),
+            x509.NameAttribute(NameOID.COMMON_NAME, CA_NAME),
+        ]
+    )
+    now = datetime.now(timezone.utc)
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(minutes=5))
+        .not_valid_after(now + timedelta(days=3650))
+        .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
+        .add_extension(
+            x509.KeyUsage(
+                digital_signature=False,
+                content_commitment=False,
+                key_encipherment=False,
+                data_encipherment=False,
+                key_agreement=False,
+                key_cert_sign=True,
+                crl_sign=True,
+                encipher_only=False,
+                decipher_only=False,
+            ),
+            critical=True,
+        )
+        .add_extension(
+            x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False
+        )
+        .sign(key, hashes.SHA256())
+    )
+    _write_pem(ca_cert_path, cert.public_bytes(Encoding.PEM))
+    _write_pem(ca_key_path, _key_pem(key), private=True)
+    return cert, key
+
+
+def generate_ca_signed_cert(
+    cert_path: Path,
+    key_path: Path,
+    ca_cert,
+    ca_key,
+    common_name: str,
+    alt_names: list[str],  # DNS names or IP addresses
+):
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "IL"),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "System-B90"),
             x509.NameAttribute(NameOID.COMMON_NAME, common_name),
-            x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, "Dev"),
         ]
     )
 
-    # Prepare SANs
-    san_list = []
-    for name in alt_names:
+    san_list: list[x509.GeneralName] = []
+    for name in dict.fromkeys(alt_names):  # de-dupe, keep order
         try:
-            # If it's an IP address
             san_list.append(x509.IPAddress(ipaddress.ip_address(name)))
         except ValueError:
-            # Otherwise treat as DNS name
             san_list.append(x509.DNSName(name))
 
-    # Build certificate
+    now = datetime.now(timezone.utc)
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
-        .issuer_name(issuer)
+        .issuer_name(ca_cert.subject)
         .public_key(key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(datetime.utcnow())
-        .not_valid_after(datetime.utcnow() + timedelta(days=365))
-        .add_extension(x509.SubjectAlternativeName(san_list), critical=False)
-        .sign(key, hashes.SHA256())
-    )
-
-    # Save private key
-    with open(key_path, "wb") as f:
-        f.write(
-            key.private_bytes(
-                encoding=Encoding.PEM,
-                format=PrivateFormat.TraditionalOpenSSL,
-                encryption_algorithm=NoEncryption(),
-            )
+        .not_valid_before(now - timedelta(minutes=5))
+        # 397 days: the longest lifetime browsers accept for a leaf.
+        .not_valid_after(now + timedelta(days=397))
+        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+        .add_extension(
+            x509.KeyUsage(
+                digital_signature=True,
+                content_commitment=False,
+                key_encipherment=True,
+                data_encipherment=False,
+                key_agreement=False,
+                key_cert_sign=False,
+                crl_sign=False,
+                encipher_only=False,
+                decipher_only=False,
+            ),
+            critical=True,
         )
+        .add_extension(
+            x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False
+        )
+        .add_extension(x509.SubjectAlternativeName(san_list), critical=False)
+        .add_extension(
+            x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()),
+            critical=False,
+        )
+        .sign(ca_key, hashes.SHA256())
+    )
+    _write_pem(cert_path, cert.public_bytes(Encoding.PEM))
+    _write_pem(key_path, _key_pem(key), private=True)
 
-    # Save certificate
-    with open(cert_path, "wb") as f:
-        f.write(cert.public_bytes(Encoding.PEM))
 
-    return Path(cert_path), Path(key_path)
+def cert_is_current(cert_path: Path, ca_cert, names: list[str]) -> bool:
+    """True if the leaf is issued by our CA, not near expiry, and covers `names`."""
+    try:
+        cert = x509.load_pem_x509_certificate(cert_path.read_bytes())
+        sans = cert.extensions.get_extension_for_class(
+            x509.SubjectAlternativeName
+        ).value.get_values_for_type(x509.DNSName)
+    except (OSError, ValueError, x509.ExtensionNotFound):
+        return False
+    return (
+        cert.issuer == ca_cert.subject
+        and cert.not_valid_after_utc > datetime.now(timezone.utc) + timedelta(days=14)
+        and all(n in sans for n in names)
+    )
 
 
 def handle_certs(values: dict[str, Any]):
-    ROOT_CERT_PATH = Path("./utils/certs/")
-    os.makedirs(ROOT_CERT_PATH, exist_ok=True)
+    root = Path("./utils/certs/")
+    os.makedirs(root, exist_ok=True)
 
-    CERT_PATH = ROOT_CERT_PATH / "star.crt"
-    KEY_PATH = ROOT_CERT_PATH / "star.key"
+    cert_path, key_path = root / "star.crt", root / "star.key"
+    ca_cert_path, ca_key_path = root / "ca.crt", root / "ca.key"
 
-    if CERT_PATH.exists() or KEY_PATH.exists():
+    hostname, wss = values["HOSTNAME"], values["WEBSOCKET_SERVER_HOSTNAME"]
+    ca_cert, ca_key = load_or_create_ca(ca_cert_path, ca_key_path)
+
+    if key_path.exists() and cert_is_current(cert_path, ca_cert, [hostname, wss]):
         success("Using existing certificates")
-        return
+    else:
+        alt_names = [hostname, wss, "localhost", "127.0.0.1"]
+        bind_ip = values.get("PEEKABOO_BIND_IP", "0.0.0.0")
+        if bind_ip != "0.0.0.0":
+            alt_names.append(bind_ip)
+        generate_ca_signed_cert(
+            cert_path,
+            key_path,
+            ca_cert,
+            ca_key,
+            common_name=hostname,
+            alt_names=alt_names,
+        )
+        success(f"Issued {cert_path} (signed by {CA_NAME})")
 
-    cert, key = generate_self_signed_cert(
-        cert_path=CERT_PATH,
-        key_path=KEY_PATH,
-        common_name=values["HOSTNAME"],
-        alt_names=[
-            f"wss.{values['HOSTNAME']}",
-            values["WEBSOCKET_SERVER_HOSTNAME"],
-            "localhost",
-        ],
+    info(
+        f"Trust {ca_cert_path} once to silence browser warnings "
+        f"(Windows: certutil -addstore -user Root {ca_cert_path})"
     )
-
-    assert cert == CERT_PATH
-    assert key == KEY_PATH
 
 
 def collect_vars() -> Dict[str, str]:
@@ -415,7 +521,7 @@ def collect_vars() -> Dict[str, str]:
     existing_values["HOSTNAME"] = (
         existing_values.get("HOSTNAME")
         if existing_values.get("HOSTNAME")
-        else "peek-a-boo"
+        else "peekaboo.dev"
     )
 
     # Prompt for interactive vars
@@ -439,15 +545,19 @@ def collect_vars() -> Dict[str, str]:
     # NextAuth needs this to build correct callback/redirect URLs — without
     # it, it falls back to guessing from request headers, which breaks
     # behind the nginx proxy.
-    values["NEXTAUTH_URL"] = existing_values.get(
-        "NEXTAUTH_URL", f"https://{values['HOSTNAME']}"
-    )
+    # Bind/port settings are kept from an existing .env (like Bluz's
+    # BLUZ_BIND_IP / *_PORT) so the URL below matches what nginx publishes.
+    for var in ("PEEKABOO_BIND_IP", "PEEKABOO_HTTP_PORT", "PEEKABOO_HTTPS_PORT"):
+        values[var] = existing_values.get(var) or AUTO_VARS[var]
+    https_port = values["PEEKABOO_HTTPS_PORT"]
+    port_suffix = "" if https_port == "443" else f":{https_port}"
+    values["NEXTAUTH_URL"] = f"https://{values['HOSTNAME']}{port_suffix}"
 
     return values
 
 
 def write_env(values: Dict[str, str], env_path: Path):
-    env_content = "\n".join(f"{k}='{v}'" for k, v in values.items())
+    env_content = "\n".join(f"{k}='{v}'" for k, v in values.items()) + "\n"
     env_path.write_text(env_content)
     success(f".env file created at {env_path}")
 
@@ -506,7 +616,7 @@ def handle_docker_images():
         "or pull/build them:"
     )
     for image in missing:
-        if image.startswith("peekaboo/"):
+        if "peek-a-boo/" in image:
             print(f"    docker load -i <{image.split('/')[1]}.tar from releases tab>")
         else:
             print(f"    docker pull {image}")

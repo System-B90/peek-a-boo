@@ -38,6 +38,11 @@ npm run dev
 `ALLOW_LOGIN_BYPASS=true` skips real auth for local dev — never set it outside a local
 environment.
 
+Containerised dev (Bluz-style): `npm run docker:dev` layers `deploy/docker-compose.dev.yml`
+over `deploy/docker-compose.yml` � builds the `dev` Dockerfile target, live-syncs `src/`
+via `compose --watch`, nginx on `127.0.0.4:80/443` (needs `.env` with `NPM_TOKEN`).
+`docker:down` / `docker:nuke` tear it down.
+
 For the full Docker/Ubuntu quick start (TLS certs in `utils/certs/` as `star.key` /
 `star.crt`, pulling the three images, `docker-compose up`), see [README.md](README.md).
 

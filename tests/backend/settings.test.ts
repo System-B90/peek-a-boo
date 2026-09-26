@@ -22,14 +22,14 @@ const ENV_KEYS = [
 let saved: Record<string, string | undefined>;
 
 beforeEach(() => {
-    saved = Object.fromEntries(ENV_KEYS.map((k) => [ k, process.env[k] ]));
+    saved = Object.fromEntries(ENV_KEYS.map((k) => [k, process.env[k]]));
     for (const key of ENV_KEYS) delete process.env[key];
     vi.mocked(fs.readFile).mockReset();
     vi.mocked(fs.writeFile).mockReset().mockResolvedValue(undefined);
 });
 
 afterEach(() => {
-    for (const [ key, value ] of Object.entries(saved)) {
+    for (const [key, value] of Object.entries(saved)) {
         if (value === undefined) delete process.env[key];
         else process.env[key] = value;
     }
@@ -62,7 +62,9 @@ describe("getSetting precedence", () => {
         fileContains({ HIVE_HOSTNAME: "hive.from-file" });
         const settings = await freshSettings();
 
-        expect(await settings.getSetting("HIVE_HOSTNAME")).toBe("hive.from-file");
+        expect(await settings.getSetting("HIVE_HOSTNAME")).toBe(
+            "hive.from-file",
+        );
     });
 
     it("falls back to the env value when the file omits the key", async () => {
@@ -70,7 +72,9 @@ describe("getSetting precedence", () => {
         fileContains({ HIVE_PASSWORD: "pw" });
         const settings = await freshSettings();
 
-        expect(await settings.getSetting("HIVE_HOSTNAME")).toBe("hive.from-env");
+        expect(await settings.getSetting("HIVE_HOSTNAME")).toBe(
+            "hive.from-env",
+        );
     });
 
     it("treats an empty string in the file as absent", async () => {
@@ -80,7 +84,9 @@ describe("getSetting precedence", () => {
         fileContains({ HIVE_HOSTNAME: "" });
         const settings = await freshSettings();
 
-        expect(await settings.getSetting("HIVE_HOSTNAME")).toBe("hive.from-env");
+        expect(await settings.getSetting("HIVE_HOSTNAME")).toBe(
+            "hive.from-env",
+        );
     });
 
     it("falls back to the hard-coded default when neither is set", async () => {
@@ -251,7 +257,7 @@ describe("cache lifecycle", () => {
 
         await settings.saveSettings(payload);
 
-        const [ path, written ] = vi.mocked(fs.writeFile).mock.calls[0];
+        const [path, written] = vi.mocked(fs.writeFile).mock.calls[0];
         expect(path).toBe(settings.SETTINGS_PATH);
         expect(written).toBe(JSON.stringify(payload, null, 4));
     });

@@ -2,16 +2,10 @@ name: E2E Tests
 
 on:
     workflow_dispatch:
-    # Master only, deliberately. This suite boots a full Hive stack on the
-    # org's single self-hosted box and runs for the best part of an hour.
-    # Per-pull-request runs spent that shared box on branches that get
-    # force-pushed and rebased, while three other repos queued behind it.
-    # Use workflow_dispatch to run it against a branch on purpose.
-    #
-    # Narrowed further to the paths that can change what the suite exercises.
-    # A docs- or workflow-only push to master was otherwise enough to spend an
-    # hour of the shared box on an identical result — which is exactly what a
-    # CI-config hotfix just did.
+    # Master only. Runs against the persistent shared Hive (see
+    # System-B90/.github CLAUDE.md, "Shared persistent Hive"): one job at a
+    # time across the org, 25 minutes each, so keep this suite small and
+    # non-destructive. Use workflow_dispatch to run it against a branch.
     push:
         branches: [master]
         paths:
@@ -30,78 +24,31 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
 
+permissions:
+    contents: read
+    packages: read
+    # shared-hive-acquire cancels this run if it holds Hive past 25 minutes.
+    actions: write
+
 jobs:
     e2e:
-        name: Full E2E Tests (with Hive)
-        # The org is out of GitHub-hosted Actions minutes — everything runs on
-        # the self-hosted pool.
-        runs-on: [self-hosted, dind, Linux]
-        # 45 was calibrated when this ran on a fresh GitHub-hosted VM. On the
-        # shared box it is not enough, and the job dies mid-build rather than
-        # failing on anything real. Measured on 2026-08-04 (run 30862079400):
-        # Set up Hive 8m52s, Set up Node + Playwright 8m57s, then "Build & start
-        # Peek-a-boo" was still going at 24m14s when the ceiling killed it —
-        # ~46m spent without reaching a single test.
-        #
-        # Bluz's equivalent job already uses 90, and peek-a-boo does comparable
-        # work (it docker-builds ui, vnc-bridge and proxy), so 45 was the
-        # outlier. madash keeps 45 because it never docker-builds the app —
-        # npm run build + next start on the host is far lighter.
-        #
-        # The 24-minute image build is the thing actually worth fixing; a build
-        # cache would cut this far more than the ceiling does (System-B90/.github#12).
+        name: E2E Tests (shared Hive)
+        runs-on: [self-hosted, shared-hive]
+        # Image builds (before the lock) + queueing for the lock + the 25m
+        # Hive budget. The budget itself is enforced by shared-hive-acquire.
         timeout-minutes: 90
         env:
             NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+            COMPOSE_PROJECT_NAME: peekaboo-test
+            # The shared Hive runs as compose project "hive"; ui joins its
+            # network to resolve the hive.org alias.
+            HIVE_NETWORK_NAME: hive_hive-net
 
         steps:
             - name: Checkout repository
               uses: actions/checkout@v7
 
-
-            # ── Hive (identity provider + organizational data) ────────────────
-            # Shared org action: disk cleanup, token verify, Hive checkout,
-            # commit-keyed image cache (or registry pull once Hive publishes
-            # images), boot + init, readiness check. Hive repo/ref defaults
-            # live in the action — one place to update for all consumer repos.
-            - name: Set up Hive
-              uses: System-B90/.github/actions/setup-hive@main
-              with:
-                  hive-token: ${{ secrets.ACCESS_TOKEN }}
-                  image-source: registry
-                  extra-hosts: 127.0.0.5 peekaboo.dev
-
-            # Peek-a-boo authenticates end users directly against Hive's
-            # /api/core/token/ (no OAuth) with a fixed HIVE_API_USERNAME=api
-            # service account. Hive's init creates that user with an unknown
-            # random password, so pin it here to a known value the rest of
-            # the job can rely on.
-            - name: Set Hive 'api' service account password
-              working-directory: hive
-              run: |
-                  cat <<'PY' | docker compose -f docker-compose.yaml exec -T core python manage.py shell
-                  from django.contrib.auth import get_user_model
-
-                  User = get_user_model()
-                  user = User.objects.get(username="api")
-                  user.set_password("Password1")
-                  user.save()
-                  print("api service account password set")
-                  PY
-
-            - name: Install Python dependencies
-              run: pip install -r scripts/requirements.txt
-
-            - name: Verify Hive admin login via pyhive
-              run: |
-                  python - <<'PY'
-                  from pyhive import HiveClient
-
-                  with HiveClient("admin", "Password1", "https://hive.org", verify=False, timeout=30) as client:
-                      print("Hive admin login OK. API version:", client.get_hive_version())
-                  PY
-
-            # ── Peek-a-boo environment & stack ─────────────────────────────────
+            # ── Everything slow happens before taking the shared Hive ─────────
             - name: Generate self-signed SSL certificate
               run: |
                   mkdir -p nginx/ssl
@@ -113,51 +60,82 @@ jobs:
             - name: Prepare websocket token file
               run: touch websock/websocket_token_source.txt
 
+            # The shared-hive runners' system Python is externally managed (PEP 668).
+            - name: Set up Python
+              uses: actions/setup-python@v6
+              with:
+                  python-version: "3.12"
+
+            - name: Install Python dependencies
+              run: pip install -r scripts/requirements.txt
+
             - name: Set up Node + Playwright
               uses: System-B90/.github/actions/setup-playwright@main
+
+            # Only NEXT_PUBLIC_HIVE_URL is baked in at build time, and it is
+            # fixed. The real .env (SSO credentials) needs Hive, so it is
+            # generated after acquiring it; this placeholder just lets the
+            # compose files resolve for the build.
+            - name: Build Peek-a-boo images
+              run: |
+                  echo "NEXT_PUBLIC_HIVE_URL='https://hive.org'" > .env
+                  docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml build
+
+            # ── Shared Hive: exclusive, reset, 25-minute budget ──────────────
+            - name: Acquire shared Hive
+              uses: System-B90/.github/actions/shared-hive-acquire@main
 
             - name: Verify Hive 'api' account and generate .env
               run: python scripts/ci_setup.py
 
-            # Scoped to this step only — Hive's own docker compose invocation
-            # (working-directory: hive) must not share this project name, or
-            # Compose conflates its "nginx" service with ours and recreates
-            # Hive's nginx container using our service definition.
-            - name: Build & start Peek-a-boo
-              env:
-                  COMPOSE_PROJECT_NAME: peekaboo-test
-                  # setup-hive checks Hive out to hive/, so its compose network
-                  # is hive_hive-net — not the hive-stack_hive-net a local
-                  # checkout produces. ui joins it to resolve the hive.org
-                  # alias Hive's nginx publishes.
-                  HIVE_NETWORK_NAME: hive_hive-net
-                  NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-              run: |
-                  docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml build
-                  docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml up -d
+            - name: Start Peek-a-boo
+              run: docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml up -d --no-build
 
             - name: Wait for Peek-a-boo to be ready
               run: |
-                  for i in $(seq 1 90); do
+                  for i in $(seq 1 60); do
                     code=$(curl -ks -o /dev/null -w "%{http_code}" https://peekaboo.dev:8443/login || true)
                     if [ "$code" -ge 200 ] && [ "$code" -lt 500 ]; then
                       echo "Peek-a-boo is up (HTTP $code)"
                       exit 0
                     fi
-                    echo "Attempt $i/90 - Peek-a-boo not ready yet (HTTP $code), waiting 5s..."
+                    echo "Attempt $i/60 - Peek-a-boo not ready yet (HTTP $code), waiting 5s..."
                     sleep 5
                   done
                   echo "::error::Peek-a-boo failed to become ready in time"
                   exit 1
 
-            # ── Run Playwright tests ────────────────────────────────────────────
             - name: Run E2E Tests
               run: npm run test:e2e
               env:
                   CI: true
                   BASE_URL: https://peekaboo.dev:8443
 
-            # ── Artifacts ────────────────────────────────────────────────────────
+            - name: Dump Container Logs
+              if: failure()
+              run: |
+                  mkdir -p container-logs
+                  for c in $(docker ps -aq --filter "name=^/peekaboo-test-") $(docker ps -aq --filter "name=^/hive-core$"); do
+                    name=$(docker inspect --format '{{.Name}}' "$c" | tr -d '/')
+                    docker logs "$c" > "container-logs/$name.log" 2>&1 || true
+                  done
+                  echo "::group::Peek-a-boo ui container log (tail)"
+                  docker logs --tail 400 peekaboo-test-ui 2>&1 || true
+                  echo "::endgroup::"
+
+            # Stop the app before releasing, so nothing talks to Hive while it
+            # is reset. Only this app's stack — never prune here: the shared
+            # Hive's containers are briefly stopped during a reset and a
+            # container prune would delete them.
+            - name: Stop Peek-a-boo
+              if: always()
+              run: docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml down -v --remove-orphans || true
+
+            - name: Release shared Hive
+              if: always()
+              uses: System-B90/.github/actions/shared-hive-release@main
+
+            # ── Artifacts ────────────────────────────────────────────────────
             - name: Upload Playwright Report
               uses: actions/upload-artifact@v6
               if: ${{ !cancelled() }}
@@ -174,19 +152,6 @@ jobs:
                   path: test-results/
                   retention-days: 7
 
-            - name: Dump Container Logs
-              if: failure()
-              run: |
-                  mkdir -p container-logs
-                  docker ps -a
-                  for c in $(docker ps -aq); do
-                    name=$(docker inspect --format '{{.Name}}' "$c" | tr -d '/')
-                    docker logs "$c" > "container-logs/$name.log" 2>&1 || true
-                  done
-                  echo "::group::Peek-a-boo ui container log (tail)"
-                  docker logs --tail 400 peekaboo-test-ui 2>&1 || true
-                  echo "::endgroup::"
-
             - name: Upload Container Logs
               uses: actions/upload-artifact@v6
               if: failure()
@@ -194,27 +159,3 @@ jobs:
                   name: container-logs
                   path: container-logs/
                   retention-days: 7
-
-            # ── Release the shared box ─────────────────────────────────────
-            # Runs even when the tests fail: otherwise a dead Hive stack
-            # occupies the shared runner until the next job happens to clear it
-            # (System-B90/.github#12). Best-effort throughout — cleanup must not
-            # turn a green run red.
-            - name: Tear down Hive and reclaim disk
-              if: always()
-              run: |
-                  # Best-effort: GitHub runs this under `bash -e`, where a bare
-                  # command substitution from a dead docker daemon would abort the
-                  # step before `exit 0`. Cleanup must never fail the job.
-                  set +e
-                  docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml down -v --remove-orphans || true
-                  docker compose -f hive/docker-compose.yaml down -v --remove-orphans || true
-                  leftovers=$(docker ps -aq --filter "name=^/hive-")
-                  if [ -n "$leftovers" ]; then docker rm -f $leftovers || true; fi
-                  docker container prune -f || true
-                  docker volume prune -f || true
-                  docker builder prune -f --keep-storage 10GB || true
-                  df -h / || true
-                  exit 0
-              env:
-                  COMPOSE_PROJECT_NAME: peekaboo-test

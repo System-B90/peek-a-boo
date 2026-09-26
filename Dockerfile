@@ -1,6 +1,20 @@
 ARG NODE_DOCKER_REGISTRY
 ARG IS_IN_CNET
 
+# Dev target: `docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml`
+# (npm run docker:dev). Source is synced in by compose `develop.watch`, so only
+# dependencies are baked in; `next dev` does the rest.
+FROM ${NODE_DOCKER_REGISTRY}node:20-alpine AS dev
+ARG NPM_TOKEN
+ENV NPM_TOKEN=${NPM_TOKEN}
+WORKDIR /app
+COPY package*.json .npmrc ./
+RUN npm install --ignore-scripts
+COPY . .
+ENV NODE_ENV=development     NEXT_TELEMETRY_DISABLED=1
+EXPOSE 3000
+CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
+
 # Use a local Node.js image
 FROM ${NODE_DOCKER_REGISTRY}node:20-alpine AS builder
 ARG NODE_DOCKER_REGISTRY

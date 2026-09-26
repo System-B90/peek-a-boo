@@ -187,7 +187,7 @@ export default defineConfig([
             "next-env.d.ts",
             "venv/",
             "websock/venv/",
-            "utils/certs/",
+            "nginx/ssl/",
             "scripts/cnet/**",
             "*.d.ts",
 	    ".claude/",

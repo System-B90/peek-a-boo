@@ -18,10 +18,9 @@ on:
             - 'src/**'
             - 'tests/**'
             - 'websock/**'
-            - 'utils/**'
+            - 'nginx/**'
             - 'deploy/**'
             - 'scripts/**'
-            - 'docker-compose*.yml'
             - 'Dockerfile'
             - 'package.json'
             - 'package-lock.json'
@@ -45,7 +44,7 @@ jobs:
         # ~46m spent without reaching a single test.
         #
         # Bluz's equivalent job already uses 90, and peek-a-boo does comparable
-        # work (it docker-builds nextjs, websock and nginx), so 45 was the
+        # work (it docker-builds ui, vnc-bridge and proxy), so 45 was the
         # outlier. madash keeps 45 because it never docker-builds the app —
         # npm run build + next start on the host is far lighter.
         #
@@ -105,11 +104,11 @@ jobs:
             # ── Peek-a-boo environment & stack ─────────────────────────────────
             - name: Generate self-signed SSL certificate
               run: |
-                  mkdir -p utils/certs
-                  openssl req -x509 -newkey rsa:4096 -keyout utils/certs/star.key \
-                    -out utils/certs/star.crt -sha256 -days 30 -nodes \
+                  mkdir -p nginx/ssl
+                  openssl req -x509 -newkey rsa:4096 -keyout nginx/ssl/star.key \
+                    -out nginx/ssl/star.crt -sha256 -days 30 -nodes \
                     -subj "/CN=peekaboo.dev" \
-                    -addext "subjectAltName=DNS:peekaboo.dev,DNS:wss.peekaboo.dev,DNS:localhost"
+                    -addext "subjectAltName=DNS:peekaboo.dev,DNS:localhost"
 
             - name: Prepare websocket token file
               run: touch websock/websocket_token_source.txt
@@ -129,13 +128,13 @@ jobs:
                   COMPOSE_PROJECT_NAME: peekaboo-test
                   # setup-hive checks Hive out to hive/, so its compose network
                   # is hive_hive-net — not the hive-stack_hive-net a local
-                  # checkout produces. nextjs joins it to resolve the hive.org
+                  # checkout produces. ui joins it to resolve the hive.org
                   # alias Hive's nginx publishes.
                   HIVE_NETWORK_NAME: hive_hive-net
                   NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
               run: |
-                  docker compose -f docker-compose.yml -f docker-compose.test.yml build
-                  docker compose -f docker-compose.yml -f docker-compose.test.yml up -d
+                  docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml build
+                  docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml up -d
 
             - name: Wait for Peek-a-boo to be ready
               run: |
@@ -184,8 +183,8 @@ jobs:
                     name=$(docker inspect --format '{{.Name}}' "$c" | tr -d '/')
                     docker logs "$c" > "container-logs/$name.log" 2>&1 || true
                   done
-                  echo "::group::Peek-a-boo nextjs container log (tail)"
-                  docker logs --tail 400 peekaboo-test-nextjs 2>&1 || true
+                  echo "::group::Peek-a-boo ui container log (tail)"
+                  docker logs --tail 400 peekaboo-test-ui 2>&1 || true
                   echo "::endgroup::"
 
             - name: Upload Container Logs
@@ -208,7 +207,7 @@ jobs:
                   # command substitution from a dead docker daemon would abort the
                   # step before `exit 0`. Cleanup must never fail the job.
                   set +e
-                  docker compose -f docker-compose.yml -f docker-compose.test.yml down -v --remove-orphans || true
+                  docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml down -v --remove-orphans || true
                   docker compose -f hive/docker-compose.yaml down -v --remove-orphans || true
                   leftovers=$(docker ps -aq --filter "name=^/hive-")
                   if [ -n "$leftovers" ]; then docker rm -f $leftovers || true; fi

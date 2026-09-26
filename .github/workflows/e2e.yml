@@ -35,7 +35,7 @@ jobs:
         name: Full E2E Tests (with Hive)
         # The org is out of GitHub-hosted Actions minutes — everything runs on
         # the self-hosted pool.
-        runs-on: [self-hosted, dind]
+        runs-on: [self-hosted, dind, Linux]
         # 45 was calibrated when this ran on a fresh GitHub-hosted VM. On the
         # shared box it is not enough, and the job dies mid-build rather than
         # failing on anything real. Measured on 2026-08-04 (run 30862079400):

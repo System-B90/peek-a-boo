@@ -5,10 +5,10 @@ test.describe("Login Page", () => {
         await page.goto("/login", { waitUntil: "commit" });
 
         await expect(
-            page.getByRole("heading", { name: "Login" }),
+            page.getByRole("heading", { name: "Peek-a-boo" }),
         ).toBeVisible();
         await expect(
-            page.getByRole("button", { name: "Sign in with Hive" }),
+            page.getByRole("button", { name: "התחברות עם הייב" }),
         ).toBeVisible();
     });
 
@@ -17,7 +17,7 @@ test.describe("Login Page", () => {
     }) => {
         await page.goto("/login", { waitUntil: "commit" });
 
-        await page.getByRole("button", { name: "Sign in with Hive" }).click();
+        await page.getByRole("button", { name: "התחברות עם הייב" }).click();
 
         await page.waitForURL(/hive\.org/, { timeout: 30_000 });
     });

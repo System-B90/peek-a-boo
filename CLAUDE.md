@@ -21,8 +21,8 @@ Three deployable pieces, each its own Docker image: `nginx` (proxy), `peekaboo_n
 $env:ALLOW_LOGIN_BYPASS = "true"
 py -3.11 -m venv venv
 .\venv\Scripts\activate
-pip install git+https://github.com/System-B90/pyhive.git@main dotenv requests
-python .\setup.py
+pip install -r scripts\requirements.txt
+python scripts\setup.py   # from the repo root; writes .env, nginx/ssl/, websock token file
 
 pushd .\websock\
 py -3.11 -m venv venv
@@ -43,15 +43,19 @@ over `deploy/docker-compose.yml` � builds the `dev` Dockerfile target, live-sy
 via `compose --watch`, nginx on `127.0.0.4:80/443` (needs `.env` with `NPM_TOKEN`).
 `docker:down` / `docker:nuke` tear it down.
 
-For the full Docker/Ubuntu quick start (TLS certs in `utils/certs/` as `star.key` /
-`star.crt`, pulling the three images, `docker-compose up`), see [README.md](README.md).
+For the release-bundle install (`install.sh`/`install.ps1`, `update.sh`, `link-hive.sh`; TLS certs in `nginx/ssl/` as `star.key` /
+`star.crt`), see [README.md](README.md). Release bundles mirror Bluz: `release.yml` packs
+`scripts/*` + `deploy/docker-compose.release.yml` (shipped as `docker-compose.yml`) +
+`docker-compose.hive-local.yml` + `nginx/nginx.conf.template` + `VERSION` into a versionless
+`peekaboo/` dir; the offline bundle adds `images/*.tar` and vendored `wheels/`. Bundle scripts
+run from the bundle root — keep `release.yml`'s file list and guard in sync when adding one.
 
 ## Tests
 
 ```bash
 npm run lint            # ESLint over the whole repo (lint:fix to autofix)
 npm run test:unit       # Vitest (tests/backend/*.test.ts)
-ruff check .             # Python lint (websock/, scripts/, setup.py)
+ruff check .             # Python lint (websock/, scripts/)
 ruff format --check .    # Python format check
 ```
 
@@ -63,18 +67,19 @@ on every push and PR.
 
 ## Key directories
 
-| Path                                  | Contains                                                                                                        |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `src/client-api/`                     | Client-side fetch wrappers. Browser-only.                                                                       |
-| `src/app/api/`                        | Route handlers: `avatar`, `class`, `env`, `install-client`, `login`, `logout`, `settings`, `students`, `tweet`. |
-| `src/server-api/`                     | Server-only: Hive client, NextAuth options, session/auth logic.                                                 |
-| `src/shared-api/`                     | Shared types/contracts and error classes, pure utils.                                                           |
-| `src/components/search`               | React UI.                                                                                                       |
-| `src/interfaces/`, `src/glyphs/`      | Shared TS interfaces; icon/glyph assets.                                                                        |
-| `websock/`                            | Standalone Python websockify service — VNC bridge, own `requirements.txt` + venv.                               |
-| `utils/certs/`                        | TLS certs for local/prod (`star.key`, `star.crt`) — never commit real certs.                                    |
-| `tests/backend/`                      | Vitest: `enc.test.ts`, `error-classes.test.ts`, `network-error-parsing.test.ts`.                                |
-| `create_fake_students.py`, `setup.py` | Local/demo data + environment setup.                                                                            |
+| Path                             | Contains                                                                                                        |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `src/client-api/`                | Client-side fetch wrappers. Browser-only.                                                                       |
+| `src/app/api/`                   | Route handlers: `avatar`, `class`, `env`, `install-client`, `login`, `logout`, `settings`, `students`, `tweet`. |
+| `src/server-api/`                | Server-only: Hive client, NextAuth options, session/auth logic.                                                 |
+| `src/shared-api/`                | Shared types/contracts and error classes, pure utils.                                                           |
+| `src/components/search`          | React UI.                                                                                                       |
+| `src/interfaces/`, `src/glyphs/` | Shared TS interfaces; icon/glyph assets.                                                                        |
+| `websock/`                       | Standalone Python websockify service — VNC bridge, own `requirements.txt` + venv.                               |
+| `nginx/`                         | `nginx.conf.template`; `ssl/` holds TLS certs (`star.key`, `star.crt`, `ca.crt`) — gitignored, never commit.    |
+| `deploy/`                        | Compose: base, `.dev`, `.test` (e2e), `.hive-local` (co-located Hive), `.release` (shipped in bundles).         |
+| `scripts/`                       | `setup.py` wizard, `install.sh`/`.ps1`, `update.sh`, `link-hive.sh`, `ci_setup.py`, `bump_version.py`.          |
+| `tests/backend/`                 | Vitest: `enc.test.ts`, `error-classes.test.ts`, `network-error-parsing.test.ts`.                                |
 
 ## Gotchas
 

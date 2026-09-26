@@ -51,7 +51,7 @@ venv/
 
 node_modules2/
 src/hanichim-info/
-utils/certs/
+nginx/ssl/
 my_utils/
 websock/*.txt
 .vscode/PythonImportHelper-v2-Completion.json

@@ -1,6 +1,18 @@
+# E2E overlay — layered on deploy/docker-compose.yml (npm run docker:test).
+# Builds the prod images from source instead of pulling ghcr tags, binds nginx
+# to 127.0.0.5 so it can coexist with a local Hive, and joins Hive's network.
 services:
   ui:
     container_name: peekaboo-test-ui
+    image: peekaboo-ui:test
+    build:
+      context: ../
+      dockerfile: Dockerfile
+      args:
+        NODE_DOCKER_REGISTRY: ${NODE_DOCKER_REGISTRY:-}
+        NPM_TOKEN: ${NPM_TOKEN}
+        # NEXT_PUBLIC_* vars are inlined into the JS bundle at build time.
+        NEXT_PUBLIC_HIVE_URL: ${NEXT_PUBLIC_HIVE_URL}
     # Join Hive's network instead of routing hive.org through the host.
     #
     # `extra_hosts: hive.org:host-gateway` resolves to the host's gateway IP,
@@ -28,6 +40,13 @@ services:
 
   vnc-bridge:
     container_name: peekaboo-test-vnc-bridge
+    image: peekaboo-vnc-bridge:test
+    build:
+      context: ../websock/
+      dockerfile: Dockerfile
+      args:
+        PYTHON_DOCKER_REGISTRY: ${PYTHON_DOCKER_REGISTRY:-}
+        PIP_CONF_PATH: ${PIP_CONF_PATH:-pip_online.conf}
 
 networks:
   hive_net:

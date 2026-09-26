@@ -16,8 +16,8 @@
         "docker:prod": "docker compose --env-file .env -f deploy/docker-compose.yml up -d",
         "docker:down": "docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml down",
         "docker:nuke": "docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml down -v --rmi local",
-        "docker:test": "docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build",
-        "docker:test:down": "docker compose -f docker-compose.yml -f docker-compose.test.yml down -v",
+        "docker:test": "docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml up -d --build",
+        "docker:test:down": "docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml down -v",
         "prepare": "husky"
     },
     "lint-staged": {

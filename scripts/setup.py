@@ -2,13 +2,15 @@
 """
 Author: Michael K. Steinberg (Bis90 v25)
 Name: setup.py
+
+Interactive .env / TLS / websockify-token wizard. Operates on the current
+directory, which is the repo root in development (`python scripts/setup.py`)
+and the bundle root in a release (`python3 setup.py`, run by install.sh).
 """
 
 import base64
 import os
-import random
-import shutil
-import subprocess
+import secrets
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -41,7 +43,7 @@ except ImportError:
     handle_import_error("ipaddress")
 
 try:
-    from dotenv import load_dotenv
+    from dotenv import dotenv_values
 except ImportError:
     # The import name is `dotenv`; the distribution is `python-dotenv`. There
     # is a separate, unrelated `dotenv` on PyPI, so printing the import name
@@ -127,15 +129,6 @@ AUTO_VARS = {
 
 SECRET_VARS = ("SYM_ENC_KEY", "NEXTAUTH_SECRET", "HIVE_CLIENT_SECRET")
 
-# Images docker-compose.yml expects (README "Quick Start" step 4).
-REQUIRED_DOCKER_IMAGES = (
-    "ghcr.io/system-b90/peek-a-boo/nextjs",
-    "nginx",
-    "ghcr.io/system-b90/peek-a-boo/websock",
-)
-# Image tarballs (e.g. from the releases tab) dropped here get `docker load`ed.
-DOCKER_IMAGES_DIR = "images"
-
 PROMPT_VARS: Dict[str, str] = {
     "HOSTNAME": "Hostname for Peek-a-Boo (Used for certificate)",
     "VNC_CLIENT_PASSWORD": "Password for VNC on student PCs",
@@ -179,7 +172,7 @@ def error(msg: str):
 
 
 def gen_random_b64_str(byte_len: int = 32) -> str:
-    return base64.b64encode(random.randbytes(byte_len)).decode()
+    return base64.b64encode(secrets.token_bytes(byte_len)).decode()
 
 
 def b64_encode(value: str) -> str:
@@ -193,7 +186,7 @@ def b64_decode(value: str) -> str:
 
 
 def project_root() -> Path:
-    return Path(sys.argv[0]).resolve().parent
+    return Path.cwd()
 
 
 def test_hive_user(hostname: str, password: str) -> bool:
@@ -297,18 +290,18 @@ def test_values(values: Dict[str, str]):
 
 
 def load_existing_env(env_path: Path) -> Dict[str, str]:
-    """Load existing .env file into a dictionary if it exists."""
+    """Load an existing .env into a dictionary (every key, not just ours).
+
+    Keys the wizard does not own — PEEKABOO_VERSION written by install.sh,
+    HIVE_NETWORK_NAME written by link-hive.sh — must survive a re-run, or the
+    next compose invocation resolves the wrong image tag / network.
+    """
     if not env_path.exists():
         return {}
-    load_dotenv(env_path)  # loads into os.environ
-    return {
-        var: (
-            os.getenv(var, "")
-            if var != "VNC_CLIENT_PASSWORD"
-            else b64_decode(os.getenv(var, ""))
-        )
-        for var in PROMPT_VARS.keys() | set(SECRET_VARS) | set(AUTO_VARS.keys())
-    }
+    values = {k: v or "" for k, v in dotenv_values(env_path).items()}
+    if "VNC_CLIENT_PASSWORD" in values:
+        values["VNC_CLIENT_PASSWORD"] = b64_decode(values["VNC_CLIENT_PASSWORD"])
+    return values
 
 
 CA_NAME = "System-B90 Local Dev CA"
@@ -464,7 +457,7 @@ def cert_is_current(cert_path: Path, ca_cert, names: list[str]) -> bool:
 
 
 def handle_certs(values: dict[str, Any]):
-    root = Path("./utils/certs/")
+    root = project_root() / "nginx" / "ssl"
     os.makedirs(root, exist_ok=True)
 
     cert_path, key_path = root / "star.crt", root / "star.key"
@@ -549,6 +542,11 @@ def collect_vars() -> Dict[str, str]:
     port_suffix = "" if https_port == "443" else f":{https_port}"
     values["NEXTAUTH_URL"] = f"https://{values['HOSTNAME']}{port_suffix}"
 
+    # Carry over keys owned by the installer scripts (see load_existing_env).
+    for var, val in existing_values.items():
+        if var not in values and var not in PROMPT_VARS:
+            values[var] = val
+
     return values
 
 
@@ -562,60 +560,12 @@ def create_tokens_file(token_path: Path, hive_hostname: str, hive_password: str)
     info("Fetching student list 🧑‍🎓")
     students = get_hive_students(hive_hostname, hive_password)
 
+    token_path.parent.mkdir(parents=True, exist_ok=True)
     token_path.write_text(
         "\n".join(f"{hostname}: {hostname}:5900" for username, hostname in students)
         + "\n"
     )
     success(f"WebSocket token file created at {token_path}")
-
-
-def docker_image_exists(image: str) -> bool:
-    result = subprocess.run(
-        ["docker", "images", "-q", image],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return result.returncode == 0 and bool(result.stdout.strip())
-
-
-def handle_docker_images():
-    banner("Checking Docker images 🐳")
-
-    if shutil.which("docker") is None:
-        warn("Docker not found on PATH — skipping image checks.")
-        return
-
-    # Load any image tarballs dropped into ./images/ (offline installs).
-    images_dir = project_root() / DOCKER_IMAGES_DIR
-    for tarball in sorted(images_dir.glob("*.tar")) if images_dir.is_dir() else []:
-        info(f"Loading image from {tarball.name} 📦")
-        result = subprocess.run(
-            ["docker", "load", "-i", str(tarball)],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if result.returncode == 0:
-            success(result.stdout.strip() or f"Loaded {tarball.name}")
-        else:
-            warn(f"Failed to load {tarball.name}: {result.stderr.strip()}")
-
-    missing = [i for i in REQUIRED_DOCKER_IMAGES if not docker_image_exists(i)]
-    if not missing:
-        success("All required Docker images are present")
-        return
-
-    warn(f"Missing Docker images: {', '.join(missing)}")
-    info(
-        f"Place release tarballs in ./{DOCKER_IMAGES_DIR}/ and re-run setup, "
-        "or pull/build them:"
-    )
-    for image in missing:
-        if "peek-a-boo/" in image:
-            print(f"    docker load -i <{image.split('/')[1]}.tar from releases tab>")
-        else:
-            print(f"    docker pull {image}")
 
 
 def main():
@@ -636,8 +586,6 @@ def main():
     create_tokens_file(token_file, values["HIVE_HOSTNAME"], values["HIVE_API_PASSWORD"])
 
     handle_certs(values)
-
-    handle_docker_images()
 
     banner("Setup complete 🎉")
     success("Peek-a-boo environment is ready to go! 🚀🔥")

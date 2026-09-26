@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Generate dev TLS certs for peek-a-boo, issued by a local "System-B90" CA.
 #
-#   utils/certs/ca.crt    trust this once in your OS/browser store
-#   utils/certs/star.crt  leaf (+ nothing else), SANs = HOSTNAME, localhost
-#   utils/certs/star.key  leaf key
+#   nginx/ssl/ca.crt    trust this once in your OS/browser store
+#   nginx/ssl/star.crt  leaf (+ nothing else), SANs = HOSTNAME, localhost
+#   nginx/ssl/star.key  leaf key
 #
 # Hostnames come from .env (HOSTNAME); defaults match dev.
 # The CA is reused if present so the browser trust survives leaf regeneration.
@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."
 env_get() { [ -f .env ] && sed -n "s/^$1=['\"]\?\([^'\"]*\)['\"]\?$/\1/p" .env | head -1 || true; }
 HOST="$(env_get HOSTNAME)"; HOST="${HOST:-peekaboo.dev}"
 
-DIR=utils/certs
+DIR=nginx/ssl
 mkdir -p "$DIR"
 export MSYS_NO_PATHCONV=1   # Git Bash: keep -subj "/O=..." from being path-converted
 

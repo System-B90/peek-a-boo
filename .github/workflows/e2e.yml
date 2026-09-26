@@ -18,10 +18,9 @@ on:
             - 'src/**'
             - 'tests/**'
             - 'websock/**'
-            - 'utils/**'
+            - 'nginx/**'
             - 'deploy/**'
             - 'scripts/**'
-            - 'docker-compose*.yml'
             - 'Dockerfile'
             - 'package.json'
             - 'package-lock.json'
@@ -105,9 +104,9 @@ jobs:
             # ── Peek-a-boo environment & stack ─────────────────────────────────
             - name: Generate self-signed SSL certificate
               run: |
-                  mkdir -p utils/certs
-                  openssl req -x509 -newkey rsa:4096 -keyout utils/certs/star.key \
-                    -out utils/certs/star.crt -sha256 -days 30 -nodes \
+                  mkdir -p nginx/ssl
+                  openssl req -x509 -newkey rsa:4096 -keyout nginx/ssl/star.key \
+                    -out nginx/ssl/star.crt -sha256 -days 30 -nodes \
                     -subj "/CN=peekaboo.dev" \
                     -addext "subjectAltName=DNS:peekaboo.dev,DNS:localhost"
 
@@ -134,8 +133,8 @@ jobs:
                   HIVE_NETWORK_NAME: hive_hive-net
                   NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
               run: |
-                  docker compose -f docker-compose.yml -f docker-compose.test.yml build
-                  docker compose -f docker-compose.yml -f docker-compose.test.yml up -d
+                  docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml build
+                  docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml up -d
 
             - name: Wait for Peek-a-boo to be ready
               run: |
@@ -208,7 +207,7 @@ jobs:
                   # command substitution from a dead docker daemon would abort the
                   # step before `exit 0`. Cleanup must never fail the job.
                   set +e
-                  docker compose -f docker-compose.yml -f docker-compose.test.yml down -v --remove-orphans || true
+                  docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.test.yml down -v --remove-orphans || true
                   docker compose -f hive/docker-compose.yaml down -v --remove-orphans || true
                   leftovers=$(docker ps -aq --filter "name=^/hive-")
                   if [ -n "$leftovers" ]; then docker rm -f $leftovers || true; fi

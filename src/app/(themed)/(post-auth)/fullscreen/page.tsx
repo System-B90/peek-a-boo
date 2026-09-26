@@ -11,9 +11,10 @@ export default function Fullscreen() {
     const searchParams = useSearchParams();
     const { clientEnvConfig } = useAuth();
 
-    // Fullscreen can be given one of the following:
-    // * hostname
-    // * username
+    // Fullscreen takes a `username` search param. A `hostname` param is
+    // recognised but NOT implemented -- the effect below only logs. Connecting
+    // by hostname would need a lookup from host to VNC credentials that does
+    // not exist yet.
 
     const [studentUsername] = useState<string>(
         searchParams.get("username") ?? "",

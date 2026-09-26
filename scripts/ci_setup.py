@@ -28,6 +28,7 @@ HIVE_HOSTNAME = "hive.org"
 HIVE_API_PASSWORD = "Password1"
 TEST_HOSTNAME = "peekaboo.dev"
 VNC_CLIENT_PASSWORD = "TestVncPass1"
+VNC_MASTER_PASSWORD = "TestVncMaster1"
 
 
 def verify_hive_api_account() -> None:
@@ -44,7 +45,7 @@ def verify_hive_api_account() -> None:
             client.get_hive_version()
     except Exception as e:
         print(f"Failed to authenticate Hive 'api' service account: {e}")
-        sys.exit(1)
+        raise SystemExit(1) from e
     print("Hive 'api' service account OK.")
 
 
@@ -69,7 +70,7 @@ def register_sso_service(nextauth_url: str) -> tuple[str, str]:
             return client_id, client_secret
     except Exception as e:
         print(f"Failed to register SSO with Hive: {e}")
-        sys.exit(1)
+        raise SystemExit(1) from e
 
 
 def main() -> None:
@@ -85,6 +86,7 @@ def main() -> None:
         "NEXTAUTH_SECRET": gen_random_b64_str(),
         "HOSTNAME": TEST_HOSTNAME,
         "VNC_CLIENT_PASSWORD": base64.b64encode(VNC_CLIENT_PASSWORD.encode()).decode(),
+        "VNC_MASTER_PASSWORD": base64.b64encode(VNC_MASTER_PASSWORD.encode()).decode(),
         "HIVE_HOSTNAME": HIVE_HOSTNAME,
         "HIVE_PASSWORD": "",
         "HIVE_API_PASSWORD": HIVE_API_PASSWORD,

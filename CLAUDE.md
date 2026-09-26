@@ -38,7 +38,7 @@ npm run dev
 `ALLOW_LOGIN_BYPASS=true` skips real auth for local dev — never set it outside a local
 environment.
 
-Containerised dev (Bluz-style): `npm run docker:dev` layers `deploy/docker-compose.dev.yml`
+Containerised dev (Bluz-style): `npm run docker:dev` (`docker:dev:rebuild` to force an image rebuild) layers `deploy/docker-compose.dev.yml`
 over `deploy/docker-compose.yml` � builds the `dev` Dockerfile target, live-syncs `src/`
 via `compose --watch`, nginx on `127.0.0.4:80/443` (needs `.env` with `NPM_TOKEN`).
 `docker:down` / `docker:nuke` tear it down.
@@ -56,6 +56,7 @@ sb90-deploy — only `scripts/setup.py` (the wizard's peek-a-boo questions) stay
 ```bash
 npm run lint            # ESLint over the whole repo (lint:fix to autofix)
 npm run test:unit       # Vitest (tests/backend/*.test.ts)
+pytest tests/websock -q  # Pytest for the websockify bridge
 ruff check .             # Python lint (websock/, scripts/)
 ruff format --check .    # Python format check
 ```
@@ -68,19 +69,20 @@ on every push and PR.
 
 ## Key directories
 
-| Path                             | Contains                                                                                                        |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `src/client-api/`                | Client-side fetch wrappers. Browser-only.                                                                       |
-| `src/app/api/`                   | Route handlers: `avatar`, `class`, `env`, `install-client`, `login`, `logout`, `settings`, `students`, `tweet`. |
-| `src/server-api/`                | Server-only: Hive client, NextAuth options, session/auth logic.                                                 |
-| `src/shared-api/`                | Shared types/contracts and error classes, pure utils.                                                           |
-| `src/components/search`          | React UI.                                                                                                       |
-| `src/interfaces/`, `src/glyphs/` | Shared TS interfaces; icon/glyph assets.                                                                        |
-| `websock/`                       | Standalone Python websockify service — VNC bridge, own `requirements.txt` + venv.                               |
-| `nginx/`                         | `nginx.conf.template`; `ssl/` holds TLS certs (`star.key`, `star.crt`, `ca.crt`) — gitignored, never commit.    |
-| `deploy/`                        | Compose: base, `.dev`, `.test` (e2e), `.hive-local` (co-located Hive), `.release` (shipped in bundles).         |
-| `scripts/`                       | `setup.py` wizard (on sb90-deploy), `ci_setup.py`, `bump_version.py`.                                           |
-| `tests/backend/`                 | Vitest: `enc.test.ts`, `error-classes.test.ts`, `network-error-parsing.test.ts`.                                |
+| Path                             | Contains                                                                                                            |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `src/client-api/`                | Client-side fetch wrappers. Browser-only.                                                                           |
+| `src/app/api/`                   | Route handlers: `avatar`, `class`, `env`, `install-client`, `login`, `logout`, `settings`, `students`, `tweet`.     |
+| `src/server-api/`                | Server-only: Hive client, NextAuth options, session/auth logic.                                                     |
+| `src/shared-api/`                | Shared types/contracts and error classes, pure utils.                                                               |
+| `src/components/search`          | React UI.                                                                                                           |
+| `src/interfaces/`, `src/glyphs/` | Shared TS interfaces; icon/glyph assets.                                                                            |
+| `websock/`                       | Standalone Python websockify service — VNC bridge, own `requirements.txt` + venv.                                   |
+| `nginx/`                         | `nginx.conf.template`; `ssl/` holds TLS certs (`star.key`, `star.crt`, `ca.crt`) — gitignored, never commit.        |
+| `deploy/`                        | Compose: base, `.dev`, `.test` (e2e), `.hive-local` (co-located Hive), `.release` (shipped in bundles).             |
+| `scripts/`                       | `setup.py` wizard (on sb90-deploy), `ci_setup.py`, `bump_version.py`.                                               |
+| `tests/backend/`                 | Vitest backend suites — one per module or route (`api-common`, `settings`, `hive-server-api`, `students-route`, …). |
+| `tests/websock/`                 | Pytest for the Python bridge (`test_start_websockify.py`).                                                          |
 
 ## Gotchas
 

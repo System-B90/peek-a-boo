@@ -1,9 +1,9 @@
+import json
+import os
+import re
 from argparse import ArgumentParser
 from enum import Enum
-import os
 from pathlib import Path
-import json
-import re
 
 
 class Version(Enum):

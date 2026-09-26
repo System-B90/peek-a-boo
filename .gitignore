@@ -62,3 +62,4 @@ create_fake_students.py
 # Python bytecode
 __pycache__/
 *.py[cod]
+.pytest_cache/

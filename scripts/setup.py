@@ -17,6 +17,7 @@ CA + leaf certificate, Hive clients — live in sb90-deploy
 import base64
 import json
 import os
+import secrets
 import ssl
 import sys
 import urllib.error
@@ -43,15 +44,15 @@ SECRET_VARS = ("SYM_ENC_KEY", "NEXTAUTH_SECRET")
 
 PROMPT_VARS = {
     "VNC_CLIENT_PASSWORD": "Password for VNC on student PCs",
-    #
+    # Hive
     "HIVE_HOSTNAME": 'Hostname of Hive instance (e.g. "hive.org")',
     "HIVE_PASSWORD": "Password for Hive PostgreSQL",
     "HIVE_API_PASSWORD": "Password for Hive API",
-    #
+    # Mattermost
     "MATTERMOST_URL": 'URL for Mattermost (e.g. "https://mattermost.domain.tld")',
     "MATTERMOST_ACCESS_TOKEN": "Mattermost personal access token",
     "TWEET_CHANNEL_ID": "Mattermost channel ID for tweets",
-    #
+    # Hive SSO
     "NEXT_PUBLIC_HIVE_URL": 'Base URL of the Hive instance for OIDC SSO (e.g. "https://hive.org")',
     "HIVE_CLIENT_ID": "OAuth client ID registered with Hive for this app",
     "HIVE_CLIENT_SECRET": "OAuth client secret registered with Hive for this app",
@@ -161,6 +162,22 @@ def create_tokens_file(token_path: Path, hostname: str, api_password: str) -> No
         "\n".join(f"{host}: {host}:5900" for _, host in students) + "\n"
     )
     success(f"WebSocket token file created at {token_path}")
+
+
+def _set_master_password(w: Wizard, previous_client: str) -> None:
+    """Keep an existing master password; otherwise generate a unique one.
+
+    A re-run on a deployment that predates VNC_MASTER_PASSWORD reuses the client
+    password, since that is what its master password effectively already is.
+    """
+    existing = w.prev("VNC_MASTER_PASSWORD")
+    if existing:
+        w.set("VNC_MASTER_PASSWORD", existing)
+    elif previous_client:
+        w.set("VNC_MASTER_PASSWORD", previous_client)
+    else:
+        password = secrets.token_urlsafe(12)
+        w.set("VNC_MASTER_PASSWORD", base64.b64encode(password.encode()).decode())
 
 
 def main() -> None:

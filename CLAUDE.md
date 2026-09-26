@@ -38,7 +38,7 @@ npm run dev
 `ALLOW_LOGIN_BYPASS=true` skips real auth for local dev — never set it outside a local
 environment.
 
-Containerised dev (Bluz-style): `npm run docker:dev` layers `deploy/docker-compose.dev.yml`
+Containerised dev (Bluz-style): `npm run docker:dev` (`docker:dev:rebuild` to force an image rebuild) layers `deploy/docker-compose.dev.yml`
 over `deploy/docker-compose.yml` � builds the `dev` Dockerfile target, live-syncs `src/`
 via `compose --watch`, nginx on `127.0.0.4:80/443` (needs `.env` with `NPM_TOKEN`).
 `docker:down` / `docker:nuke` tear it down.

@@ -16,30 +16,23 @@ server {
     ssl_session_cache shared:SSL:1m;
     ssl_session_timeout 5m;
 
-    location / {
-        proxy_pass http://ui:3000;
+    # VNC-over-websocket bridge (websockify): clients connect to
+    # wss://<host>/ws?token=<student>. proxy_pass with a URI swaps the /ws
+    # prefix for / and keeps the query string.
+    location /ws {
+        proxy_pass http://vnc-bridge:60800/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 1h;
+        proxy_send_timeout 1h;
     }
-}
-
-server {
-    listen 443 ssl;
-    server_name $WEBSOCKET_SERVER_HOSTNAME;
-
-    ssl_certificate /etc/nginx/certs/star.crt;
-    ssl_certificate_key /etc/nginx/certs/star.key;
-
-    ssl_session_cache shared:SSL:1m;
-    ssl_session_timeout 5m;
 
     location / {
-        proxy_pass http://vnc-bridge:60800;
+        proxy_pass http://ui:3000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

@@ -41,7 +41,6 @@ services:
       - ../.env
     environment:
       - SERVER_HOSTNAME=${HOSTNAME}
-      - WEBSOCKET_SERVER_HOSTNAME=${WEBSOCKET_SERVER_HOSTNAME}
     volumes:
       - ../utils/certs:/etc/nginx/certs:ro
       - ../scripts/configs/nginx.conf.template:/etc/nginx/templates/nginx.conf.template:ro

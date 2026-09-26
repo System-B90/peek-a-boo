@@ -138,7 +138,6 @@ DOCKER_IMAGES_DIR = "images"
 
 PROMPT_VARS: Dict[str, str] = {
     "HOSTNAME": "Hostname for Peek-a-Boo (Used for certificate)",
-    "WEBSOCKET_SERVER_HOSTNAME": "Hostname for WebSocket server",
     "VNC_CLIENT_PASSWORD": "Password for VNC on student PCs",
     #
     "HIVE_HOSTNAME": 'Hostname of Hive instance (e.g. "hive.org")',
@@ -471,13 +470,13 @@ def handle_certs(values: dict[str, Any]):
     cert_path, key_path = root / "star.crt", root / "star.key"
     ca_cert_path, ca_key_path = root / "ca.crt", root / "ca.key"
 
-    hostname, wss = values["HOSTNAME"], values["WEBSOCKET_SERVER_HOSTNAME"]
+    hostname = values["HOSTNAME"]
     ca_cert, ca_key = load_or_create_ca(ca_cert_path, ca_key_path)
 
-    if key_path.exists() and cert_is_current(cert_path, ca_cert, [hostname, wss]):
+    if key_path.exists() and cert_is_current(cert_path, ca_cert, [hostname]):
         success("Using existing certificates")
     else:
-        alt_names = [hostname, wss, "localhost", "127.0.0.1"]
+        alt_names = [hostname, "localhost", "127.0.0.1"]
         bind_ip = values.get("PEEKABOO_BIND_IP", "0.0.0.0")
         if bind_ip != "0.0.0.0":
             alt_names.append(bind_ip)
@@ -527,9 +526,6 @@ def collect_vars() -> Dict[str, str]:
     # Prompt for interactive vars
     for var, desc in PROMPT_VARS.items():
         default = existing_values.get(var, "")
-        if var == "WEBSOCKET_SERVER_HOSTNAME" and not default:
-            # HOSTNAME is prompted first (dict order), so it's available here.
-            default = f"wss.{values['HOSTNAME']}"
         prompt_msg = (
             f"👉 {var} ({desc}) [{default}]: " if default else f"👉 {var} ({desc}) = "
         )

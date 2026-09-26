@@ -16,6 +16,8 @@ services:
         NPM_TOKEN: ${NPM_TOKEN}
     environment:
       - NODE_ENV=development
+      # Behind nginx, so use its /ws route instead of bare-dev's direct :60800.
+      - WEBSOCKET_URL=/ws
       # Bind-mounted/synced files on Docker Desktop (Windows/macOS) don't emit
       # inotify events reliably.
       - WATCHPACK_POLLING=true

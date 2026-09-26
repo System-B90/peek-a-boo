@@ -3,6 +3,7 @@
 import { createContext, useContext, useMemo } from "react";
 
 import { useAuth } from "@/components/auth-provider";
+import { buildWebsocketProxyUrl } from "@/shared-api/websocket-url";
 
 export type SettingsContext = {
     default: boolean;
@@ -26,7 +27,13 @@ export const SettingsProvider = ({
     const { clientEnvConfig } = useAuth();
     const wsProxyUrl = useMemo(
         () =>
-            `${clientEnvConfig.WEBSOCKET_PROTOCOL_PREFIX}://${clientEnvConfig.WEBSOCKET_SERVER_HOSTNAME}:${clientEnvConfig.WEBSOCKET_PORT}?token=${hostname}`,
+            typeof window === "undefined"
+                ? ""
+                : buildWebsocketProxyUrl(
+                    clientEnvConfig.WEBSOCKET_URL,
+                    window.location,
+                    hostname,
+                ),
         [hostname, clientEnvConfig],
     );
 

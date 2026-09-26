@@ -109,7 +109,7 @@ jobs:
                   openssl req -x509 -newkey rsa:4096 -keyout utils/certs/star.key \
                     -out utils/certs/star.crt -sha256 -days 30 -nodes \
                     -subj "/CN=peekaboo.dev" \
-                    -addext "subjectAltName=DNS:peekaboo.dev,DNS:wss.peekaboo.dev,DNS:localhost"
+                    -addext "subjectAltName=DNS:peekaboo.dev,DNS:localhost"
 
             - name: Prepare websocket token file
               run: touch websock/websocket_token_source.txt

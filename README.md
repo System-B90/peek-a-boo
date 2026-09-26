@@ -8,11 +8,10 @@ Monitor your students the smart way
 
 1. Acquire an Ubuntu machine with docker.
 2. Clone the repository.
-3. Create a TLS certificate for your peek-a-boo domain (and the "wss." domain) and place it in ./utils/certs.
+3. Create a TLS certificate for your peek-a-boo domain and place it in ./utils/certs.
     1. Your certificate should look like this:
     ```
     DOMAIN NAME: peek-a-boo.my-domain.dom
-    ALT NAME: wss.peek-a-boo.my-domain.dom
     ```
     2. Place it in `./utils/certs/` as `star.key` and `star.crt`.
 4. Pull / import the 3 images required.

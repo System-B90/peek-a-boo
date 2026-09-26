@@ -19,12 +19,6 @@ services:
     networks:
       - backend
       - hive_net
-    environment:
-      # Hive's nginx publishes 0.0.0.0:80/443 (all interfaces), which blocks
-      # any other container from binding those ports on any IP, including
-      # 127.0.0.5. Use non-standard host ports instead (see nginx below) and
-      # tell the client-side WebSocket connector to match.
-      - WEBSOCKET_PORT=8443
 
   proxy:
     container_name: peekaboo-test-proxy

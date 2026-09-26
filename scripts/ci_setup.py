@@ -27,7 +27,6 @@ def gen_random_b64_str(byte_len: int = 32) -> str:
 HIVE_HOSTNAME = "hive.org"
 HIVE_API_PASSWORD = "Password1"
 TEST_HOSTNAME = "peekaboo.dev"
-TEST_WEBSOCKET_HOSTNAME = f"wss.{TEST_HOSTNAME}"
 VNC_CLIENT_PASSWORD = "TestVncPass1"
 
 
@@ -85,7 +84,6 @@ def main() -> None:
         "NEXTAUTH_URL": nextauth_url,
         "NEXTAUTH_SECRET": gen_random_b64_str(),
         "HOSTNAME": TEST_HOSTNAME,
-        "WEBSOCKET_SERVER_HOSTNAME": TEST_WEBSOCKET_HOSTNAME,
         "VNC_CLIENT_PASSWORD": base64.b64encode(VNC_CLIENT_PASSWORD.encode()).decode(),
         "HIVE_HOSTNAME": HIVE_HOSTNAME,
         "HIVE_PASSWORD": "",

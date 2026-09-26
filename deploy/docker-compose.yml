@@ -11,6 +11,17 @@ services:
       - ../.env:/app/.env:ro
     expose:
       - "3000"
+    healthcheck:
+      # No curl/wget in the runner image; node is the only HTTP client.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     networks:
       - backend
 
@@ -22,8 +33,10 @@ services:
       - "${PEEKABOO_BIND_IP:-0.0.0.0}:${PEEKABOO_HTTPS_PORT:-443}:443"
       - "${PEEKABOO_BIND_IP:-0.0.0.0}:${PEEKABOO_HTTP_PORT:-80}:80"
     depends_on:
-      - ui
-      - vnc-bridge
+      ui:
+        condition: service_healthy
+      vnc-bridge:
+        condition: service_started
     env_file:
       - ../.env
     environment:

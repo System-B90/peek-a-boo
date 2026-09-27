@@ -69,6 +69,22 @@ on every push and PR.
 
 **Regression tests for bugs:** Every closed bug issue must have a dedicated regression test committed alongside the fix. The test must fail on the pre-fix code and pass after. This prevents bugs from silently resurfacing.
 
+## Release screenshots
+
+Every release ships with screenshots of the app, captured automatically in CI:
+
+- `tests/e2e/screenshots.spec.ts` captures the main screens (login, dashboard, mentees, settings) into `release-screenshots/` on every
+  E2E run, and `e2e.yml` uploads them as the `release-screenshots` artifact. On a `v*`
+  tag, `release.yml` pulls that artifact from the master E2E run for the tagged commit
+  (or the latest green one) and attaches the PNGs to the GitHub Release. Don't take or
+  commit screenshots by hand.
+- **Rule:** when a PR adds or visibly changes a user-facing page, add or update its shot
+  in `tests/e2e/screenshots.spec.ts` in the same PR. Before tagging, make sure master E2E is green for the commit
+  you're tagging, and look at its `release-screenshots` artifact to see what the release
+  will ship.
+- The shots aren't assertions. A screen that fails to render shows up as a bad image, so
+  look at them rather than relying on a green run.
+
 ## Key directories
 
 | Path                             | Contains                                                                                                            |

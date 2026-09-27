@@ -170,8 +170,12 @@ def run_cli(tmp_path, monkeypatch):
 
 
 @pytest.fixture
-def run_cli_table(run_cli):
-    """Like run_cli, but renders tables instead of --json."""
+def run_cli_table(run_cli, monkeypatch):
+    """Like run_cli, but renders tables instead of --json -- on a console wide
+    enough that headers never wrap, whatever terminal (or CI log) runs it."""
+    from peekaboo_cli import output
+
+    monkeypatch.setattr(output.console, "width", 250)
 
     def invoke(stub: StubApp, *args: str) -> Any:
         return run_cli(stub, *args, as_json=False)

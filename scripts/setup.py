@@ -16,7 +16,6 @@ CA + leaf certificate, Hive clients — live in sb90-deploy
 
 import base64
 import json
-import os
 import secrets
 import ssl
 import sys
@@ -98,17 +97,14 @@ def _get(url: str, headers: dict | None = None, timeout: float = 10) -> dict:
 def find_npm_token() -> str:
     """An @system-b90 GitHub Packages token so `docker compose build` (which
     can't see the host's .npmrc) can pull @system-b90/* deps in development.
-    Checked: NPM_TOKEN/GITHUB_TOKEN env vars, then ~/.npmrc."""
-    for var in ("NPM_TOKEN", "GITHUB_TOKEN"):
-        if os.environ.get(var):
-            return os.environ[var]
-    npmrc = Path.home() / ".npmrc"
-    if npmrc.exists():
-        for line in npmrc.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if line.startswith("//npm.pkg.github.com/:_authToken="):
-                return line.split("=", 1)[1].strip()
-    return ""
+    Checked by sb90-devops: NPM_TOKEN/GITHUB_TOKEN/GH_TOKEN, ~/.npmrc, then
+    `gh auth token`. Release bundles ship without sb90-devops and pull
+    prebuilt images, so they need no token."""
+    try:
+        from sb90_devops import find_npm_token as shared_lookup
+    except ImportError:
+        return ""
+    return shared_lookup() or ""
 
 
 def test_mattermost(url: str, token: str, channel_id: str) -> None:
@@ -182,8 +178,9 @@ def main() -> None:
     w.set("NPM_TOKEN", find_npm_token() or w.prev("NPM_TOKEN"))
     if not w.values["NPM_TOKEN"]:
         print(
-            "⚠️  No @system-b90 GitHub Packages token found (NPM_TOKEN/GITHUB_TOKEN, "
-            "~/.npmrc). Only `docker compose build` in a checkout needs one."
+            "⚠️  No @system-b90 GitHub Packages token found (NPM_TOKEN/GITHUB_TOKEN/"
+            "GH_TOKEN, ~/.npmrc, gh auth). Only `docker compose build` in a "
+            "checkout needs one."
         )
 
     info("Generating secure secrets 🔑")

@@ -14,7 +14,6 @@ import sys
 from pathlib import Path
 
 try:
-    from pyhive import HiveClient
     from sb90_deploy import envfile, hive
 except ImportError:
     print("Error: dependencies missing. Run: pip install -r scripts/requirements.txt")
@@ -48,13 +47,8 @@ def verify_hive_api_account() -> None:
 def register_sso_service(nextauth_url: str) -> tuple[str, str]:
     print(f"Registering Peek-a-Boo SSO service with Hive at {HIVE_URL}...")
     try:
-        with HiveClient(
-            "admin",
-            HIVE_ADMIN_PASSWORD,
-            HIVE_URL,
-            verify=False,
-            timeout=10,
-        ) as client:
+        # hive.register_sso is interactive (browser/prompts); CI has admin creds.
+        with hive.api_client(HIVE_URL, "admin", HIVE_ADMIN_PASSWORD) as client:
             sso_credentials = client.register_sso_service(
                 service_name="Peek-a-Boo CI",
                 redirect_uris=f"{nextauth_url}/api/auth/callback/hive",

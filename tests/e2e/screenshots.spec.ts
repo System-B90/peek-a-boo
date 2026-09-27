@@ -1,13 +1,33 @@
-import { type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 /**
- * Release screenshots. Not assertions: captures the main screens into
+ * Release screenshots. Captures the main screens into
  * `release-screenshots/` (repo root), which e2e.yml uploads as an artifact and
  * release.yml attaches to the GitHub Release on `v*` tags. Keep the list in
  * step with the app's user-facing pages (see CLAUDE.md, "Release screenshots").
+ *
+ * The only assertion is that the page was actually served: a 5xx (e.g. an
+ * nginx 502 page) fails the test instead of shipping as a "screenshot".
  */
 
 const OUT_DIR = "release-screenshots";
+
+/** Navigates, retrying 5xx responses for up to ~30s while the stack warms up. */
+async function open(page: Page, url: string): Promise<void> {
+    let status = 0;
+    for (let attempt = 0; attempt < 10; attempt++) {
+        const res = await page.goto(url, {
+            waitUntil: "domcontentloaded",
+            timeout: 60_000,
+        });
+        status = res?.status() ?? 0;
+        if (status > 0 && status < 500) {
+            break;
+        }
+        await page.waitForTimeout(3_000);
+    }
+    expect(status, `${url} was not served (HTTP ${status})`).toBeLessThan(500);
+}
 
 async function shoot(page: Page, name: string): Promise<void> {
     // Let the grid and fonts settle so the shot isn't a loading skeleton.
@@ -18,20 +38,20 @@ async function shoot(page: Page, name: string): Promise<void> {
 }
 
 test.describe("Release screenshots", () => {
-    test.describe.configure({ timeout: 60_000 });
+    test.describe.configure({ timeout: 90_000 });
 
     test("login", async ({ browser }) => {
         const context = await browser.newContext({
             storageState: { cookies: [], origins: [] },
         });
         const page = await context.newPage();
-        await page.goto("/login", { waitUntil: "domcontentloaded" });
+        await open(page, "/login");
         await shoot(page, "01-login");
         await context.close();
     });
 
     test("dashboard", async ({ page }) => {
-        await page.goto("/", { waitUntil: "commit" });
+        await open(page, "/");
         await page
             .getByPlaceholder("Filters...")
             .waitFor({ timeout: 15_000 })
@@ -40,12 +60,12 @@ test.describe("Release screenshots", () => {
     });
 
     test("mentees", async ({ page }) => {
-        await page.goto("/mentees", { waitUntil: "commit" });
+        await open(page, "/mentees");
         await shoot(page, "03-mentees");
     });
 
     test("settings", async ({ page }) => {
-        await page.goto("/settings", { waitUntil: "commit" });
+        await open(page, "/settings");
         await shoot(page, "04-settings");
     });
 });

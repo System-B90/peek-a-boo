@@ -29,6 +29,15 @@ async function open(page: Page, url: string): Promise<void> {
     expect(status, `${url} was not served (HTTP ${status})`).toBeLessThan(500);
 }
 
+/** Logged-in screens: a redirect to /login means the SSO auth state is missing. */
+async function openAuthed(page: Page, url: string): Promise<void> {
+    await open(page, url);
+    await expect(
+        page,
+        `${url} redirected to login (auth state missing)`,
+    ).not.toHaveURL(/\/login/);
+}
+
 async function shoot(page: Page, name: string): Promise<void> {
     // Let the grid and fonts settle so the shot isn't a loading skeleton.
     await page
@@ -51,7 +60,7 @@ test.describe("Release screenshots", () => {
     });
 
     test("dashboard", async ({ page }) => {
-        await open(page, "/");
+        await openAuthed(page, "/");
         await page
             .getByPlaceholder("Filters...")
             .waitFor({ timeout: 15_000 })
@@ -60,12 +69,12 @@ test.describe("Release screenshots", () => {
     });
 
     test("mentees", async ({ page }) => {
-        await open(page, "/mentees");
+        await openAuthed(page, "/mentees");
         await shoot(page, "03-mentees");
     });
 
     test("settings", async ({ page }) => {
-        await open(page, "/settings");
+        await openAuthed(page, "/settings");
         await shoot(page, "04-settings");
     });
 });

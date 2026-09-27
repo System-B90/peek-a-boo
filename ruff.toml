@@ -7,3 +7,9 @@ extend-exclude = ["venv", "websock/venv", "nginx/ssl"]
 
 [lint]
 extend-select = ["I", "W", "B", "UP"]
+
+[lint.flake8-bugbear]
+# Typer declares CLI parameters as `param: T = typer.Option(...)` (cli/). The
+# call is evaluated once at import and only read by Typer, so B008's
+# mutable-default concern does not apply.
+extend-immutable-calls = ["typer.Option", "typer.Argument"]

@@ -66,9 +66,11 @@ jobs:
                   NPM_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
             # sb90-deploy (org pip index) is what scripts/setup.py and the
-            # bundle dry-run test run on.
+            # bundle dry-run test run on; 0.2.0 is the first with `publish`,
+            # whose manifest rewriting scripts/tests/test_cli_release.py runs.
+            # ./cli is the peekaboo-cli package its tests import.
             - name: Install Dependencies (Python)
-              run: pip install ruff==0.16.9 pytest sb90-deploy --extra-index-url https://system-b90.github.io/.github/pypi/
+              run: pip install ruff==0.16.9 pytest build "sb90-deploy>=0.2.0" ./cli --extra-index-url https://system-b90.github.io/.github/pypi/
 
             - name: Run ESLint
               run: npm run lint
@@ -95,6 +97,19 @@ jobs:
             - name: Run Python Unit Tests
               if: ${{ !cancelled() }}
               run: pytest tests/websock -q
+
+            # peekaboo-cli (cli/): every command's wire contract against a
+            # stub server, plus the login loopback handshake.
+            - name: Run CLI Tests
+              if: ${{ !cancelled() }}
+              run: pytest cli/tests -q
+
+            # The release job builds this same wheel to vendor into the bundles
+            # and publish to the org pip index; a packaging break should fail
+            # here, on the PR, not on the tag.
+            - name: Build CLI Package
+              if: ${{ !cancelled() }}
+              run: python -m build cli/
 
             # Master only, as before — a full Next.js build is the most
             # expensive step here, and it holds the shared runner while every

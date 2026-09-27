@@ -43,6 +43,7 @@ To use your own certificate, place it at `nginx/ssl/star.crt` / `nginx/ssl/star.
 | `deploy/`  | `app.json` (how sb90-deploy bundles/installs peek-a-boo); compose files: `docker-compose.yml` (base), `.dev.yml`, `.test.yml`, `.hive-local.yml`, `.release.yml` (shipped in bundles) |
 | `nginx/`   | `nginx.conf.template`; `ssl/` holds certs (gitignored)                                                                                                                                |
 | `websock/` | Python websockify VNC bridge                                                                                                                                                          |
+| `cli/`     | `peekaboo-cli`, the `peekaboo` command — see [cli/README.md](cli/README.md)                                                                                                           |
 
 ## Releasing
 
@@ -51,6 +52,10 @@ From a clean `master`, `python -m sb90_deploy publish` (shared, from
 latest `v*` tag (patch/minor/major, optional `-rc.N`), bumps the manifests listed in
 `deploy/app.json` `release.manifests`, commits, tags and pushes. The tag runs
 `release.yml`. Non-interactive: `--bump patch --no-rc --yes`; `--dry` pushes nothing.
+
+The `peekaboo` CLI (`cli/`) is versioned with the app: the release attaches its wheel,
+vendors it into the bundles, and publishes it to the org pip index
+(`pip install peekaboo-cli --extra-index-url https://system-b90.github.io/.github/pypi/`).
 
 ## Development Setup (Windows)
 
@@ -82,6 +87,7 @@ npm run lint:fix      # ...with --fix
 npm run test:unit     # Vitest unit tests (tests/backend/*.test.ts)
 ruff check .           # Python lint
 ruff format --check .  # Python format check
+pytest cli/tests -q    # peekaboo CLI (after `pip install -e ./cli`)
 ```
 
 A Husky pre-commit hook runs `lint-staged` (ESLint on JS/TS, Prettier on JSON/CSS/MD).

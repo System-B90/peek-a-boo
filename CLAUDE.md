@@ -57,7 +57,8 @@ sb90-deploy — only `scripts/setup.py` (the wizard's peek-a-boo questions) stay
 npm run lint            # ESLint over the whole repo (lint:fix to autofix)
 npm run test:unit       # Vitest (tests/backend/*.test.ts)
 pytest tests/websock -q  # Pytest for the websockify bridge
-pytest scripts/tests -q  # Pytest for scripts/ (release bundle)
+pytest scripts/tests -q  # Pytest for scripts/ (release bundle, CLI release wiring)
+pytest cli/tests -q      # Pytest for the peekaboo CLI (pip install -e ./cli first)
 ruff check .             # Python lint (websock/, scripts/)
 ruff format --check .    # Python format check
 ```
@@ -78,6 +79,7 @@ on every push and PR.
 | `src/shared-api/`                | Shared types/contracts and error classes, pure utils.                                                               |
 | `src/components/search`          | React UI.                                                                                                           |
 | `src/interfaces/`, `src/glyphs/` | Shared TS interfaces; icon/glyph assets.                                                                            |
+| `cli/`                           | `peekaboo-cli` (Typer). Mirrors Bluz's `cli/`; every UI feature has a command. Login via `/cli-auth`.               |
 | `websock/`                       | Standalone Python websockify service — VNC bridge, own `requirements.txt` + venv.                                   |
 | `nginx/`                         | `nginx.conf.template`; `ssl/` holds TLS certs (`star.key`, `star.crt`, `ca.crt`) — gitignored, never commit.        |
 | `deploy/`                        | Compose: base, `.dev`, `.test` (e2e), `.hive-local` (co-located Hive), `.release` (shipped in bundles).             |
@@ -86,6 +88,10 @@ on every push and PR.
 | `tests/websock/`                 | Pytest for the Python bridge (`test_start_websockify.py`).                                                          |
 
 ## Gotchas
+
+- **UI feature → CLI command.** Anything possible from the UI should be possible from
+  `peekaboo` (`cli/`). Adding a route or UI action means adding the command and a wire
+  test in `cli/tests/test_command_requests.py`.
 
 - **Two runtimes in one repo**: the Next.js app (`npm run dev`) and the Python websockify
   bridge (`websock/`, its own venv) are separate processes — both need to be running for

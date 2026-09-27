@@ -15,10 +15,12 @@
     "post_install": [
         "Trust nginx/ssl/ca.crt (System-B90 Local Dev CA) to silence certificate warnings."
     ],
+    "venv_packages": ["peekaboo-cli"],
     "release": {
         "manifests": [
             "package.json",
-            { "path": "package-lock.json", "count": 2 }
+            { "path": "package-lock.json", "count": 2 },
+            { "path": "cli/peekaboo_cli/__init__.py", "format": "python" }
         ]
     },
     "bundle": {
@@ -28,6 +30,7 @@
             "docker-compose.hive-local.yml": "deploy/docker-compose.hive-local.yml",
             "setup.py": "scripts/setup.py",
             "nginx/nginx.conf.template": "nginx/nginx.conf.template"
-        }
+        },
+        "local_wheels": ["cli/dist/*.whl"]
     }
 }

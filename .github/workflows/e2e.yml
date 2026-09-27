@@ -159,6 +159,16 @@ jobs:
                   path: test-results/
                   retention-days: 7
 
+            # Written by the screenshots spec (see CLAUDE.md, "Release screenshots").
+            - name: Upload Release Screenshots
+              uses: actions/upload-artifact@v6
+              if: ${{ !cancelled() }}
+              with:
+                  name: release-screenshots
+                  path: release-screenshots/
+                  if-no-files-found: warn
+                  retention-days: 90
+
             - name: Upload Container Logs
               uses: actions/upload-artifact@v6
               if: failure()

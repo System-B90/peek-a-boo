@@ -62,3 +62,4 @@ create_fake_students.py
 __pycache__/
 *.py[cod]
 .pytest_cache/
+/release-screenshots/

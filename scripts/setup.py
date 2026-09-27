@@ -18,6 +18,7 @@ import base64
 import json
 import os
 import secrets
+import shutil
 import ssl
 import sys
 import urllib.error
@@ -173,6 +174,22 @@ def _set_master_password(w: Wizard, previous_client: str) -> None:
         w.set("VNC_MASTER_PASSWORD", base64.b64encode(password.encode()).decode())
 
 
+def seed_default_cert(ssl_dir: Path) -> None:
+    """In a checkout, start from the committed dev cert (System-B90 Dev Root CA,
+    covers peekaboo.dev / peekaboo.test / peekaboo.localhost). w.tls keeps it
+    when it covers the chosen hostname and issues a fresh one otherwise. Release
+    bundles don't ship nginx/ssl-default, so production gets its own cert."""
+    default = Path(__file__).resolve().parent.parent / "nginx" / "ssl-default"
+    if not default.is_dir():
+        return
+    if (ssl_dir / "star.crt").exists() or (ssl_dir / "star.key").exists():
+        return
+    ssl_dir.mkdir(parents=True, exist_ok=True)
+    for name in ("star.crt", "star.key"):
+        shutil.copy2(default / name, ssl_dir / name)
+    info("Copied the default dev cert (System-B90 Dev Root CA) to nginx/ssl 🔒")
+
+
 def main() -> None:
     w = Wizard(_spec())
 
@@ -224,6 +241,7 @@ def main() -> None:
         values["HIVE_HOSTNAME"],
         values["HIVE_API_PASSWORD"],
     )
+    seed_default_cert(Path("nginx") / "ssl")
     w.tls(hostname, ssl_dir="nginx/ssl", cert_name="star.crt", key_name="star.key")
     success("Peek-a-boo environment is ready to go! 🚀🔥")
 

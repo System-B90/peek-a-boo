@@ -1,12 +1,14 @@
+# syntax=docker/dockerfile:1
 # Dev target: `docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml`
 # (npm run docker:dev). Source is synced in by compose `develop.watch`, so only
 # dependencies are baked in; `next dev` does the rest.
 FROM node:20-alpine AS dev
-ARG NPM_TOKEN
-ENV NPM_TOKEN=${NPM_TOKEN}
 WORKDIR /app
 COPY package*.json .npmrc ./
-RUN npm install --ignore-scripts
+# GitHub Packages read token for @system-b90/* arrives as a BuildKit secret
+# (`npm_token`), never as ARG/ENV, so it can't land in image config, layers or
+# provenance. .npmrc resolves ${NPM_TOKEN} from the env of this one command.
+RUN --mount=type=secret,id=npm_token     NPM_TOKEN="$(cat /run/secrets/npm_token)" npm install --ignore-scripts
 COPY . .
 ENV NODE_ENV=development     NEXT_TELEMETRY_DISABLED=1
 EXPOSE 3000
@@ -17,10 +19,6 @@ FROM node:20-alpine AS builder
 
 # Set working directory
 WORKDIR /app
-
-# GitHub Packages read token for @system-b90/* (npm resolves ${NPM_TOKEN} from env)
-ARG NPM_TOKEN
-ENV NPM_TOKEN=${NPM_TOKEN}
 
 # Copy package.json and lock file
 COPY package*.json .npmrc ./
@@ -41,7 +39,8 @@ COPY ./next.config.ts /app/next.config.ts
 # COPY ./.next /app/.next
 # COPY ./node_modules /app/node_modules
 
-RUN npm install
+# Token as a BuildKit secret, as in the dev stage above.
+RUN --mount=type=secret,id=npm_token     NPM_TOKEN="$(cat /run/secrets/npm_token)" npm install
 
 RUN chmod -R +x ./.next/* || true
 RUN chmod -R +x ./node_modules/.bin/* || true

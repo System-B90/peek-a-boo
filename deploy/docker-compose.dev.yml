@@ -11,8 +11,8 @@ services:
       context: ../
       dockerfile: Dockerfile
       target: dev
-      args:
-        NPM_TOKEN: ${NPM_TOKEN}
+      secrets:
+        - npm_token
     environment:
       - NODE_ENV=development
       # Behind nginx, so use its /ws route instead of bare-dev's direct :60800.
@@ -60,3 +60,9 @@ services:
     ports: !override
       - "127.0.0.4:80:80"
       - "127.0.0.4:443:443"
+
+secrets:
+  # Build-time only; `python -m sb90_devops.with_npm_token` (npm scripts) or CI
+  # exports NPM_TOKEN. Never an ARG/ENV, so it stays out of image layers.
+  npm_token:
+    environment: NPM_TOKEN

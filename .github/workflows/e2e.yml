@@ -55,13 +55,11 @@ jobs:
               uses: actions/checkout@v7
 
             # ── Everything slow happens before taking the shared Hive ─────────
-            - name: Generate self-signed SSL certificate
+            # The committed dev cert covers $E2E_HOST (peekaboo.test) and 127.0.0.5.
+            - name: Install the default dev SSL certificate
               run: |
                   mkdir -p nginx/ssl
-                  openssl req -x509 -newkey rsa:4096 -keyout nginx/ssl/star.key \
-                    -out nginx/ssl/star.crt -sha256 -days 30 -nodes \
-                    -subj "/CN=$E2E_HOST" \
-                    -addext "subjectAltName=DNS:$E2E_HOST,DNS:localhost"
+                  cp nginx/ssl-default/star.crt nginx/ssl-default/star.key nginx/ssl/
 
             - name: Prepare websocket token file
               run: touch websock/websocket_token_source.txt

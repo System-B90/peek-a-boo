@@ -8,8 +8,8 @@ services:
     build:
       context: ../
       dockerfile: Dockerfile
-      args:
-        NPM_TOKEN: ${NPM_TOKEN}
+      secrets:
+        - npm_token
         # No NEXT_PUBLIC_HIVE_URL here: a build-time value is inlined into the
         # server bundle and overrides the runtime .env (see Dockerfile).
     # Join Hive's network instead of routing hive.org through the host.
@@ -51,3 +51,9 @@ networks:
     # local hive-stack/ checkout produces hive-stack_hive-net.
     name: ${HIVE_NETWORK_NAME:-hive-stack_hive-net}
     external: true
+
+secrets:
+  # Build-time only; `python -m sb90_devops.with_npm_token` (npm scripts) or CI
+  # exports NPM_TOKEN. Never an ARG/ENV, so it stays out of image layers.
+  npm_token:
+    environment: NPM_TOKEN

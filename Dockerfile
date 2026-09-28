@@ -49,12 +49,16 @@ RUN chmod -R +x ./node_modules/.bin/* || true
 # Placeholders to satisfy buildHiveAuthOptions()'s eager env read during
 # `next build`'s page-data collection — real values come from the runtime
 # environment (docker-compose/.env), not baked into the image.
+#
+# NEXT_PUBLIC_HIVE_URL is deliberately NOT set here: Next inlines any
+# NEXT_PUBLIC_* defined at build time into every bundle, server code
+# included, so a placeholder would permanently override the runtime .env
+# (SSO then tried to resolve hive.invalid). Left undefined, the server
+# reads it from process.env at runtime, as madash does.
 ARG NEXTAUTH_SECRET=ci_build_placeholder
-ARG NEXT_PUBLIC_HIVE_URL=https://hive.invalid
 ARG HIVE_CLIENT_ID=ci_build_placeholder
 ARG HIVE_CLIENT_SECRET=ci_build_placeholder
 ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET} \
-    NEXT_PUBLIC_HIVE_URL=${NEXT_PUBLIC_HIVE_URL} \
     HIVE_CLIENT_ID=${HIVE_CLIENT_ID} \
     HIVE_CLIENT_SECRET=${HIVE_CLIENT_SECRET}
 

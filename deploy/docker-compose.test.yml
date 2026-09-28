@@ -10,8 +10,8 @@ services:
       dockerfile: Dockerfile
       args:
         NPM_TOKEN: ${NPM_TOKEN}
-        # NEXT_PUBLIC_* vars are inlined into the JS bundle at build time.
-        NEXT_PUBLIC_HIVE_URL: ${NEXT_PUBLIC_HIVE_URL}
+        # No NEXT_PUBLIC_HIVE_URL here: a build-time value is inlined into the
+        # server bundle and overrides the runtime .env (see Dockerfile).
     # Join Hive's network instead of routing hive.org through the host.
     #
     # `extra_hosts: hive.org:host-gateway` resolves to the host's gateway IP,

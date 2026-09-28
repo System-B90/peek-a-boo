@@ -14,6 +14,8 @@ PyHiveLMS>=2.1.5
 # runs on it, and 0.2.0 adds `python -m sb90_deploy publish`. Brings
 # cryptography with it; release bundles vendor it themselves.
 sb90-deploy>=0.2.0
+# Shared GitHub Packages token lookup for scripts/setup.py (dev checkouts).
+sb90-devops>=0.2.0
 # Lint and scripts/tests (test_bundle.py), as in Bluz.
 ruff==0.16.9
 pytest>=8.0.0

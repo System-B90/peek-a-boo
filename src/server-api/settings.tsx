@@ -28,8 +28,9 @@ const DEFAULT_SETTINGS = {
     ),
     HIVE_HOSTNAME: process.env.HIVE_HOSTNAME ?? "hive.org",
     HIVE_PASSWORD: process.env.HIVE_PASSWORD ?? "",
-    HIVE_POSTGRES_HOSTNAME:
-        process.env.HIVE_POSTGRES_HOSTNAME ?? "hive-postgres",
+    // Empty means "same host as Hive": only a deployment co-living with Hive
+    // on one docker network should point this at "hive-postgres".
+    HIVE_POSTGRES_HOSTNAME: process.env.HIVE_POSTGRES_HOSTNAME ?? "",
     HIVE_API_USERNAME: process.env.HIVE_API_USERNAME ?? "api",
     HIVE_API_PASSWORD: process.env.HIVE_API_PASSWORD ?? "",
     HIVE_POSTGRES_USERNAME:

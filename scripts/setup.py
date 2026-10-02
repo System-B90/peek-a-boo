@@ -209,7 +209,7 @@ def main() -> None:
         key="HOSTNAME",
         default="peekaboo.dev",
     )
-    w.ports(default_bind="127.0.0.4")
+    w.ports()
 
     for key, description in PROMPT_VARS.items():
         if key == "VNC_CLIENT_PASSWORD":

@@ -38,7 +38,7 @@ jobs:
     # test failure, so one run reports every problem rather than one per push.
     verify:
         name: Lint, Test, Build
-        runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "node", "python"]') }}
+        runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "node", "python", "mattermost"]') }}
         timeout-minutes: 30
         steps:
             - name: Checkout repository
@@ -90,6 +90,13 @@ jobs:
             - name: Run Unit Tests
               if: ${{ !cancelled() }}
               run: npm run test:unit
+
+            # sendTweet / sendDirecMessage against a real Mattermost that
+            # @system-b90/test-kit/mattermost starts in Docker on 127.0.0.18:8065
+            # and tears down after (compose project peekaboo-mattermost-it).
+            - name: Run Mattermost Integration Tests
+              if: ${{ !cancelled() }}
+              run: npm run test:integration
 
             # websock/ is the repo's only Python runtime code and had no tests
             # at all; its token-file resolution decides whether the VNC bridge

@@ -56,6 +56,7 @@ sb90-deploy — only `scripts/setup.py` (the wizard's peek-a-boo questions) stay
 ```bash
 npm run lint            # ESLint over the whole repo (lint:fix to autofix)
 npm run test:unit       # Vitest (tests/backend/*.test.ts)
+npm run test:integration # Vitest vs. a real Mattermost in Docker (tests/integration/), via @system-b90/test-kit/mattermost
 pytest tests/websock -q  # Pytest for the websockify bridge
 pytest scripts/tests -q  # Pytest for scripts/ (release bundle, CLI release wiring)
 pytest cli/tests -q      # Pytest for the peekaboo CLI (pip install -e ./cli first)

@@ -48,6 +48,10 @@ server {
     location / {
         proxy_pass http://ui:3000;
         proxy_set_header Host $host;
+        # $host drops the port. Redirects built from these (logout, login)
+        # must keep it, or a non-443 deployment is sent to :443.
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_http_version 1.1;

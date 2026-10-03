@@ -86,6 +86,7 @@ test.describe("Release screenshots", () => {
             .getByRole("button", { name: "Replay the tour" })
             .first()
             .click();
+        await expect(page.getByText("Keyboard shortcuts")).toBeHidden();
         await page.keyboard.press("Enter");
         await shoot(page, "06-tour");
     });

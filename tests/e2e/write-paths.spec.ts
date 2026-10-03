@@ -7,8 +7,11 @@ import { expect, test } from "@playwright/test";
 test.describe("Settings", () => {
     test("a saved setting survives a reload", async ({ page }) => {
         await page.goto("/settings");
+        // The form has loaded once Hive's hostname (always set) is filled in.
+        await expect(page.getByLabel("Hive Hostname")).not.toHaveValue("", {
+            timeout: 15_000,
+        });
         const field = page.getByLabel("Mattermost URL");
-        await expect(field).not.toHaveValue("", { timeout: 15_000 });
         const original = await field.inputValue();
         const marker = `https://mattermost-e2e-${Date.now()}.test`;
 

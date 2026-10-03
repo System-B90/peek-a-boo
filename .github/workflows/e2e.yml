@@ -61,8 +61,10 @@ jobs:
                   mkdir -p nginx/ssl
                   cp nginx/ssl-default/star.crt nginx/ssl-default/star.key nginx/ssl/
 
+            # One probe token, so the e2e /ws test gets a websocket handshake:
+            # websockify rejects unknown tokens before upgrading.
             - name: Prepare websocket token file
-              run: touch websock/websocket_token_source.txt
+              run: echo "e2e-probe: 127.0.0.1:5900" > websock/websocket_token_source.txt
 
             # The shared-hive runners' system Python is externally managed (PEP 668).
             - name: Set up Python

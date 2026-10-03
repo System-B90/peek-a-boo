@@ -5,13 +5,17 @@ import { expect, type Page, test } from "@playwright/test";
 
 type Student = { studentUsername: string; studentNumber: number };
 
+/** Fetched in the page: page.request ignores Chromium's host-resolver rules. */
 async function firstStudent(page: Page): Promise<Student | undefined> {
-    const response = await page.request.get("/api/students");
-    const body = (await response.json()) as {
-        status: number;
-        data?: Array<Student>;
-    };
-    return body.status === 0 ? body.data?.[0] : undefined;
+    await page.goto("/");
+    return await page.evaluate(async () => {
+        const response = await fetch("/api/students");
+        const body = (await response.json()) as {
+            status: number;
+            data?: Array<{ studentUsername: string; studentNumber: number }>;
+        };
+        return body.status === 0 ? body.data?.[0] : undefined;
+    });
 }
 
 test.describe("Student grid", () => {

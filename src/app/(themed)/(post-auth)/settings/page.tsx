@@ -3,10 +3,13 @@
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import { useTour } from "@system-b90/onboarding";
 import { ReactNode } from "react";
 
 import { SettingsForm } from "@/app/(themed)/(post-auth)/settings/settings-form";
 import { VNCClientAdministrationPane } from "@/app/(themed)/(post-auth)/settings/vnc-admin-pane";
+import { TourAnchor } from "@/components/onboarding/tour-anchor";
+import { ANCHORS, SETTINGS_TOUR } from "@/components/onboarding/tours";
 
 function Pane({ title, children }: { title: string; children: ReactNode }) {
     return (
@@ -25,6 +28,8 @@ function Pane({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export default function Page() {
+    useTour(SETTINGS_TOUR);
+
     return (
         <div
             style={{
@@ -38,12 +43,16 @@ export default function Page() {
         >
             {/* LEFT PANE — Settings */}
             <Pane title={"Peek-a-Boo Settings"}>
-                <SettingsForm />
+                <TourAnchor id={ANCHORS.settingsForm}>
+                    <SettingsForm />
+                </TourAnchor>
             </Pane>
 
             {/* RIGHT PANE — Client Administration */}
             <Pane title={"Client Administration"}>
-                <VNCClientAdministrationPane />
+                <TourAnchor id={ANCHORS.clientAdmin}>
+                    <VNCClientAdministrationPane />
+                </TourAnchor>
 
                 <Box sx={{ height: "1.5rem" }} />
 

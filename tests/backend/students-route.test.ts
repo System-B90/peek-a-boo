@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { assertUserLoggedIn } from "@/app/api/common";
 import { GET } from "@/app/api/students/[[...slug]]/route";
-import { queryPostgres } from "@/server-api/postgres";
+import { getStudents } from "@/server-api/students";
 import { UserNotLoggedInError } from "@/shared-api/errors";
 
 // `common.tsx` pulls in next-auth at import time, which throws without
@@ -20,8 +20,8 @@ vi.mock("@/app/api/common", async (importOriginal) => {
     return { ...actual, assertUserLoggedIn: vi.fn() };
 });
 
-vi.mock("@/server-api/postgres", () => ({
-    queryPostgres: vi.fn(),
+vi.mock("@/server-api/students", () => ({
+    getStudents: vi.fn(),
 }));
 
 // `catchHandler`'s redirect path parses `request.url`, so it must be a real one.
@@ -45,7 +45,7 @@ function params(slug?: Array<string>) {
 describe("GET /api/students", () => {
     beforeEach(() => {
         vi.mocked(assertUserLoggedIn).mockReset().mockResolvedValue({} as never);
-        vi.mocked(queryPostgres).mockReset().mockResolvedValue([]);
+        vi.mocked(getStudents).mockReset().mockResolvedValue([]);
     });
 
     it("requires a session", async () => {
@@ -57,28 +57,28 @@ describe("GET /api/students", () => {
 
         // The roster must not be read at all for an unauthenticated caller;
         // where the response redirects to is `catchHandler`'s concern.
-        expect(queryPostgres).not.toHaveBeenCalled();
+        expect(getStudents).not.toHaveBeenCalled();
     });
 
     it("queries every student when no slug is given", async () => {
         await GET(request, params());
-        expect(queryPostgres).toHaveBeenCalledWith();
+        expect(getStudents).toHaveBeenCalledWith();
     });
 
     it("queries every student when the slug array is empty", async () => {
         await GET(request, params([]));
-        expect(queryPostgres).toHaveBeenCalledWith();
+        expect(getStudents).toHaveBeenCalledWith();
     });
 
     it("filters by username when a slug is given", async () => {
         await GET(request, params(["alice"]));
-        expect(queryPostgres).toHaveBeenCalledWith("alice");
+        expect(getStudents).toHaveBeenCalledWith("alice");
     });
 
     it("rejects an empty-string slug rather than querying", async () => {
         const response = await GET(request, params([""]));
 
         expect((await envelope(response)).status).toBe(-1);
-        expect(queryPostgres).not.toHaveBeenCalled();
+        expect(getStudents).not.toHaveBeenCalled();
     });
 });

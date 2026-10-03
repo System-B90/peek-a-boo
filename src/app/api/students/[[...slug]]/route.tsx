@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest } from "next/server";
 
 import { ApiSuccess, assertUserLoggedIn, catchHandler } from "@/app/api/common";
-import { queryPostgres } from "@/server-api/postgres";
+import { getStudents } from "@/server-api/students";
 import { ClientApiError } from "@/shared-api/errors";
 
 export async function GET(
@@ -14,13 +14,13 @@ export async function GET(
         const { slug } = await params;
         await assertUserLoggedIn();
         if (typeof slug === "undefined" || !slug || slug.length === 0) {
-            return ApiSuccess(await queryPostgres());
+            return ApiSuccess(await getStudents());
         }
         const studentUsername = slug[0] as string;
         if (!studentUsername) {
             throw new ClientApiError("Username parameter is required!");
         }
-        return ApiSuccess(await queryPostgres(studentUsername));
+        return ApiSuccess(await getStudents(studentUsername));
     } catch (e: unknown) {
         return await catchHandler(request, e);
     }

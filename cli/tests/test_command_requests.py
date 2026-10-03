@@ -352,7 +352,11 @@ def test_tweet_refuses_an_oversized_attachment(
 
 # --- settings --------------------------------------------------------------------
 
-SETTINGS = {"HIVE_HOSTNAME": "hive.org", "HIVE_PASSWORD": "pw", "TWEET_CHANNEL_ID": ""}
+SETTINGS = {
+    "HIVE_HOSTNAME": "hive.org",
+    "HIVE_API_PASSWORD": "pw",
+    "TWEET_CHANNEL_ID": "",
+}
 
 
 def test_settings_show_masks_secrets(stub_app, run_cli):
@@ -363,7 +367,7 @@ def test_settings_show_masks_secrets(stub_app, run_cli):
 
     assert shown == {
         "HIVE_HOSTNAME": "hive.org",
-        "HIVE_PASSWORD": "<set>",
+        "HIVE_API_PASSWORD": "<set>",
         "TWEET_CHANNEL_ID": "",
     }
 
@@ -375,7 +379,7 @@ def test_settings_show_reveal_and_defaults(stub_app, run_cli):
     shown = _json(run_cli(stub, "settings", "show", "--defaults", "--reveal"))
 
     assert stub.last().path == "/api/settings/default"
-    assert shown["HIVE_PASSWORD"] == "pw"
+    assert shown["HIVE_API_PASSWORD"] == "pw"
 
 
 def test_settings_set_posts_only_the_changed_keys(stub_app, run_cli):

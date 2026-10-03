@@ -2,7 +2,7 @@
 # Dev target: `docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml`
 # (npm run docker:dev). Source is synced in by compose `develop.watch`, so only
 # dependencies are baked in; `next dev` does the rest.
-FROM node:20-alpine AS dev
+FROM node:24-alpine AS dev
 WORKDIR /app
 COPY package*.json .npmrc ./
 # GitHub Packages read token for @system-b90/* arrives as a BuildKit secret
@@ -15,7 +15,7 @@ EXPOSE 3000
 CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
 
 # Use a local Node.js image
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -64,7 +64,7 @@ ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET} \
 RUN npm run build
 
 # Final stage: production server
-FROM node:20-alpine
+FROM node:24-alpine
 
 LABEL org.opencontainers.image.source="https://github.com/System-B90/peek-a-boo"
 LABEL org.opencontainers.image.description="Peek-a-Boo Next.js app. See README: https://github.com/System-B90/peek-a-boo#readme"
@@ -87,7 +87,7 @@ EXPOSE 3000
 
 RUN npm config fix
 
-# Run as non-root (node:20-alpine ships a built-in `node` user). The COPY
+# Run as non-root (node:24-alpine ships a built-in `node` user). The COPY
 # above owns everything *inside* /app; this chowns the directory itself, which
 # COPY --chown does not. Non-recursive on purpose — one inode, not a walk of
 # node_modules.

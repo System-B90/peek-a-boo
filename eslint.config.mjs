@@ -1,15 +1,35 @@
+import eslintReact from "@eslint-react/eslint-plugin";
+import nextPlugin from "@next/eslint-plugin-next";
 import stylistic from "@stylistic/eslint-plugin";
 import { defineConfig } from "eslint/config";
-import nextConfig from "eslint-config-next/core-web-vitals";
-import importPlugin from "eslint-plugin-import";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
+import importPlugin from "eslint-plugin-import-x";
 import perfectionist from "eslint-plugin-perfectionist";
-import reactPlugin from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
 import unicorn from "eslint-plugin-unicorn";
 import unusedImports from "eslint-plugin-unused-imports";
 import tseslint from "typescript-eslint";
 
+// ESLint 10 (#84): eslint-config-next pulled in eslint-plugin-react and
+// eslint-plugin-import, neither of which supports ESLint 10. Its pieces are
+// composed directly instead: @next/eslint-plugin-next, react-hooks,
+// @eslint-react (React rules) and import-x (import rules, still under the
+// `import/` prefix so rule names below are unchanged).
 export default defineConfig([
-    nextConfig,
+    nextPlugin.configs["core-web-vitals"],
+    reactHooks.configs.flat["recommended-latest"],
+    {
+        files: ["**/*.{ts,tsx}"],
+        ...eslintReact.configs["recommended-typescript"],
+        rules: {
+            ...eslintReact.configs["recommended-typescript"].rules,
+            // Was react/jsx-no-leaked-render under eslint-plugin-react.
+            "@eslint-react/no-leaked-conditional-rendering": "error",
+            // Style-only preferences this codebase does not follow.
+            "@eslint-react/no-use-context": "off",
+            "@eslint-react/naming-convention-context-name": "off",
+        },
+    },
     {
         plugins: {
             "@typescript-eslint": tseslint.plugin,
@@ -17,8 +37,10 @@ export default defineConfig([
             import: importPlugin,
             "unused-imports": unusedImports,
             perfectionist: perfectionist,
-            react: reactPlugin,
             unicorn: unicorn,
+        },
+        settings: {
+            "import-x/resolver-next": [createTypeScriptImportResolver()],
         },
         languageOptions: {
             parser: tseslint.parser,
@@ -102,10 +124,6 @@ export default defineConfig([
             ],
 
             // --- React & Perfectionist ---
-            "react/jsx-no-leaked-render": [
-                "error",
-                { validStrategies: ["ternary", "coerce"] },
-            ],
             "perfectionist/sort-variable-declarations": [
                 "error",
                 { type: "alphabetical" },

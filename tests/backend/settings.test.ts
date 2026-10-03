@@ -10,11 +10,8 @@ const ENV_KEYS = [
     "VNC_CLIENT_PASSWORD",
     "VNC_MASTER_PASSWORD",
     "HIVE_HOSTNAME",
-    "HIVE_PASSWORD",
-    "HIVE_POSTGRES_HOSTNAME",
     "HIVE_API_USERNAME",
     "HIVE_API_PASSWORD",
-    "HIVE_POSTGRES_USERNAME",
     "MATTERMOST_URL",
     "MATTERMOST_ACCESS_TOKEN",
     "TWEET_CHANNEL_ID",
@@ -70,7 +67,7 @@ describe("getSetting precedence", () => {
 
     it("falls back to the env value when the file omits the key", async () => {
         process.env.HIVE_HOSTNAME = "hive.from-env";
-        fileContains({ HIVE_PASSWORD: "pw" });
+        fileContains({ HIVE_API_PASSWORD: "pw" });
         const settings = await freshSettings();
 
         expect(await settings.getSetting("HIVE_HOSTNAME")).toBe(
@@ -96,9 +93,6 @@ describe("getSetting precedence", () => {
 
         expect(await settings.getSetting("HIVE_HOSTNAME")).toBe("hive.org");
         expect(await settings.getSetting("HIVE_API_USERNAME")).toBe("api");
-        expect(await settings.getSetting("HIVE_POSTGRES_USERNAME")).toBe(
-            "grafanareader",
-        );
     });
 
     it("returns defaults when the settings file does not exist", async () => {
@@ -215,9 +209,6 @@ describe("getSettings merge", () => {
             "HIVE_API_PASSWORD",
             "HIVE_API_USERNAME",
             "HIVE_HOSTNAME",
-            "HIVE_PASSWORD",
-            "HIVE_POSTGRES_HOSTNAME",
-            "HIVE_POSTGRES_USERNAME",
             "MATTERMOST_ACCESS_TOKEN",
             "MATTERMOST_URL",
             "TWEET_CHANNEL_ID",
@@ -233,7 +224,7 @@ describe("cache lifecycle", () => {
         const settings = await freshSettings();
 
         await settings.getSetting("HIVE_HOSTNAME");
-        await settings.getSetting("HIVE_PASSWORD");
+        await settings.getSetting("HIVE_API_PASSWORD");
         await settings.getSetting("HIVE_HOSTNAME");
 
         expect(vi.mocked(fs.readFile)).toHaveBeenCalledTimes(1);

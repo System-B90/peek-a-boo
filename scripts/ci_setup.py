@@ -77,7 +77,6 @@ def main() -> None:
         "VNC_CLIENT_PASSWORD": base64.b64encode(VNC_CLIENT_PASSWORD.encode()).decode(),
         "VNC_MASTER_PASSWORD": base64.b64encode(VNC_MASTER_PASSWORD.encode()).decode(),
         "HIVE_HOSTNAME": HIVE_HOSTNAME,
-        "HIVE_PASSWORD": "",
         "HIVE_API_PASSWORD": HIVE_API_PASSWORD,
         "MATTERMOST_URL": "",
         "MATTERMOST_ACCESS_TOKEN": "",

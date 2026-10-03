@@ -63,7 +63,8 @@ export function ClientVNC({
 
     const onSecurityFailureWrapper: SecurityFailureParams = useCallback(
         (event) => {
-            console.error(`Security Failure! ${vncClientPassword}`);
+            // Never log the password itself: it ends up in the browser console.
+            console.error("VNC security failure; retrying with stored credentials");
             vncRef.current?.sendCredentials({
                 password: vncClientPassword,
                 target: "",
@@ -114,7 +115,7 @@ export function ClientVNC({
         if (typeof window === "undefined") {
             return;
         }
-        setInterval(() => {
+        const watchdog = setInterval(() => {
             const hasCanvasChild =
                 (containerRef.current?.getElementsByTagName("canvas").length ??
                     0) > 0;
@@ -124,6 +125,8 @@ export function ClientVNC({
             isConnecting.current = false;
             setConnectionError(true);
         }, 1000);
+        // Without this every mounted card leaked a 1s interval for good.
+        return () => clearInterval(watchdog);
     }, [containerRef, isConnecting, setConnectionError]);
 
     return (

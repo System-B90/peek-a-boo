@@ -5,11 +5,8 @@ export type UserControlledSettings = {
     VNC_CLIENT_PASSWORD: string;
     VNC_MASTER_PASSWORD: string;
     HIVE_HOSTNAME: string;
-    HIVE_PASSWORD: string;
-    HIVE_POSTGRES_HOSTNAME: string;
     HIVE_API_USERNAME: string;
     HIVE_API_PASSWORD: string;
-    HIVE_POSTGRES_USERNAME: string;
     MATTERMOST_URL: string;
     MATTERMOST_ACCESS_TOKEN: string;
     TWEET_CHANNEL_ID: string;
@@ -27,14 +24,8 @@ const DEFAULT_SETTINGS = {
             "",
     ),
     HIVE_HOSTNAME: process.env.HIVE_HOSTNAME ?? "hive.org",
-    HIVE_PASSWORD: process.env.HIVE_PASSWORD ?? "",
-    // Empty means "same host as Hive": only a deployment co-living with Hive
-    // on one docker network should point this at "hive-postgres".
-    HIVE_POSTGRES_HOSTNAME: process.env.HIVE_POSTGRES_HOSTNAME ?? "",
     HIVE_API_USERNAME: process.env.HIVE_API_USERNAME ?? "api",
     HIVE_API_PASSWORD: process.env.HIVE_API_PASSWORD ?? "",
-    HIVE_POSTGRES_USERNAME:
-        process.env.HIVE_POSTGRES_USERNAME ?? "grafanareader",
     MATTERMOST_URL: process.env.MATTERMOST_URL ?? "https://mattermost",
     MATTERMOST_ACCESS_TOKEN: process.env.MATTERMOST_ACCESS_TOKEN ?? "",
     TWEET_CHANNEL_ID: process.env.TWEET_CHANNEL_ID ?? "",

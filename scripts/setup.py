@@ -16,11 +16,13 @@ CA + leaf certificate, Hive clients — live in sb90-deploy
 
 import base64
 import json
+import re
 import secrets
 import shutil
 import ssl
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -42,6 +44,10 @@ OBSOLETE_VARS = (
     "PYTHON_DOCKER_REGISTRY",
     "PIP_CONF_PATH",
     "IS_IN_CNET",
+    # Students are read through the Hive API now; no Hive DB access (#102).
+    "HIVE_PASSWORD",
+    "HIVE_POSTGRES_HOSTNAME",
+    "HIVE_POSTGRES_USERNAME",
 )
 SECRET_VARS = ("SYM_ENC_KEY", "NEXTAUTH_SECRET")
 
@@ -49,12 +55,13 @@ PROMPT_VARS = {
     "VNC_CLIENT_PASSWORD": "Password for VNC on student PCs",
     # Hive
     "HIVE_HOSTNAME": 'Hostname of Hive instance (e.g. "hive.org")',
-    "HIVE_PASSWORD": "Password for Hive PostgreSQL",
     "HIVE_API_PASSWORD": "Password for Hive API",
     # Mattermost
     "MATTERMOST_URL": 'URL for Mattermost (e.g. "https://mattermost.domain.tld")',
     "MATTERMOST_ACCESS_TOKEN": "Mattermost personal access token",
-    "TWEET_CHANNEL_ID": "Mattermost channel ID for tweets",
+    "TWEET_CHANNEL_URL": (
+        'Mattermost tweets channel URL (e.g. "https://mattermost.local/my-team/channels/tweets")'
+    ),
     # Hive SSO
     "NEXT_PUBLIC_HIVE_URL": 'Base URL of the Hive instance for OIDC SSO (e.g. "https://hive.org")',
 }
@@ -106,6 +113,75 @@ def find_npm_token() -> str:
     except ImportError:
         return ""
     return shared_lookup() or ""
+
+
+# A Mattermost channel ID is 26 lowercase base32 characters.
+_CHANNEL_ID = re.compile(r"^[a-z0-9]{26}$")
+
+
+def parse_channel_url(channel_url: str) -> tuple[str, str, str]:
+    """Split a channel URL into (server base URL, team name, channel name).
+
+    Accepts ``https://host[/subpath]/<team>/channels/<channel>`` with an
+    optional trailing slash, query or fragment, as copied from the browser.
+    """
+    parsed = urllib.parse.urlsplit(channel_url.strip())
+    parts = [part for part in parsed.path.split("/") if part]
+    if not parsed.scheme or not parsed.netloc or len(parts) < 3:
+        raise ValueError(f"'{channel_url}' is not a Mattermost channel URL")
+    if parts[-2] != "channels":
+        raise ValueError(
+            f"'{channel_url}' is not a channel URL "
+            "(expected .../<team>/channels/<channel>)"
+        )
+    base = f"{parsed.scheme}://{parsed.netloc}" + "".join(
+        f"/{part}" for part in parts[:-3]
+    )
+    return base, parts[-3], parts[-1]
+
+
+def resolve_tweet_channel_id(url: str, token: str, channel_url: str) -> str:
+    """The channel ID behind a channel URL, looked up through Mattermost's API.
+
+    A bare channel ID (what earlier versions of this wizard asked for) is
+    returned unchanged, so existing answers keep working.
+    """
+    channel_url = channel_url.strip()
+    if not channel_url or _CHANNEL_ID.match(channel_url):
+        return channel_url
+    base, team, channel = parse_channel_url(channel_url)
+    api = (url.strip().rstrip("/") or base) + "/api/v4"
+    headers = {"Authorization": f"Bearer {token.strip()}"}
+    found = _get(
+        f"{api}/teams/name/{urllib.parse.quote(team)}"
+        f"/channels/name/{urllib.parse.quote(channel)}",
+        headers,
+    )
+    channel_id = found.get("id") if isinstance(found, dict) else None
+    if not channel_id:
+        raise ValueError(f"Mattermost returned no channel for '{channel_url}'")
+    return str(channel_id)
+
+
+def set_tweet_channel(w: Wizard) -> None:
+    """Turn the TWEET_CHANNEL_URL answer into the TWEET_CHANNEL_ID the app reads."""
+    channel_url = w.values.get("TWEET_CHANNEL_URL", "")
+    token = w.values.get("MATTERMOST_ACCESS_TOKEN", "")
+    if not channel_url:
+        w.set("TWEET_CHANNEL_ID", "")
+        return
+    if not token and not _CHANNEL_ID.match(channel_url.strip()):
+        print("⚠️  Mattermost token not set — cannot resolve the tweet channel.")
+        w.keep("TWEET_CHANNEL_ID")
+        return
+    info("Resolving tweet channel URL 🔗")
+    try:
+        channel_id = resolve_tweet_channel_id(
+            w.values.get("MATTERMOST_URL", ""), token, channel_url
+        )
+    except (OSError, ValueError) as error:
+        fail(f"Unable to resolve the tweet channel: {error}")
+    w.set("TWEET_CHANNEL_ID", channel_id)
 
 
 def test_mattermost(url: str, token: str, channel_id: str) -> None:
@@ -212,6 +288,13 @@ def main() -> None:
     w.ports()
 
     for key, description in PROMPT_VARS.items():
+        if (
+            key == "TWEET_CHANNEL_URL"
+            and not w.prev(key)
+            and w.prev("TWEET_CHANNEL_ID")
+        ):
+            # Upgrading from a version that asked for the raw ID: offer it.
+            w.existing[key] = w.prev("TWEET_CHANNEL_ID")
         if key == "VNC_CLIENT_PASSWORD":
             previous = w.prev(key)
             w.existing[key] = base64.b64decode(previous).decode() if previous else ""
@@ -224,6 +307,9 @@ def main() -> None:
 
     # Persist inputs now so a failure in validation / token fetch / certs
     # doesn't lose them — a re-run offers them as defaults.
+    w.write()
+
+    set_tweet_channel(w)
     w.write()
 
     values = w.values

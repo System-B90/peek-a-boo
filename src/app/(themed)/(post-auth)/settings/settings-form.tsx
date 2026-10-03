@@ -193,11 +193,6 @@ export function SettingsForm() {
                         onChange={handleChange("HIVE_HOSTNAME")}
                         value={values.HIVE_HOSTNAME}
                     />
-                    <PasswordField
-                        handleChange={handleChange("HIVE_PASSWORD")}
-                        label="Hive Password"
-                        value={values["HIVE_PASSWORD"]}
-                    />
                     <TextField
                         fullWidth
                         label="Hive API Username"
@@ -208,12 +203,6 @@ export function SettingsForm() {
                         handleChange={handleChange("HIVE_API_PASSWORD")}
                         label="Hive API Password"
                         value={values["HIVE_API_PASSWORD"]}
-                    />
-                    <TextField
-                        fullWidth
-                        label="Hive Postgres Username"
-                        onChange={handleChange("HIVE_POSTGRES_USERNAME")}
-                        value={values.HIVE_POSTGRES_USERNAME}
                     />
                 </Section>
 

@@ -22,10 +22,6 @@ name: peek-a-boo
 
 services:
   ui:
-    environment:
-      # Hive's DB is only reachable by container name on Hive's network;
-      # without this overlay peek-a-boo falls back to HIVE_HOSTNAME.
-      HIVE_POSTGRES_HOSTNAME: ${HIVE_POSTGRES_HOSTNAME:-hive-postgres}
     networks:
       - backend
       - hive_net

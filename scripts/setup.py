@@ -42,6 +42,10 @@ OBSOLETE_VARS = (
     "PYTHON_DOCKER_REGISTRY",
     "PIP_CONF_PATH",
     "IS_IN_CNET",
+    # Students are read through the Hive API now; no Hive DB access (#102).
+    "HIVE_PASSWORD",
+    "HIVE_POSTGRES_HOSTNAME",
+    "HIVE_POSTGRES_USERNAME",
 )
 SECRET_VARS = ("SYM_ENC_KEY", "NEXTAUTH_SECRET")
 
@@ -49,7 +53,6 @@ PROMPT_VARS = {
     "VNC_CLIENT_PASSWORD": "Password for VNC on student PCs",
     # Hive
     "HIVE_HOSTNAME": 'Hostname of Hive instance (e.g. "hive.org")',
-    "HIVE_PASSWORD": "Password for Hive PostgreSQL",
     "HIVE_API_PASSWORD": "Password for Hive API",
     # Mattermost
     "MATTERMOST_URL": 'URL for Mattermost (e.g. "https://mattermost.domain.tld")',

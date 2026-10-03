@@ -38,7 +38,6 @@
         "next": "^16.3.6",
         "next-auth": "^4.24.15",
         "notistack": "^3.0.2",
-        "postgres": "^3.4.9",
         "react": "^19.3.0",
         "react-dom": "^19.3.0",
         "react-error-boundary": "^6.1.6",

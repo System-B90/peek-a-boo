@@ -3,7 +3,9 @@ import path from "path";
 import { defineSharedVitestConfig } from "@system-b90/test-kit/vitest";
 
 export default defineSharedVitestConfig({
-    include: [ "tests/backend/**/*.test.ts" ],
+    // tests/frontend/ holds React component tests; each file opts into jsdom
+    // with a `// @vitest-environment jsdom` docblock.
+    include: [ "tests/backend/**/*.test.ts", "tests/frontend/**/*.test.tsx" ],
     alias: {
         "@": path.resolve(__dirname, "../src"),
     },

@@ -102,6 +102,7 @@ Every release ships with screenshots of the app, captured automatically in CI:
 | `deploy/`                        | Compose: base, `.dev`, `.test` (e2e), `.hive-local` (co-located Hive), `.release` (shipped in bundles).             |
 | `scripts/`                       | `setup.py` wizard (on sb90-deploy), `ci_setup.py` (e2e `.env`). Releases: `python -m sb90_deploy publish`.          |
 | `tests/backend/`                 | Vitest backend suites — one per module or route (`api-common`, `settings`, `hive-server-api`, `students-route`, …). |
+| `tests/frontend/`                | Vitest + jsdom + Testing Library React component tests (`// @vitest-environment jsdom` per file).                   |
 | `tests/websock/`                 | Pytest for the Python bridge (`test_start_websockify.py`).                                                          |
 
 ## Gotchas

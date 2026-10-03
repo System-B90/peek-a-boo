@@ -77,4 +77,16 @@ test.describe("Release screenshots", () => {
         await openAuthed(page, "/settings");
         await shoot(page, "04-settings");
     });
+
+    test("help and tour", async ({ page }) => {
+        await openAuthed(page, "/");
+        await page.getByRole("button", { name: "Open help" }).click();
+        await shoot(page, "05-help");
+        await page
+            .getByRole("button", { name: "Replay the tour" })
+            .first()
+            .click();
+        await page.keyboard.press("Enter");
+        await shoot(page, "06-tour");
+    });
 });

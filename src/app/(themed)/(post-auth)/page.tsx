@@ -1,5 +1,6 @@
 "use client";
 
+import { useTour } from "@system-b90/onboarding";
 import { useMemo } from "react";
 
 import { ClientOnlyDynamic as ClientOnly } from "@/app/(themed)/(post-auth)/client-only";
@@ -7,12 +8,15 @@ import { useActiveStudents } from "@/components/active-students-provider";
 import { useAllStudentInfo } from "@/components/all-student-info-provider";
 import { useCurrentTags } from "@/components/current-tags-provider";
 import { Drawer } from "@/components/drawer";
+import { TourAnchor } from "@/components/onboarding/tour-anchor";
+import { ANCHORS, HOME_TOUR } from "@/components/onboarding/tours";
 import { VncGrid } from "@/components/vnc-grid";
 
 export default function Home() {
     const { activeStudents } = useActiveStudents();
     const { studentInfoList } = useAllStudentInfo();
     const { currentTags } = useCurrentTags();
+    useTour(HOME_TOUR);
 
     const studentsInFilter = useMemo(() => {
         return studentInfoList
@@ -60,13 +64,17 @@ export default function Home() {
         <div className="w-full h-full">
             <ClientOnly>
                 <div className="flex">
-                    <Drawer
-                        activeStudentsOutsideFilter={
-                            activeStudentsOutsideFilter
-                        }
-                        students={studentsInFilter}
-                    />
-                    <VncGrid />
+                    <TourAnchor id={ANCHORS.drawer}>
+                        <Drawer
+                            activeStudentsOutsideFilter={
+                                activeStudentsOutsideFilter
+                            }
+                            students={studentsInFilter}
+                        />
+                    </TourAnchor>
+                    <TourAnchor className="flex-5" id={ANCHORS.grid}>
+                        <VncGrid />
+                    </TourAnchor>
                 </div>
             </ClientOnly>
         </div>

@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { HelpButton } from "@system-b90/onboarding";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useCallback, MouseEventHandler } from "react";
@@ -7,6 +8,8 @@ import { useState, useCallback, MouseEventHandler } from "react";
 import { useAllStudentInfo } from "@/components/all-student-info-provider";
 import { CommandPaletteButton } from "@/components/app-commands/CommandPaletteButton";
 import { useAuth } from "@/components/auth-provider";
+import { TourAnchor } from "@/components/onboarding/tour-anchor";
+import { ANCHORS } from "@/components/onboarding/tours";
 import { enqueueApiErrorSnackbar } from "@/components/snackbar-utils";
 import { HomeGlyph } from "@/glyphs/home";
 import { PeekabooIconGlyph } from "@/glyphs/peekaboo-icon";
@@ -139,8 +142,33 @@ export function MentorAccessBar() {
                         <div
                             className={`flex flex-row items-center justify-end gap-x-1 ${minimized ? "transform-[translateX(calc(100%))_translateY(-100%)]" : "transform-[translateX(0)]"}`}
                         >
-                            <CommandPaletteButton />
-                            <GotoSettings />
+                            <TourAnchor
+                                className="flex items-center"
+                                id={ANCHORS.help}
+                            >
+                                {/* The bar minimizes on click; help must not. */}
+                                <span
+                                    className="flex items-center"
+                                    onClick={(event) => event.stopPropagation()}
+                                >
+                                    <HelpButton
+                                        aria-label="Open help"
+                                        size="small"
+                                    />
+                                </span>
+                            </TourAnchor>
+                            <TourAnchor
+                                className="flex items-center"
+                                id={ANCHORS.palette}
+                            >
+                                <CommandPaletteButton />
+                            </TourAnchor>
+                            <TourAnchor
+                                className="flex items-center"
+                                id={ANCHORS.settingsLink}
+                            >
+                                <GotoSettings />
+                            </TourAnchor>
                             <RefreshAllData />
                         </div>
                     </div>

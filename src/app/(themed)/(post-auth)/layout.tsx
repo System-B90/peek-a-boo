@@ -10,6 +10,7 @@ import { ClassesProvider } from "@/components/classes-provider";
 import { CurrentTagsProvider } from "@/components/current-tags-provider";
 import { KnownTagsProvider } from "@/components/known-tags-provider";
 import { MentorAccessBar } from "@/components/mentor-access-bar";
+import { PeekABooOnboarding } from "@/components/onboarding/peekaboo-onboarding";
 
 export default function RootLayout({
     children,
@@ -24,19 +25,21 @@ export default function RootLayout({
               too — hence StudentCommands lower down rather than inside it.
             */}
             <PeekABooCommandPalette>
-                <AllStudentInfoProvider>
-                    <MentorAccessBar />
-                    <ClassesProvider>
-                        <KnownTagsProvider>
-                            <ActiveStudentsProvider>
-                                <CurrentTagsProvider>
-                                    <StudentCommands />
-                                    {children}
-                                </CurrentTagsProvider>
-                            </ActiveStudentsProvider>
-                        </KnownTagsProvider>
-                    </ClassesProvider>
-                </AllStudentInfoProvider>
+                <PeekABooOnboarding>
+                    <AllStudentInfoProvider>
+                        <MentorAccessBar />
+                        <ClassesProvider>
+                            <KnownTagsProvider>
+                                <ActiveStudentsProvider>
+                                    <CurrentTagsProvider>
+                                        <StudentCommands />
+                                        {children}
+                                    </CurrentTagsProvider>
+                                </ActiveStudentsProvider>
+                            </KnownTagsProvider>
+                        </ClassesProvider>
+                    </AllStudentInfoProvider>
+                </PeekABooOnboarding>
             </PeekABooCommandPalette>
         </AuthProvider>
     );

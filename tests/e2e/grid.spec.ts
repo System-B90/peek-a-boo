@@ -8,18 +8,23 @@ type Student = { studentUsername: string; studentNumber: number };
 /** Fetched in the page: page.request ignores Chromium's host-resolver rules. */
 async function firstStudent(page: Page): Promise<Student | undefined> {
     await page.goto("/");
-    return await page.evaluate(async () => {
+    const body = await page.evaluate(async () => {
         const response = await fetch("/api/students");
         const body = (await response.json()) as {
             status: number;
             data?: Array<{ studentUsername: string; studentNumber: number }>;
         };
-        return body.status === 0 ? body.data?.[0] : undefined;
+        return body;
     });
+    // A failed roster read is a bug (#102), not a reason to skip.
+    expect(body.status, "GET /api/students failed").toBe(0);
+    return body.data?.[0];
 }
 
 test.describe("Student grid", () => {
-    test("shows the empty state when no student is active", async ({ page }) => {
+    test("shows the empty state when no student is active", async ({
+        page,
+    }) => {
         await page.goto("/");
         await expect(page.getByText("No active students!")).toBeVisible({
             timeout: 15_000,

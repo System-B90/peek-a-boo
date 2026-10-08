@@ -1,9 +1,9 @@
-# peekaboo-cli
+# peekaboo
 
 Drive Peek-a-boo from the terminal: everything the web UI does, scriptable.
 
 ```bash
-pip install peekaboo-cli --extra-index-url https://system-b90.github.io/.github/pypi/
+pip install peekaboo --extra-index-url https://system-b90.github.io/.github/pypi/
 peekaboo login                 # opens the browser, hands the session back to the CLI
 peekaboo students list --mine  # your mentees
 ```
@@ -38,5 +38,5 @@ pip install -e ./cli
 pytest cli/tests -q
 ```
 
-The version lives in `peekaboo_cli/__init__.py` and is bumped together with the app by
+The version lives in `peekaboo/__init__.py` and is bumped together with the app by
 `python -m sb90_deploy publish` (see `deploy/app.json` `release.manifests`).

@@ -12,9 +12,9 @@ from typing import Any
 
 import typer
 
-from peekaboo_cli.commands._common import show
-from peekaboo_cli.context import state
-from peekaboo_cli.output import abort, success
+from peekaboo.commands._common import show
+from peekaboo.context import state
+from peekaboo.output import abort, success
 
 app = typer.Typer(help="Server settings (the settings page).", no_args_is_help=True)
 

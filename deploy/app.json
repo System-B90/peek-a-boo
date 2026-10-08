@@ -15,12 +15,12 @@
     "post_install": [
         "Trust nginx/ssl/ca.crt (System-B90 Local Dev CA) to silence certificate warnings."
     ],
-    "venv_packages": ["peekaboo-cli"],
+    "venv_packages": ["peekaboo"],
     "release": {
         "manifests": [
             "package.json",
             { "path": "package-lock.json", "count": 2 },
-            { "path": "cli/peekaboo_cli/__init__.py", "format": "python" }
+            { "path": "cli/peekaboo/__init__.py", "format": "python" }
         ]
     },
     "bundle": {

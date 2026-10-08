@@ -11,8 +11,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from peekaboo_cli.client import AppClient
-from peekaboo_cli.config import Config, load_config
+from peekaboo.client import AppClient
+from peekaboo.config import Config, load_config
 
 
 @dataclass

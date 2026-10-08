@@ -15,9 +15,9 @@ from pathlib import Path
 
 import typer
 
-from peekaboo_cli.commands._common import LIMIT_OPTION, OFFSET_OPTION, show
-from peekaboo_cli.context import state
-from peekaboo_cli.output import abort, success
+from peekaboo.commands._common import LIMIT_OPTION, OFFSET_OPTION, show
+from peekaboo.context import state
+from peekaboo.output import abort, success
 
 classes_app = typer.Typer(help="Hive classes.", no_args_is_help=True)
 

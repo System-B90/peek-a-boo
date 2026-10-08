@@ -96,7 +96,7 @@ Every release ships with screenshots of the app, captured automatically in CI:
 | `src/shared-api/`                | Shared types/contracts and error classes, pure utils.                                                               |
 | `src/components/search`          | React UI.                                                                                                           |
 | `src/interfaces/`, `src/glyphs/` | Shared TS interfaces; icon/glyph assets.                                                                            |
-| `cli/`                           | `peekaboo-cli` (Typer). Mirrors Bluz's `cli/`; every UI feature has a command. Login via `/cli-auth`.               |
+| `cli/`                           | `peekaboo` (Typer). Mirrors Bluz's `cli/`; every UI feature has a command. Login via `/cli-auth`.               |
 | `websock/`                       | Standalone Python websockify service — VNC bridge, own `requirements.txt` + venv.                                   |
 | `nginx/`                         | `nginx.conf.template`; `ssl/` holds TLS certs (`star.key`, `star.crt`, `ca.crt`) — gitignored, never commit.        |
 | `deploy/`                        | Compose: base, `.dev`, `.test` (e2e), `.hive-local` (co-located Hive), `.release` (shipped in bundles).             |

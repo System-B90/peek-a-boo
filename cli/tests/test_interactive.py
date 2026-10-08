@@ -14,10 +14,10 @@ from typing import Any
 
 import pytest
 import typer
-from peekaboo_cli import interactive
-from peekaboo_cli.context import configure
-from peekaboo_cli.errors import CliError
-from peekaboo_cli.main import app
+from peekaboo import interactive
+from peekaboo.context import configure
+from peekaboo.errors import CliError
+from peekaboo.main import app
 
 
 class ScriptedPrompter:

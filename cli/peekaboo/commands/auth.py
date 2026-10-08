@@ -24,17 +24,17 @@ import tqdm
 import typer
 from InquirerPy import inquirer
 
-from peekaboo_cli.client import AppClient
-from peekaboo_cli.config import (
+from peekaboo.client import AppClient
+from peekaboo.config import (
     ENV_TOKEN,
     Config,
     _load_file,
     config_location,
     load_config,
 )
-from peekaboo_cli.context import state
-from peekaboo_cli.errors import ApiError
-from peekaboo_cli.output import success, warn
+from peekaboo.context import state
+from peekaboo.errors import ApiError
+from peekaboo.output import success, warn
 
 app = typer.Typer(help="Authentication and CLI configuration.", no_args_is_help=True)
 
@@ -535,7 +535,7 @@ def logout() -> None:
 @app.command("config")
 def show_config() -> None:
     """Show the resolved configuration (token is masked)."""
-    from peekaboo_cli.commands._common import show
+    from peekaboo.commands._common import show
 
     config = load_config()
     data = {
@@ -551,8 +551,8 @@ def show_config() -> None:
 @app.command("whoami")
 def whoami() -> None:
     """Show who the stored session belongs to (the next-auth session route)."""
-    from peekaboo_cli.commands._common import show
-    from peekaboo_cli.errors import NotAuthenticatedError
+    from peekaboo.commands._common import show
+    from peekaboo.errors import NotAuthenticatedError
 
     with state.client() as client:
         # next-auth's own route: a bare session object, not the envelope, and

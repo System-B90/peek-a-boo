@@ -17,7 +17,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from peekaboo_cli.main import app
+from peekaboo.main import app
 from typer.testing import CliRunner
 from wire_types import Raw
 
@@ -173,7 +173,7 @@ def run_cli(tmp_path, monkeypatch):
 def run_cli_table(run_cli, monkeypatch):
     """Like run_cli, but renders tables instead of --json -- on a console wide
     enough that headers never wrap, whatever terminal (or CI log) runs it."""
-    from peekaboo_cli import output
+    from peekaboo import output
 
     monkeypatch.setattr(output.console, "width", 250)
 

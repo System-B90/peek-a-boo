@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import typer
 
-from peekaboo_cli.commands._common import show
-from peekaboo_cli.context import state
+from peekaboo.commands._common import show
+from peekaboo.context import state
 
 _PATH = "/api/health"
 

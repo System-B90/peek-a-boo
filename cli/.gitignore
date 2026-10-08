@@ -1,4 +1,4 @@
-# Python build / cache artifacts for the peekaboo-cli package
+# Python build / cache artifacts for the peekaboo package
 __pycache__/
 *.py[cod]
 *.egg-info/

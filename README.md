@@ -43,7 +43,7 @@ To use your own certificate, place it at `nginx/ssl/star.crt` / `nginx/ssl/star.
 | `deploy/`  | `app.json` (how sb90-deploy bundles/installs peek-a-boo); compose files: `docker-compose.yml` (base), `.dev.yml`, `.test.yml`, `.hive-local.yml`, `.release.yml` (shipped in bundles) |
 | `nginx/`   | `nginx.conf.template`; `ssl/` holds certs (gitignored)                                                                                                                                |
 | `websock/` | Python websockify VNC bridge                                                                                                                                                          |
-| `cli/`     | `peekaboo-cli`, the `peekaboo` command — see [cli/README.md](cli/README.md)                                                                                                           |
+| `cli/`     | `peekaboo`, the `peekaboo` command — see [cli/README.md](cli/README.md)                                                                                                           |
 
 ## Releasing
 
@@ -55,7 +55,7 @@ latest `v*` tag (patch/minor/major, optional `-rc.N`), bumps the manifests liste
 
 The `peekaboo` CLI (`cli/`) is versioned with the app: the release attaches its wheel,
 vendors it into the bundles, and publishes it to the org pip index
-(`pip install peekaboo-cli --extra-index-url https://system-b90.github.io/.github/pypi/`).
+(`pip install peekaboo --extra-index-url https://system-b90.github.io/.github/pypi/`).
 
 ## Development Setup (Windows)
 

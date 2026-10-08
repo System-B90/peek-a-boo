@@ -193,7 +193,7 @@ def test_vnc_open_fullscreen_needs_no_lookup(stub_app, run_cli):
 
 
 def test_vnc_open_launches_a_browser(stub_app, run_cli, monkeypatch):
-    from peekaboo_cli.commands import vnc
+    from peekaboo.commands import vnc
 
     opened = []
     monkeypatch.setattr(vnc.webbrowser, "open", opened.append)
@@ -337,7 +337,7 @@ def test_tweet_refuses_a_non_media_attachment(stub_app, run_cli, tmp_path):
 def test_tweet_refuses_an_oversized_attachment(
     stub_app, run_cli, tmp_path, monkeypatch
 ):
-    from peekaboo_cli.commands import misc
+    from peekaboo.commands import misc
 
     monkeypatch.setattr(misc, "MAX_ATTACHMENT_BYTES", 4)
     stub = stub_app()
@@ -475,7 +475,7 @@ def test_whoami_shows_the_session_user(stub_app, run_cli):
 
 
 def test_whoami_without_a_session_is_not_logged_in(stub_app, run_cli):
-    from peekaboo_cli.errors import NotAuthenticatedError
+    from peekaboo.errors import NotAuthenticatedError
 
     stub = stub_app()
     stub.route("GET", "/api/auth/session", {})
@@ -486,7 +486,7 @@ def test_whoami_without_a_session_is_not_logged_in(stub_app, run_cli):
 
 def test_a_login_redirect_means_not_logged_in(stub_app, run_cli):
     """peek-a-boo answers an expired session with a redirect to /login."""
-    from peekaboo_cli.errors import NotAuthenticatedError
+    from peekaboo.errors import NotAuthenticatedError
 
     stub = stub_app()
     stub.route("GET", "/api/class", {}, status=307, headers={"Location": "/login"})

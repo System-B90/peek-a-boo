@@ -1,6 +1,6 @@
 """
 Name: test_cli_release.py
-Purpose: Keep the peekaboo-cli package wired into the release: its version is
+Purpose: Keep the peekaboo package wired into the release: its version is
     bumped with the app's by `python -m sb90_deploy publish`, and release
     bundles vendor its wheel and install it into the bundle's venv.
 Created: 2026-09-27
@@ -17,7 +17,7 @@ from sb90_deploy.release import Manifest, update_manifests
 
 ROOT = Path(__file__).resolve().parents[2]
 APP_JSON = json.loads((ROOT / "deploy" / "app.json").read_text(encoding="utf-8"))
-CLI_VERSION_FILE = "cli/peekaboo_cli/__init__.py"
+CLI_VERSION_FILE = "cli/peekaboo/__init__.py"
 
 
 def _cli_version(root: Path) -> str:
@@ -48,4 +48,4 @@ def test_bundles_ship_and_install_the_cli() -> None:
     pyproject = tomllib.loads((ROOT / "cli" / "pyproject.toml").read_text("utf-8"))
     assert pyproject["project"]["name"] in APP_JSON["venv_packages"]
     assert "cli/dist/*.whl" in APP_JSON["bundle"]["local_wheels"]
-    assert pyproject["project"]["scripts"] == {"peekaboo": "peekaboo_cli.main:run"}
+    assert pyproject["project"]["scripts"] == {"peekaboo": "peekaboo.main:run"}

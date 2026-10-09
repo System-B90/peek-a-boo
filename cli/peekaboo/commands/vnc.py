@@ -14,10 +14,10 @@ import webbrowser
 
 import typer
 
-from peekaboo_cli.commands._common import show
-from peekaboo_cli.commands.students import fetch_student
-from peekaboo_cli.context import state
-from peekaboo_cli.output import abort, success
+from peekaboo.commands._common import show
+from peekaboo.commands.students import fetch_student
+from peekaboo.context import state
+from peekaboo.output import abort, success
 
 app = typer.Typer(
     help="Watch student screens and install the VNC client.", no_args_is_help=True

@@ -68,7 +68,7 @@ jobs:
             # sb90-deploy (org pip index) is what scripts/setup.py and the
             # bundle dry-run test run on; 0.2.0 is the first with `publish`,
             # whose manifest rewriting scripts/tests/test_cli_release.py runs.
-            # ./cli is the peekaboo-cli package its tests import.
+            # ./cli is the peekaboo package its tests import.
             - name: Install Dependencies (Python)
               run: pip install ruff==0.16.9 pytest build "sb90-deploy>=0.2.0" ./cli --extra-index-url https://system-b90.github.io/.github/pypi/
 
@@ -105,7 +105,7 @@ jobs:
               if: ${{ !cancelled() }}
               run: pytest tests/websock -q
 
-            # peekaboo-cli (cli/): every command's wire contract against a
+            # peekaboo (cli/): every command's wire contract against a
             # stub server, plus the login loopback handshake.
             - name: Run CLI Tests
               if: ${{ !cancelled() }}

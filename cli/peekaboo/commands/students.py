@@ -12,9 +12,9 @@ from typing import Any
 
 import typer
 
-from peekaboo_cli.commands._common import LIMIT_OPTION, OFFSET_OPTION, show, write_file
-from peekaboo_cli.context import state
-from peekaboo_cli.output import abort, success
+from peekaboo.commands._common import LIMIT_OPTION, OFFSET_OPTION, show, write_file
+from peekaboo.context import state
+from peekaboo.output import abort, success
 
 app = typer.Typer(
     help="Student roster (Hive), mentees and avatars.", no_args_is_help=True

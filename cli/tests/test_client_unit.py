@@ -1,6 +1,6 @@
 """
 Name: test_client_unit.py
-Purpose: Unit tests for the HTTP client core (peekaboo_cli/client.py) — envelope
+Purpose: Unit tests for the HTTP client core (peekaboo/client.py) — envelope
          unwrapping, error translation, redirect/401 handling and get_raw().
          Fully offline: every response comes from an httpx.MockTransport, so
          there is no server and no network.
@@ -15,11 +15,11 @@ from collections.abc import Callable
 from typing import Any
 
 import httpx
-import peekaboo_cli.client as client_module
+import peekaboo.client as client_module
 import pytest
-from peekaboo_cli.client import AppClient
-from peekaboo_cli.config import Config
-from peekaboo_cli.errors import ApiError, NotAuthenticatedError
+from peekaboo.client import AppClient
+from peekaboo.config import Config
+from peekaboo.errors import ApiError, NotAuthenticatedError
 
 
 def _client(

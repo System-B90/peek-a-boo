@@ -14,8 +14,8 @@ from typing import Any
 
 import typer
 
-from peekaboo_cli.context import state
-from peekaboo_cli.output import abort, render
+from peekaboo.context import state
+from peekaboo.output import abort, render
 
 
 def parse_json(value: str | None, *, what: str = "value") -> Any:

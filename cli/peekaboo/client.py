@@ -13,8 +13,8 @@ from typing import Any, Self
 
 import httpx
 
-from peekaboo_cli.config import Config
-from peekaboo_cli.errors import ApiError, NotAuthenticatedError
+from peekaboo.config import Config
+from peekaboo.errors import ApiError, NotAuthenticatedError
 
 # `safeApiFetcher` (ui/src/api-client/common.ts) treats a redirect as "the user is
 # not logged in" — we mirror that here instead of silently following it to an HTML

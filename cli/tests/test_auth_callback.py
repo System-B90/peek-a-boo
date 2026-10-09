@@ -15,8 +15,8 @@ from collections.abc import Callable
 from typing import Any
 
 import pytest
-from peekaboo_cli.commands import auth
-from peekaboo_cli.errors import ApiError
+from peekaboo.commands import auth
+from peekaboo.errors import ApiError
 
 
 def _drive(

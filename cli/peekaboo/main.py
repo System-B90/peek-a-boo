@@ -15,7 +15,7 @@ import sys
 # cannot encode Hebrew text or Rich's Unicode glyphs (checkmarks, etc.) whenever
 # output isn't a real attached console — piped, redirected, or run from a script
 # or agent. Force UTF-8 here, before any Rich Console is constructed (commands
-# import peekaboo_cli.output below, which instantiates Console at module load).
+# import peekaboo.output below, which instantiates Console at module load).
 for _stream in (sys.stdout, sys.stderr):
     if hasattr(_stream, "reconfigure"):
         try:
@@ -25,16 +25,16 @@ for _stream in (sys.stdout, sys.stderr):
 
 import typer
 
-from peekaboo_cli import __version__
-from peekaboo_cli.clicktree import is_group, takes_a_value
-from peekaboo_cli.commands import auth, misc, settings, students, vnc
-from peekaboo_cli.commands import (
+from peekaboo import __version__
+from peekaboo.clicktree import is_group, takes_a_value
+from peekaboo.commands import auth, misc, settings, students, vnc
+from peekaboo.commands import (
     health as health_cmd,
 )
-from peekaboo_cli.context import configure
-from peekaboo_cli.errors import CliError
-from peekaboo_cli.interactive import interactive as interactive_cmd
-from peekaboo_cli.output import fail, warn
+from peekaboo.context import configure
+from peekaboo.errors import CliError
+from peekaboo.interactive import interactive as interactive_cmd
+from peekaboo.output import fail, warn
 
 app = typer.Typer(
     help="Peek-a-boo CLI — watch and manage your students from the terminal.",
@@ -67,7 +67,7 @@ app.command("interactive")(interactive_cmd)
 
 def _version_callback(value: bool) -> None:
     if value:
-        typer.echo(f"peekaboo-cli {__version__}")
+        typer.echo(f"peekaboo {__version__}")
         raise typer.Exit()
 
 
@@ -140,7 +140,7 @@ def main(
 @app.command()
 def version() -> None:
     """Print the CLI version."""
-    typer.echo(f"peekaboo-cli {__version__}")
+    typer.echo(f"peekaboo {__version__}")
 
 
 # Global flags Click only recognises before the subcommand. Recognised here so
